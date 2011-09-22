@@ -1,0 +1,16 @@
+#from Skeleton import Skeleton
+#extends Skeleton
+
+#def pagetitle
+Locations
+#end def
+
+#def body
+<h1>Locations</h1>
+<ul>
+#for $l in $locations
+<li><a href="/locationedit?id=$l.id">$l.locationName</></li>
+#end for
+</ul>
+<a href="/locationedit">Add a new location</a>
+#end def
