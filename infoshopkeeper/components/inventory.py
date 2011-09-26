@@ -213,7 +213,7 @@ class inventory:
                     "known_title": self.known_title}
 
 
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",extra_prices={}, tag=''):
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",extra_prices={}, tag=''):
 	print "GOT to addToInventory"
 	print known_title
         if not(known_title):
@@ -255,12 +255,14 @@ class inventory:
 	if the_locations:
         	location_id = the_locations[0].id
         print quantity
+        if not ourprice:
+		ourprice=listprice
         for i in range(int(quantity)): 
 	    print "book loop"
-            b=Book(title=known_title,status=status.encode("ascii", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice,location=location_id,owner=owner.encode("ascii", "backslashreplace"),notes=notes.encode("ascii", "backslashreplace"),consignmentStatus="")
-            b.extracolumns()
-            for mp in extra_prices.keys():
-                setattr(b,string.replace(mp," ",""),extra_prices[mp])
+            b=Book(title=known_title,status=status.encode("ascii", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("ascii", "backslashreplace"),notes=notes.encode("ascii", "backslashreplace"),consignmentStatus="")
+#            b.extracolumns()
+#            for mp in extra_prices.keys():
+#               setattr(b,string.replace(mp," ",""),extra_prices[mp])
 
 
 

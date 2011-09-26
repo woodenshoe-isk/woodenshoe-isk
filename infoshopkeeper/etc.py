@@ -1,4 +1,4 @@
-dbname="infoshopkeeper"
+dbname="infoshopkeeper2"
 dbhost="localhost"
 dbuser="woodenshoe"
 dbpass=""
@@ -12,10 +12,10 @@ dbtype="mysql"
 title="INFOSHOPKEEPER: Free software with a circled A"
 
 
-cherrypy_config_file="/home/woodenshoe/infoshopkeeper/cherrypy.conf"
-cherrypy_global_config_file="/home/woodenshoe/infoshopkeeper/cherrypy_global.conf"
-cherrypy_nonlocal_config_file="/home/woodenshoe/infoshopkeeper/cherrypy_nonlocal.conf"
-cherrypy_local_config_file="/home/woodenshoe/infoshopkeeper/cherrypy_local.conf"
+cherrypy_config_file="/home/tech/Developer/infoshopkeeper/cherrypy.conf"
+cherrypy_global_config_file="/home/tech/Developer/infoshopkeeper/cherrypy_global.conf"
+cherrypy_nonlocal_config_file="/home/tech/Developer/infoshopkeeper/cherrypy_nonlocal.conf"
+cherrypy_local_config_file="/home/tech/Developer/infoshopkeeper/cherrypy_local.conf"
 
 taxrate=0.08
 
@@ -76,6 +76,14 @@ misc_functions = (
 
     
 )
+
+#department categories
+departments= {
+"book":
+    {'name':'book', 'label':'Book', 'isInventoriedItem':True, 'isTaxable':True},
+'music':
+    {'name':'music', 'label':'Music', 'isInventoriedItem':True, 'isTaxable':True},
+}
     
 bookStatus = ("STOCK", "SOLD") 
 
@@ -88,7 +96,7 @@ reports=["SalesReport","BestSellersReport", "NewItemReport", "ThingsForNewItemsS
 #you need to make the corresponding float column in the database on
 #the "book" table(remove the spaces in whatever name you use
 
-multiple_prices = []                 # [("fullprice", 1),]
+multiple_prices = []
 
 #multiple_prices = (
 #    ("half off",.5),

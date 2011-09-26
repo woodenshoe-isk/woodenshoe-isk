@@ -17,7 +17,7 @@ class ThingsForNewItemsShelfReport(Report):
         return results
     
     def format_header(self):
-	return "<tr><th>Title</th><th>Author</th></tr>"
+        return "<tr><th>Title</th><th>Author</th></tr>"
 
     def format_results(self,results):
         return ["<tr onclick=\"window.open('/titleedit?id=%s');\"><td>%s</td><td>%s</td></tr>" % (r[0],r[1],r[2])  for r in results]
@@ -27,8 +27,6 @@ class ThingsForNewItemsShelfReport(Report):
         val="<select class='textbox' id='kind' name='kind'>"
         for k in list(Kind.select()):
             val = val+"<option value='%s'>%s</option>" % (k.id,k.kindName)
-	import sys
-	sys.stdout.write(val)
         val=val+"</select>"
 	
         return val

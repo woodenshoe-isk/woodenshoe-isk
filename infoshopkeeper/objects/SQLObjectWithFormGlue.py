@@ -60,7 +60,7 @@ class SQLObjectWithFormGlue(SQLObject):
             if type(c)==SOBLOBCol:
                 formhtml = formhtml + self.handleBlob(c)
             if type(c)==SOFloatCol:
-                formhtml = formhtml + self.handleBlob(c)
+                formhtml = formhtml + self.handleFloat(c)
             if type(c)==SODateTimeCol:
                 formhtml = formhtml + self.handleDateTime(c)
             if type(c)==SOForeignKey:

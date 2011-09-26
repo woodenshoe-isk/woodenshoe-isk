@@ -1,0 +1,54 @@
+#from Skeleton import Skeleton
+#extends Skeleton
+#def headscripts
+<script type='text/javascript'>                                         
+	jQuery(document).ready( function(){
+        jQuery.ajaxSetup({  'cache':false,
+                            'error':function(XMLHttpRequest,textStatus, errorThrown) {   
+                                alert(textStatus + '\r' +
+                                      errorThrown + '\r' +
+                                      XMLHttpRequest.responseText);
+                            }
+        });
+ 
+        jQuery.getJSON('/notes/get_notes', null, function( json ) {
+	        jQuery('#message_table').dataTable({    'aaData':json,
+	                                                'aaSorting':[],
+	                                                'bProcessing':true,
+	                                                'oSearch': {'sSearch':'', bRegex:false, bSmart:true},
+	                                                'sPaginationType':'full_numbers'});
+        });
+    });
+</script>
+#end def
+
+#def pagetitle
+Notes
+#end def
+
+#def body
+<h1>Notes</h1>
+<form action="/notes/post_note" method="post">
+<label class='textbox' for='author'>Name</label>
+<input class='textbox' type='text' id='author' name='author' /><br />
+
+<label class='textbox' for='message'>Message</label>
+<textarea class='textarea' rows='5' id='message' name='message'></textarea><br />
+
+<input class="submit" type="submit"/><br />
+</form>
+<div id='notes' class='table' name='notes'>
+<table class="sortable" id="message_table" >
+<thead>
+  <tr>
+    <th>Notes</th>    
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+#end def

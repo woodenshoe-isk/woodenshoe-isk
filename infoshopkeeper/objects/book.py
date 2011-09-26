@@ -16,6 +16,7 @@ cfg = configuration()
 class Book(SQLObjectWithFormGlue):
 	_connection = db.conn() 
 	listprice=FloatCol()
+	ourprice=FloatCol()
 	inventoried_when=DateTimeCol(default=now)
 	sold_when=DateTimeCol(default=now)  # we ignore this until the status gets set to "SOLD"  
 	status = StringCol(default="STOCK")
@@ -43,7 +44,7 @@ class Book(SQLObjectWithFormGlue):
 	def extracolumns(self):
 		if not(self.multiplied):
 			for mp in cfg.get("multiple_prices"):
-				self.addColumn(FloatCol(string.replace(mp[0]," ",""),default=0))
+				self.sqlmeta.addColumn(FloatCol(string.replace(mp[0]," ",""),default=0))
 			self.multiplied=True
 	def sellme(self):
 		self.status="SOLD"

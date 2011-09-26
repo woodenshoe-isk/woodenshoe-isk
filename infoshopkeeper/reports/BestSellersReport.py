@@ -15,12 +15,11 @@ class BestSellersReport(Report):
         """,(args['kind']))
         results= self.cursor.fetchall()
         self.cursor.close()
-	print results
         return results
     
     def format_header(self):
-	return ["<tr><th>Title</th><th>Copies In Stock</th><th>Copies Sold</th></tr>"]
-	
+        return ["<tr><th>Title</th><th>Copies In Stock</th><th>Copies Sold</th></tr>"]
+    
     def format_results(self,results):
         return ["<tr onclick=\"window.open('/titleedit?id=%s');\"><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[0],r[1],r[2], r[3])  for r in results]
 

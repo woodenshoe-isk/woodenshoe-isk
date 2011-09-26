@@ -1,20 +1,74 @@
-body {
-font-family: lucida,sans-serif;
-background-color:#c44;
-}
-
 .toolbar {
-background-color:#eee;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-padding:10px;
+    float:left
+    position:relative;
+	padding:0;
 }
 
-.toolbar  li {
-display: inline;
-padding: 10px;
+.toolbar.nav {
+    list-style:none;
+    width:100%
+    float:left;
+    position:relative;
+	margin:0;
 }
+
+
+.toolbar .nav li {
+    float:left;
+    text-align:center;
+    position:relative;
+    display: inline-block;
+    padding: 5px;
+}
+
+.toolbar .nav li:hover{
+    background-color:#ddd;
+}
+
+.toolbar .nav li a {
+    text-align:center;
+    padding:7px;
+    display:block;
+    text-decoration:none;
+    color:black;
+    font-weight:bold;
+}
+
+.toolbar .nav li a:hover {
+    color:red;
+    background-color:#ddd;
+}
+
+.toolbar .nav li ul {
+    display:none;
+    z-index:100;
+}
+
+.toolbar .nav li:hover  ul {
+    display: block;
+    position: absolute;
+    background-color: #eee;
+    left: 0;
+    padding: 0;
+}
+
+.toolbar .nav li ul li {
+    border:none;
+    text-align:center;
+    position:relative;
+}
+
+body {
+    font-family: lucida,sans-serif;
+    background-color:#c44;
+}
+
+/*scrollable tables*/
+/*table>tbody {
+  overflow: auto;
+  height: 280px;
+  overflow-x: hidden;
+}*/
 
 
 /* Sortable tables */
@@ -27,201 +81,746 @@ table.sortable a.sortheader {
     display: block;
     height:50px;
 }
+
 table.sortable span.sortarrow {
     color: black;
     text-decoration: none;
 }
 
 td{
-padding:5px;
-font-size:90%;
+    padding:5px;
+    font-size:90%;
+}
+
+table.sortable tbody tr.odd {
+    background-color: LightGrey;
 }
 
 table.sortable tbody tr:hover {
-background:LightCoral;
-color:Black
+    background:LightCoral;
+    color:Black
 }
 
 table.sortable td{
-padding:5px;
-font-size:90%;
-
+    padding:5px;
+    font-size:90%;
 }
 
 table.sortable {
-font-size:75%;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-background-color:white;
+    font-size:100%;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
+    background-color:white;
+    table-layout:auto
+    width:100%;
 }
 
 table.sortable th {
-	border-width:2px;
-border-color:#000;
-border-style:solid;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
+}
+
+table.sortable td {
+    border-width: 1px;
+    border-color: #000;
+    border-style: solid;
+}
+
+table#results_table {
+    width:100%;
+	float: left;
+}
+
+table#results_table tbody td ul {
+    float: left;
+    line-height: normal;
+}
+
+table#results_table tbody td li {
+    display: inline;
+    margin: 10px;
+    font-weight: bold;
+    vertical-align: text-top;
+    float: right;
+    position: relative;
+    text-align: right;
+}
+
+table#results_table tbody td li:first-child {
+    float: left;
+    text-align: left;
+}
+
+table#results_table tbody td li:last-child {
+    clear: both;
+    width: 100%;
+    font-weight: normal;
+    text-align: left;
+}
+
+table#message_table {
+    width:100%;
+}
+
+table#message_table tbody td ul {
+    float: left;
+    line-height: normal;
+}
+
+table#message_table tbody td li {
+    display: inline;
+    margin: 10px;
+    font-weight: bold;
+    vertical-align: text-top;
+    float: right;
+    position: relative;
+    text-align: right;
+}
+
+table#message_table tbody td li:first-child {
+    float: left;
+    text-align: left;
+}
+
+table#message_table tbody td li:last-child {
+    clear: both;
+    width: 100%;
+    font-weight: normal;
+    text-align: left;
 }
 
 form {
-background-color:cccccc;
-padding: 10px;
-color: #c44;
-border-width:2px;
-border-color:#000;
-border-style:solid;
+    background-color:cccccc;
+    padding: 10px;
+    color: #c44;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
-label,input.textbox {
-	display: block;
-	float: left;
-	margin-bottom: 10px;
-	width:350px;
-
-
-}
+label,input.textbox,textarea.textarea {
+    display: block;
+    float: left;
+    margin-bottom: 10px;
+    width:350px;
+    }
 
 input.textbox{
-padding-left:5px;
+    padding-left:5px;
 }
 
-input.textbox,fieldset,select.textbox {
-	display: block;
-	float: left;
-	margin-bottom: 10px;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-
+input.textbox,textarea,fieldset,select.textbox {
+    display: block;
+    float: left;
+    margin-bottom: 10px;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
 input.reset {
-margin-left: 320px;
-background-color:#c44;
-width:350px;
-font-family: lucida,sans-serif;
-font-size: 120%;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-
+    margin-left: 320px;
+    background-color:#c44;
+    width:350px;
+    font-family: lucida,sans-serif;
+    font-size: 120%;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
-
 input.submit {
-margin-left: 320px;
-background-color:#c44;
-width:350px;
-font-family: lucida,sans-serif;
-font-size: 120%;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-
+    margin-left: 320px;
+    background-color:#c44;
+    width:350px;
+    font-family: lucida,sans-serif;
+    font-size: 120%;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
 input.submit-inline {
-background-color:#c44;
-font-family: lucida,sans-serif;
-font-size: 120%;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-
+    background-color:#c44;
+    font-family: lucida,sans-serif;
+    font-size: 120%;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
-
-
 label.textbox {
-	text-align: right;
-	width: 300px;
-	padding-right: 20px;
+    text-align: right;
+    width: 300px;
+    padding-right: 20px;
 }
 
 br {
-	clear: left;
+    clear: left;
 }
 
-tr {
-background-color: #ccc;
-
-}
+/*tr {
+    background-color: #ccc;
+}*/
 
 div.showhide {
-float:right;
-display:block;
-background-color: #ccc;
-padding-right: 5px;
-padding-left: 5px;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-
+    float:right;
+    display:block;
+    background-color: #ccc;
+    padding-right: 5px;
+    padding-left: 5px;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
 div.showhide a {
-color: #c44;
-
+    color: #c44;
 }
 
+.slidingDiv {
+    height:350px;
+    padding:20px;
+    margin-top:20px;
+}
+
+div.show_hide_div {
+    float: left;
+    margin: 5px;
+}
+
+div.show_hide_div{
+    float: left;
+}
+
+div.show_hide_div span span {
+    display:inline;
+}
+
+div.show_hide_div span:first-child {
+    float: left;
+}
+    
+.show_hide_disc_triangle {
+    display:none;
+}
+
+.ui-icon { margin:0px; } 
+
 span.listing {
-background-color: #cccccc;
-padding-left:10px;
-margin-left:10px;
-padding-right:10px;
-border-width:2px;
-border-color:#000;
-border-style:solid;
+    background-color: #cccccc;
+    padding-left:10px;
+    margin-left:10px;
+    padding-right:10px;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
 div.listing  {
-margin:10px;
-
+    margin:10px;
 }
 
 div.listinggroup  {
-margin:10px;
-border-width:2px;
-border-color:#000;
-border-style:solid;
+    margin:10px;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
+}
+
+div.nav{
+    background-color:#eee;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
+    padding:10px;
+    float:left
+    position:relative;
 }
 
 div.main{
-background-color:#eee;
-border-width:2px;
-border-color:#000;
-border-style:solid;
-padding:10px;
+    background-color:#eee;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
+    margin:3px;
+    padding:10px;
+    position:relative;
+    float:left;
+    width:97%;
+}
 
+div.toolbar{
+    background-color:#eee;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
+    margin:3px;
+    padding:10px;
+    position:relative;
+    float:left;
+    width:97%;
+}
+
+div.dataTables_info {
+    width: 40%;
+}
+
+.dataTables_paginate {
+    width: 400px;
+    height: 22px;
+    line-height: 22px;
+}
+
+div.dataTables_paginate span.paginate_button,
+    div.dataTables_paginate span.paginate_active {
+    border: 1px solid #aaa;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    padding: 2px 5px;
+    margin: 0 3px;
+    cursor: pointer;
+    *cursor: hand;
+}
+
+div.dataTables_paginate span.paginate_button {
+    background-color: #ddd;
+}
+
+div.dataTables_paginate span.paginate_button:hover {
+    background-color: #ccc;
+}
+
+div.dataTables_paginate span.paginate_active {
+    background-color: #99B3FF;
 }
 
 a.listinglink  {
-padding-left:10px;
-margin-left:10px;
-padding-right:10px;
-background-color: #c44;
-border-width:2px;
-border-color:#000;
-border-style:solid;
+    padding-left:10px;
+    margin-left:10px;
+    padding-right:10px;
+    background-color: #c44;
+    border-width:2px;
+    border-color:#000;
+    border-style:solid;
 }
 
 a.close {
-border-width:2px;
-border-style:solid;
-font-size:200%;
-background-color:#ccc;
-border-color:#000;
-float:right;
-padding:5px;
+    border-width:2px;
+    border-style:solid;
+    font-size:200%;
+    background-color:#ccc;
+    border-color:#000;
+    float:right;
+    padding:5px;
+}
+
+a:link {
+    text-decoration: none;color:#000;font-weight: bold;
+}
+
+a:visited {
+    text-decoration: none;color:#000;font-weight: bold;
+}
+
+a:active {
+    text-decoration: none;color:#000;font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline; color: red;font-weight: bold;
 }
 
 
 
 
-a:link {text-decoration: none;color:#000;font-weight: bold;
-}
-a:visited {text-decoration: none;color:#000;font-weight: bold;
-}
-a:active {text-decoration: none;color:#000;font-weight: bold;
-}
-a:hover {text-decoration: underline; color: red;font-weight: bold;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

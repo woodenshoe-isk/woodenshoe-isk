@@ -1,0 +1,6 @@
+#!/bin/bash
+WD1=$PWD
+cd ~tech/Developer/infoshopkeeper/inventoryserver
+cheetah compile -R
+cd $WD1
+sudo apache2ctl graceful

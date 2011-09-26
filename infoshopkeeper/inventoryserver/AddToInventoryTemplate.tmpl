@@ -1,0 +1,194 @@
+from Skeleton import Skeleton
+#extends Skeleton
+
+#def headscripts
+<script type="text/javascript" src="/javascript/jquery.form.js"></script>
+<script type="text/javascript">                                         
+	var isbnDirty = false;
+	jQuery(document).ready(function() {
+        jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
+                alert(textStatus);
+                alert(errorThrown);
+                alert(XMLHttpRequest.responseText);
+          
+        }});
+		jQuery('.textbox').bind('keypress', function(evt) {
+               		if (evt.keyCode == 13||evt.chatCode == 13) {
+                    		/* FOCUS ELEMENT */
+                    		var inputs = jQuery(this).parents("form").eq(0).find(":input");
+                    		var idx = inputs.index(this);
+ 
+                    		if (idx == inputs.length - 1) {
+                        		inputs[0].select()
+                    		} else {
+                        		inputs[idx + 1].focus(); //  handles submit buttons
+                        		inputs[idx + 1].select();
+                    		}	
+                    		return false;
+               		}	
+		});
+		jQuery('#isbn').change( function() {
+			var isbnstring=jQuery(this).val();
+			isbnstring=isbnstring.toLowerCase();
+
+			if (isbnstring.length>11) {
+				isbnstring.replace('/[\s-]/g', '');
+			}
+
+			if (isbnDirty == false) {
+				jQuery.getJSON( '/search_isbn', {'isbn':isbnstring}, function(data){
+					jQuery.each(data, function(key, value) {
+						if (key == 'publisher') {
+							jQuery('#publisher').val(value);
+						} else if ( key == 'authors_as_string') {
+							jQuery('#authors').val(value);
+						} else if ( key == 'categories_as_string') {
+							jQuery('#categories').val(value);
+						} else if ( key == 'title') {
+							jQuery('#title').val(value);
+						} else if ( key == 'list_price') {
+							jQuery('#listprice').val(value);
+							jQuery('#ourprice').val(value);
+						} else if (key == 'isbn') {
+							jQuery('#isbn').val(value);
+						} else if ( key == 'format') {
+							jQuery('#types').val(value);
+						} else if (key ==  'kind') {
+							jQuery('#kind_name').val(value);
+						} else if ( key == 'known_title') {
+							jQuery('#known_title').val(value);
+						}
+					});
+				});
+				isbnDirty = true;
+
+			}
+			return false;
+		});
+		jQuery('#add_to_inventory_form').ajaxForm( {url:'/add_item_to_inventory', clearForm:false, success:function(){
+				jQuery("#add_to_inventory_form .textbox").not('#distributor, #quantity, #location, #owner, #status, #kind_name').each(function() {
+					jQuery(this).val("");
+				});
+				jQuery("#quantity").val(1);
+				isbnDirty=false;
+			}
+		});
+		jQuery('#add_to_inventory_form').bind('reset', function(){
+			jQuery("#add_to_inventory_form .textbox").not('#distributor, #quantity, #location, #owner, #status, #kind_name').each(function() {
+				jQuery(this).val("");
+			});
+			jQuery("#quantity").val(1);
+			isbnDirty=false;
+		});
+	});
+</script>   
+#end def
+
+#def pagetitle
+Add item to  inventory
+#end def
+
+#def body
+<h1>Add to Inventory</h1>
+<br />
+<form id="add_to_inventory_form" method="post" action="/add_item_to_inventory" //~style="visibility:hidden; display:none">
+
+<label class="textbox" for="isbn">Item ID (UPC or ISBN)</label> 
+<input class="textbox" type="text" id="isbn" name="isbn" value="$isbn" /><br />
+
+<label class="textbox" for "quantity">Quantity</label>
+<input class="textbox" type="text" id="quantity", name="quantity", value="$quantity"/><br />
+
+<label class="textbox" for="title">Title</label> 
+<input class="textbox" type="text" id="title" name="title" value="$title" /><br />
+
+<label class="textbox" for="authors">Author</label> 
+<input class="textbox" type="text" name="authors" id="authors" value="$authors" /><br />
+
+<label class="textbox" for="listprice">List Price</label>
+<input class="textbox" type="text" name="listprice" id="listprice" value="$listprice" /><br />
+
+<label class="textbox" for="ourprice">Our Price</label>
+<input class="textbox" type="text" name="ourprice" id="ourprice" value="$ourprice" /><br />
+
+<label class="textbox" for="publisher">Publisher</label> 
+<input class="textbox" type="text" name="publisher" id="publisher" value="$publisher" /><br />
+
+<label class="textbox" for="categories">Keyword</label> 
+<input class="textbox" type="text" name="categories" id="categories" value="$categories" /><br />
+
+<label class="textbox" for="distributor">Distributor</label> 
+<select class="textbox" id="distributor"  name="distributor">
+#for $d in $distributors
+<option value='$d' 
+#if "%s" %($d)==$distributor
+selected="true" 
+#end if 
+>$d</option>
+#end for
+</select><br />
+
+<label class="textbox" for="location">Location</label> 
+<select class="textbox" id="location" name="location">
+#set $i=0
+#for $loc in $locations
+<option id=$i value='$loc.id' 
+#if "%s" %($loc.id)==$location
+selected="true" 
+#end if 
+>$loc.locationName</option>
+#set $i=$i+1
+#end for
+</select><br />
+
+<label class="textbox" for="owner">Owner</label> 
+<input class="textbox" type="text" name="owner" id="owner" value="$owner" /><br />
+
+
+<label class="textbox" for="status">Status</label>
+<fieldset id="status">
+STOCK<input type="radio" name="status" id="status" value="STOCK" 
+#if  $status == 'STOCK'
+checked
+#end if
+> 
+SOLD<input type="radio" name="status" id="status" value="SOLD"
+#if $status == 'SOLD'
+checked
+#end if
+>
+</fieldset>
+<br />
+
+<label class="textbox" for="tag">Tag</label> 
+<input class="textbox" type="text" id="tag" name="tag" value="$tag" /><br />
+
+<label class="textbox" for="kind_name">Kind</label> 
+<select class="textbox" id="kind_name" name="kind_name">
+#for $k in $kinds
+<option value='$k.kindName' 
+#if "%s" %($k.id)==$kind  
+selected="true" 
+#end if 
+>$k.kindName</option>
+#end for
+</select><br />
+
+<label class="textbox" for="types">Format</label> 
+<select class="textbox" id="types" name="types">
+#for $f in $formats
+<option value='$f' 
+#if "%s" %($f)==$format
+selected="true" 
+#end if 
+>$f</option>
+#end for
+</select><br />
+
+<input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
+
+<input class="submit" type="submit" value='Add to Inventory'>
+<input class='reset' type='reset' value='cancel'>
+<br />
+</form>
+#end def

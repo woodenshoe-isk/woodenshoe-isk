@@ -23,6 +23,9 @@
 import cherrypy
 from etc import cherrypy_global_config_file, cherrypy_nonlocal_config_file, cherrypy_local_config_file, cherrypy_config_file
 from inventoryserver.server import InventoryServer
+from inventoryserver.server import Register
+from inventoryserver.server import Admin
+
 
 ##~ cherrypy.quickstart(InventoryServer(), script_name="/", config=cherrypy_config_file)
 #~ cherrypy.config.update(config=cherrypy_config_file)
@@ -30,13 +33,16 @@ from inventoryserver.server import InventoryServer
 cherrypy.server2 = server2 = cherrypy._cpserver.Server()
 cherrypy.config.namespaces['server2']=lambda k, v: setattr(cherrypy.server2, k, v)
 #cherrypy._cpserver.ServerAdapter(cherrypy.engine, server2, ('localhost',8030)).subscribe()
-print cherrypy.server2
-cherrypy.server2.socket_host='locahost'
-cherrypy.server2.socket_port=8030
+#print cherrypy.server2
+#cherrypy.server2.socket_host='locahost'
+#cherrypy.server2.socket_port=8030
 #cherrypy.server2.subscribe()
 cherrypy.config.update(cherrypy_global_config_file)
-cherrypy.tree.mount(root=InventoryServer(), script_name='/', config=cherrypy_nonlocal_config_file)
-#cherrypy.tree.mount(root=InventoryServer(), script_name='/', config=cherrypy_local_config_file)
+
+root=InventoryServer()
+root.register=Register()
+root.admin=Admin()
+cherrypy.tree.mount(root, script_name='/', config=cherrypy_nonlocal_config_file)
 #cherrypy.server.quickstart()
 #cherrypy.server.server2.quickstart()
 #cherrypy.server2.subscribe()

@@ -1,0 +1,122 @@
+#from Skeleton import Skeleton
+#extends Skeleton
+#def headscripts
+<script type='text/javascript'>                                         
+	jQuery(document).ready( function(){
+	    var inventory_data1='';
+	    
+        jQuery.ajaxSetup({  'cache':false,
+                            'error':function(XMLHttpRequest,textStatus, errorThrown) {   
+                                alert(textStatus + '\r' +
+                                      errorThrown + '\r' +
+                                      XMLHttpRequest.responseText);
+                            }
+        });
+        
+        jQuery('#void-toggle').button();
+
+        jQuery( "#isbn_not_found_error" ).dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: {
+                Ok: function() {
+                    jQuery(this).dialog( 'close' );
+                }
+            }
+        });
+    
+        jQuery('.my-forms').each( function(){
+            var dlg=jQuery(this).dialog( {
+                autoOpen: false,
+                modal: true,
+                open: function(event, ui) {
+                    jQuery(this).parent().parent();
+                },
+                close: function() {
+                    jQuery(this).find('.isbnfield').val('');
+                    jQuery(this).find('.title_list').children().remove();
+                },
+                buttons: {
+                    Cancel: function(){
+                        jQuery(this).dialog('close');
+                    },
+                    'Add to Order': function(){
+                        console.log(inventory_data1);
+                        console.log(JSON.stringify(inventory_data1));
+                        jQuery('#cart_table > tbody').append('<tr><td>' + inventory_data1 + '</td></tr>');
+                        jQuery.post('/register/add_item_to_cart', escape(JSON.stringify(inventory_data1)));
+                        jQuery(this).dialog('close');
+                    }
+                }
+            });
+            jQuery(this).parent().siblings('.main').find('.department_button:#'+jQuery(this).attr('data-name')).click( function() {
+                dlg.dialog('open');
+                return false;
+            });
+        });
+        
+        jQuery('.isbnfield').blur( function(evt) {          
+            var category_data=jQuery(this).parent().parent().data()
+            var isbnstring=jQuery(this).val();
+            var title_list=jQuery(this).closest('div').find('.title_list')
+            var isbn_error_alert=jQuery(this).closest('body').find('#isbn_not_found_error');
+            isbnstring=isbnstring.toLowerCase();
+            isbnstring=isbnstring.replace(/\s+/g, ' ');
+
+            if (isbnstring.length>11) {
+                isbnstring=isbnstring.replace(/[\s-]/g, '');
+            }
+            
+            if (isbnstring.length>0 && category_data.is_inventoried_item) {
+                jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':isbnstring}, function(inventory_data){
+                    console.log(inventory_data);
+                    inventory_data1=inventory_data
+                    if (category_data.is_inventoried_item) {
+                        if (inventory_data.title) {
+                            title_list.append('<li>'+category_data.label+'</li>');
+                            title_list.append('<li>'+inventory_data.title.booktitle+'</li>'); 
+                            title_list.append('<li>'+inventory_data.book.ourprice+'</li>');
+                        } else {
+                            isbn_error_alert.dialog('open');
+                        }
+                    } else {
+                            title_list.append('<li>'+category_data.label+'</li>');
+                            title_list.append('<li>'+isbnstring+'</li>');
+                    }
+                });
+            }
+
+            jQuery(this).val(isbnstring);
+            evt.preventDefault();
+        });
+    });
+</script>
+#end def
+#def pagetitle: Build Cart...
+
+#def body
+    #from etc import departments
+    <label for='void-toggle'>Void</label>
+    <input type='checkbox' id='void-toggle' />
+    #for $dep in $departments
+        <button id='$departments[$dep].name' class='department_button' value=$dep>$departments[$dep]['label']</button>
+        <div id='my-form-$departments[$dep].name' class='my-forms' title='Enter ISBN or Price' data-name=$departments[$dep].name data-label=$departments[$dep].label data-is_inventoried_item=$departments[$dep].isInventoriedItem data-is_taxable=$departments[$dep].isTaxable>
+            <form action='' method='get'>
+                <input id='isbn' class='isbnfield' type='text' name='isbn' /><br>
+           </form>
+            <div id='title_list_panel' class='title_list_panel' name='title_list_panel'>
+                <ul id='title_list' class='title_list' name='title_list'></ul>
+            </div>  
+        </div>
+    #end for
+    <div id = 'cart_panel'>
+        <table id='cart_table'>
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id='isbn_not_found_error' class='error_dialog' title='Error: ISBN not found'>
+        Check the ISBN again or use the search button to search the inventory by attributes.
+    </div>
+
+#end def

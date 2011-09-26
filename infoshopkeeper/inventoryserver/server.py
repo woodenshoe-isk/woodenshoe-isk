@@ -1,4 +1,5 @@
 import cherrypy
+import uuid
 
 from Cheetah.Template import Template
 from simplejson import JSONEncoder
@@ -15,6 +16,7 @@ from objects.category import Category
 from objects.kind import Kind
 from objects.location import Location
 from objects.transaction import Transaction
+from objects.notes import Notes
 from IndexTemplate import IndexTemplate
 from SearchTemplate import SearchTemplate
 from BookEditTemplate import BookEditTemplate
@@ -22,14 +24,17 @@ from TitleEditTemplate import TitleEditTemplate
 from TitleListTemplate import TitleListTemplate
 from AuthorEditTemplate import AuthorEditTemplate
 from CategoryEditTemplate import CategoryEditTemplate
+from ChooseItemTemplate import ChooseItemTemplate
 from KindEditTemplate import KindEditTemplate
 from KindListTemplate import KindListTemplate
 from LocationEditTemplate import LocationEditTemplate
 from LocationListTemplate import LocationListTemplate
+from NotesTemplate import NotesTemplate
 from ReportListTemplate import ReportListTemplate
 from ReportTemplate import ReportTemplate
 from TransactionsTemplate import TransactionsTemplate
 from CartTemplate import CartTemplate
+from CartTemplate2 import CartTemplate2
 from CheckoutTemplate import CheckoutTemplate
 from AddToInventoryTemplate import AddToInventoryTemplate
 from config import configuration
@@ -54,7 +59,202 @@ def jsonify_tool_callback(*args, **kwargs):
     response.body = turbojson.jsonify.encode(response.body)  #encoder.iterencode(response.body)
 
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
-         
+
+class Noteboard:
+    def __init__(self):
+        self._notestemplate = NotesTemplate();
+        
+    @cherrypy.expose
+    def noteboard(self):
+        return self._notestemplate.respond()
+    
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def get_notes(self, **kwargs):
+        notes=[['<ul><li>%s</li><li>%s</li><li>%s</li></ul>' % (n.author, n.whenEntered, n.message)] for n in Notes.select().orderBy('-id')]
+        return notes
+        
+    
+    @cherrypy.expose
+    def post_note(self, author='', message='', **kwargs):
+        if kwargs:
+            print "kwargs are ", kwargs
+        if author:
+            if message:
+                print "author & message are ", author, " ", message
+                Notes(author=author,  message=message)
+                return self._notestemplate.respond()
+        if kwargs['author']:
+            if kwargs['message']:
+                print "using kwargs to add note"
+                Notes(author=kwargs['author'], message=kwargs['message'])
+   
+class Register:
+    def __init__(self):
+        self._carttemplate = CartTemplate2()
+        self._chooseitemtemplate = ChooseItemTemplate()
+    
+    @cherrypy.expose
+    def build_cart(self, **args):
+        return self._carttemplate.respond()
+        
+    @cherrypy.expose
+    def add_item_to_cart(self, **kwargs):
+        import sys
+        print>>sys.stderr, "FUCK OFF"
+        for arg in kwargs:
+            print>>sys.stderr, arg
+        cart={}
+        if cherrypy.session.has_key('cart'):
+            cart = cherrypy.session.pop('cart')
+        else:
+            cart['uuid']=uuid.uuid1().hex
+        if not cart.has_key('items'):
+            cart['items']=[]
+        cart['items'].append(item)
+        cherrypy.session['cart']=cart
+        cherrypy.session.save()
+
+    @cherrypy.tools.jsonify()
+    @cherrypy.expose
+    def get_cart(self):
+        return cherrypy.session.get('cart')
+        
+    
+    @cherrypy.expose
+    def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location=""):
+        self._chooseitemtemplate.empty=True
+        self._chooseitemtemplate.title=title
+        self._chooseitemtemplate.isbn=isbn
+        self._chooseitemtemplate.author=author
+        self._chooseitemtemplate.category=category
+        self._chooseitemtemplate.distributor=distributor
+        self._chooseitemtemplate.owner=owner
+        self._chooseitemtemplate.publisher=publisher
+        self._chooseitemtemplate.out_of_stock=out_of_stock
+        self._chooseitemtemplate.stock_less_than=stock_less_than
+        self._chooseitemtemplate.stock_more_than=stock_more_than
+        self._chooseitemtemplate.sold_more_than=sold_more_than
+        self._chooseitemtemplate.begin_date=begin_date
+        self._chooseitemtemplate.end_date=end_date
+        self._chooseitemtemplate.tag=tag
+        self._chooseitemtemplate.locations=list(Location.select(orderBy="location_name"))
+        self._chooseitemtemplate.location=location
+        the_location=location
+        if type(the_location)==type([]):
+            the_location=the_location[0]
+        self._chooseitemtemplate.kinds=list(Kind.select())
+        self._chooseitemtemplate.kind=kind
+        the_kind=kind
+        if type(the_kind) == type([]):
+            the_kind=the_kind[0]
+        self._chooseitemtemplate.table_is_form=True
+        
+        titles=[]
+        fields=[title,author,category,distributor,owner,isbn,publisher,stock_less_than,stock_more_than,sold_more_than,begin_date,end_date,tag,kind]
+        fields_used = [f for f in fields if f != ""]
+        
+        where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
+        if the_kind:
+            where_clause_list .append("title.kind_id = '%s'" % escape_string(the_kind))
+        if the_location and len(the_location)>1:
+            where_clause_list .append("book.location_id = '%s'" % escape_string(the_location))
+        if title:
+            where_clause_list.append("title.booktitle RLIKE '%s'" % escape_string(title.strip()))
+        if publisher:
+            where_clause_list.append("title.publisher RLIKE '%s'" % escape_string(publisher.strip()))
+        if tag:
+            where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
+        if isbn:
+            converted_isbn=upc2isbn(isbn)
+            where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(converted_isbn))
+        if owner:
+            where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
+        if distributor:
+            where_clause_list.append("book.distributor RLIKE '%s'" % escape_string(distributor.strip()))
+        if begin_date:
+            where_clause_list.append("book.sold_when >= '%s'" % escape_string(begin_date))
+        if end_date:
+            where_clause_list.append("book.sold_when < '%s'" % escape_string(end_date))
+        if author:
+            where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
+        if category:
+            where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
+        where_clause=' AND '.join(where_clause_list)
+        titles=[]
+        if len(fields_used)>0 or out_of_stock=="yes":
+            titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
+        if out_of_stock == 'yes':
+                    titles = [t for t in titles if t.copies_in_status("STOCK") == 0]
+    
+        if stock_less_than != "":
+            titles = [t for t in titles if t.copies_in_status("STOCK") <= int(stock_less_than)]
+    
+        if stock_more_than != "":
+            titles = [t for t in titles if t.copies_in_status("STOCK") >= int(stock_more_than)]
+            
+        if sold_more_than != "":
+            titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
+
+        self._chooseitemtemplate.titles=titles
+        return self._chooseitemtemplate.respond()
+    
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def get_item_by_isbn(self, **kwargs):
+        if kwargs['isbn']:
+            isbn=kwargs['isbn']
+        converted_isbn=isbn.strip('\'\"')
+        if (isbn.replace(' ','').__len__()==13):
+            converted_isbn=upc2isbn(isbn.replace(' ',''))
+        t=Title.selectBy(isbn=converted_isbn)
+        print t
+        print list(t)
+        if list(t):
+            b=Book.selectBy(titleID=t[0].id).filter(Book.q.status=='STOCK').limit(1)
+            print b
+            print list(b)
+        if list(t) and list(b):
+            return {'title':list(t)[0], 'book':list(b)[0]}
+        else:
+            return {}
+
+        
+class Admin:
+    def __init__(self):
+        self._kindedittemplate = KindEditTemplate()
+        self._kindlisttemplate = KindListTemplate()
+        self._locationedittemplate = LocationEditTemplate()
+        self._locationlisttemplate = LocationListTemplate()
+        
+    @cherrypy.expose
+    def kindedit(self,**args):
+        if ('kindName' in args.keys()):
+            self._kindedittemplate.kind=Kind.form_to_object(Kind,args)
+            return self.kindlist()
+        else:
+            self._kindedittemplate.kind=Kind.form_to_object(Kind,args)
+            return self._kindedittemplate.respond()
+    
+    @cherrypy.expose    
+    def kindlist(self,**args):
+        self._kindlisttemplate.kinds=list(Kind.select())
+        return self._kindlisttemplate.respond()
+    
+    @cherrypy.expose
+    def locationedit(self,**args):
+        if ('locationName' in args.keys()):
+            self._locationedittemplate.location=Location.form_to_object(Location,args)
+            return self.locationlist()
+        else:
+            self._locationedittemplate.location=Location.form_to_object(Location,args)
+            return self._locationedittemplate.respond()
+            
+    @cherrypy.expose
+    def locationlist(self,**args):
+        self._locationlisttemplate.locations=list(Location.select(orderBy="location_name"))
+        return self._locationlisttemplate.respond()
+        
 class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -69,10 +269,6 @@ class InventoryServer:
         self._bookedittemplate = BookEditTemplate()
         self._authoredittemplate = AuthorEditTemplate()
         self._categoryedittemplate = CategoryEditTemplate()
-        self._kindedittemplate = KindEditTemplate()
-        self._kindlisttemplate = KindListTemplate()
-        self._locationedittemplate = LocationEditTemplate()
-        self._locationlisttemplate = LocationListTemplate()
         self._titleedittemplate = TitleEditTemplate()
         self._titlelisttemplate = TitleListTemplate()
         self._reportlisttemplate = ReportListTemplate()
@@ -82,7 +278,6 @@ class InventoryServer:
     
         self.inventory=inventory.inventory()
         self.conn=db.connect()
-        cherrypy.config.namespaces['server2'] = lambda k, v: setattr(cherrypy.server2, k, v) 
 
     def loadUserByUsername(self, login):
         ulist=[("woodenshoebooks","woodenshoe"), ]
@@ -131,36 +326,6 @@ class InventoryServer:
         self._categoryedittemplate.category=Category.form_to_object(Category,args)
         return self._categoryedittemplate.respond()
     
-    @cherrypy.expose
-    def kindedit(self,**args):
-        self.common()
-        if ('kindName' in args.keys()):
-            self._kindedittemplate.kind=Kind.form_to_object(Kind,args)
-            return self.kindlist()
-        else:
-            self._kindedittemplate.kind=Kind.form_to_object(Kind,args)
-            return self._kindedittemplate.respond()
-        
-    def kindlist(self,**args):
-        self.common()
-        self._kindlisttemplate.kinds=list(Kind.select())
-        return self._kindlisttemplate.respond()
-    
-    @cherrypy.expose
-    def locationedit(self,**args):
-        self.common()
-        if ('locationName' in args.keys()):
-            self._locationedittemplate.location=Location.form_to_object(Location,args)
-            return self.locationlist()
-        else:
-            self._locationedittemplate.location=Location.form_to_object(Location,args)
-            return self._locationedittemplate.respond()
-    
-    def locationlist(self,**args):
-        self.common()
-        self._locationlisttemplate.locations=list(Location.select(orderBy="location_name"))
-        return self._locationlisttemplate.respond()
-
     @cherrypy.expose
     def titleedit(self,**args):
         self.common()
@@ -268,13 +433,14 @@ class InventoryServer:
         self._checkouttemplate.quantities=cherrypy.session.get('quantities',[])
         return self._checkouttemplate.respond()
     
-    def add_to_inventory(self, isbn="", quantity=1, title="", listprice=0.0, authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
+    def add_to_inventory(self, isbn="", quantity=1, title="", listprice=0.0, ourprice=0.0, authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
         self.common()
         self._add_to_inventory_template.isbn=isbn
         self._add_to_inventory_template.quantity=quantity
         self._add_to_inventory_template.title=title
         self._add_to_inventory_template.authors=authors
         self._add_to_inventory_template.listprice=listprice
+        self._add_to_inventory_template.ourprice=ourprice
         self._add_to_inventory_template.publisher=publisher
         self._add_to_inventory_template.categories=categories
         
@@ -307,6 +473,7 @@ class InventoryServer:
         print "kwargs are:" 
         print kwargs
         kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
+        kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
         kwargs['authors']=kwargs['authors'].split(',')
         kwargs['categories'] = kwargs['categories'].split(',')
         if kwargs['known_title'] == 'false':
@@ -370,11 +537,8 @@ class InventoryServer:
             return self.checkout(**args)
         else:
             self._carttemplate.quantities=cherrypy.session.get('quantities',[])
-            return self._carttemplate.respond()
-
-            
-
-
+            return self._carttemplate.respond()    
+    
     def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location=""):
         cherrypy.session['lastsearch']=False
         self.common()
@@ -415,26 +579,26 @@ class InventoryServer:
         if the_location and len(the_location)>1:
             where_clause_list .append("book.location_id = '%s'" % escape_string(the_location))
         if title:
-            where_clause_list.append("title.booktitle RLIKE '%s'" % escape_string(title))
+            where_clause_list.append("title.booktitle RLIKE '%s'" % escape_string(title.strip()))
         if publisher:
-            where_clause_list.append("title.publisher RLIKE '%s'" % escape_string(publisher))
+            where_clause_list.append("title.publisher RLIKE '%s'" % escape_string(publisher.strip()))
         if tag:
-            where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag))
+            where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
         if isbn:
             converted_isbn=upc2isbn(isbn)
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(converted_isbn))
         if owner:
-            where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner))
+            where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
         if distributor:
-            where_clause_list.append("book.distributor RLIKE '%s'" % escape_string(distributor))
+            where_clause_list.append("book.distributor RLIKE '%s'" % escape_string(distributor.strip()))
         if begin_date:
             where_clause_list.append("book.sold_when >= '%s'" % escape_string(begin_date))
         if end_date:
             where_clause_list.append("book.sold_when < '%s'" % escape_string(end_date))
         if author:
-            where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author))
+            where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
         if category:
-            where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category))
+            where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
         where_clause=' AND '.join(where_clause_list)
         titles=[]
         if len(fields_used)>0 or out_of_stock=="yes":
@@ -449,7 +613,7 @@ class InventoryServer:
             titles = [t for t in titles if t.copies_in_status("STOCK") >= int(stock_more_than)]
             
         if sold_more_than != "":
-            title = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
+            titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
 
         self._searchtemplate.titles=titles
         return  self._searchtemplate.respond()            
@@ -550,7 +714,6 @@ class InventoryServer:
             results=the_report.query(args)
             if the_report.show_header:
                 self._reporttemplate.header=the_report.format_header()
-                print self._reporttemplate.header
             self._reporttemplate.results=the_report.format_results(results)
             if the_report.do_total:
                 self._reporttemplate.total=the_report.get_total(results)
@@ -576,10 +739,6 @@ class InventoryServer:
     categoryedit.exposed = True
     titleedit.exposed = True
     titlelist.exposed = True
-    kindedit.exposed = True
-    kindlist.exposed = True
-    locationedit.exposed = True
-    locationlist.exposed = True
     add_to_inventory.exposed = True
 
 

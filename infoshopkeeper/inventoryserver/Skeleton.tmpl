@@ -1,0 +1,68 @@
+#from SkeletonBase import SkeletonBase
+#extends SkeletonBase
+#implements respond
+<head>
+<title>$pagetitle</title>
+#block head
+<script src="/javascript/sorttable.js"></script>
+<script src="/javascript/functions.js"></script>
+
+
+  <!-- calendar stylesheet -->
+  <link rel="stylesheet" type="text/css" media="all" href="/style/calendar-win2k-cold-1.css" title="win2k-cold-1" />
+
+  <!-- main calendar program -->
+  <script type="text/javascript" src="/javascript/calendar.js"></script>
+
+  <!-- language for the calendar -->
+  <script type="text/javascript" src="/javascript/calendar-en.js"></script>
+
+  <!-- the following script defines the Calendar.setup helper function, which makes
+       adding a calendar a matter of 1 or 2 lines of code. -->
+  <script type="text/javascript" src="/javascript/calendar-setup.js"></script>
+<!--This adds jquery & jquery-ui -->
+
+<link type="text/css" href="/javascript/css/smoothness/jquery-ui-1.8.13.custom.css" rel="Stylesheet" />	
+<script type='text/javascript' src='/javascript/jquery-1.6.1.min.js'></script>
+<script type='text/javascript' src='/javascript/jquery.dataTables.js'></script>
+<script type='text/javascript' src='/javascript/FixedHeader.js'></script>
+<script type='text/javascript' src='/javascript/js/jquery-ui-1.8.13.custom.min.js'></script>
+
+<link href="/style/main.css" type="text/css" rel="stylesheet"/>
+#block headscripts
+#end block
+
+#end block
+</head>
+<body>
+<div class="toolbar">
+<ul class="nav">
+<li><a href="/search">Search the inventory</a></li>
+<li><a href='/add_to_inventory'>Add to Inventory</a></li>
+<li><a href="/reports">Get reports</a>
+    <ul>
+    #for $r in $reports
+    <li><a href="/report?reportname=${r['action']}">${r['name']}</a></li>
+    #end for
+    </ul>
+</li>
+<li><a href="/transactions">Review Transactions</a></li>
+<li><a href='/notes/noteboard'>Notes</a></li>
+<li><a href="">Admin</a>
+    <ul>
+    <li><a href="/admin/kindlist">Edit Item Kinds</a></li>
+    <li><a href="/admin/locationlist">Edit Item Locations</a></li>
+    </ul>
+</li>
+</ul>
+</div>
+#set $lastsearch=0
+#if $lastsearch
+<a href="$lastsearch">Return to search results...</a>
+#end if
+<div class="main">
+#block body
+#end block
+</div>
+</body>
+</html>
