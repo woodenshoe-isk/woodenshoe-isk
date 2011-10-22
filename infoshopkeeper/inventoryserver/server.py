@@ -1,9 +1,13 @@
 import cherrypy
 import uuid
+import sys
+
+from mx.DateTime import now
 
 from Cheetah.Template import Template
 from simplejson import JSONEncoder
 import turbojson
+import json
 
 from sqlobject.sqlbuilder import *
 
@@ -57,7 +61,6 @@ def jsonify_tool_callback(*args, **kwargs):
     response = cherrypy.response
     response.headers['Content-Type'] = 'application/json'
     response.body = turbojson.jsonify.encode(response.body)  #encoder.iterencode(response.body)
-
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
 
 class Noteboard:
@@ -96,33 +99,112 @@ class Register:
     
     @cherrypy.expose
     def build_cart(self, **args):
+        self._carttemplate.session_data=cherrypy.session.get('cart')
         return self._carttemplate.respond()
         
     @cherrypy.expose
-    def add_item_to_cart(self, **kwargs):
+    def add_item_to_cart(self, **args):
         import sys
-        print>>sys.stderr, "FUCK OFF"
-        for arg in kwargs:
-            print>>sys.stderr, arg
+        print>>sys.stderr, "IN add_item_to_cart     ARGS ARE"
+        print>>sys.stderr, args, repr(args)
         cart={}
+        print>>sys.stderr, "SESSION IS: ", cherrypy.session
         if cherrypy.session.has_key('cart'):
+            print>>sys.stderr, "CART EXISTS"         
             cart = cherrypy.session.pop('cart')
         else:
+            print>>sys.stderr, "MAKE CART" 
             cart['uuid']=uuid.uuid1().hex
         if not cart.has_key('items'):
+            print>>sys.stderr, "MAKE ITEM ARRAY"
             cart['items']=[]
-        cart['items'].append(item)
+        
+        if args.has_key('titleid'):
+            print>>sys.stderr, "in title block"
+            print>>sys.stderr, args['titleid']
+            t1=Title.selectBy(id=args['titleid'] )[0]
+            print>>sys.stderr, t1
+            b1=Book.selectBy(titleID=t1.id).filter(Book.q.status=='STOCK')[0]
+            print>>sys.stderr, b1
+            cart['items'].append({u'department':t1.kind.kindName.title(), u'booktitle':t1.booktitle, u'isbn':t1.isbn, u'titleID':t1.id, u'bookID':b1.id, u'ourprice':b1.ourprice})
+        elif args.has_key('item'):
+            print>>sys.stderr, "in item block"
+            cart['items'].append(json.loads(args['item']))
+        
+        cherrypy.session['cart']=cart
+        cherrypy.session.save()
+        print>>sys.stderr, "SESSION NOW IS: ", cherrypy.session
+    
+    @cherrypy.expose
+    def remove_item_from_cart(self, **args):
+        print>>sys.stderr, "args are ", args
+        print>>sys.stderr, type(int(args['index']))
+        print>>sys.stderr, int(args['index'])        
+        item_index=int(args['index'])
+        cart={}
+        if cherrypy.session.has_key('cart'):
+            cart=cherrypy.session['cart']
+            print>>sys.stderr, cart, cart['items'], cart['items'][item_index]
+        if cart.has_key('items'):
+            print>>sys.stderr, "has items"
+            cart['items'].pop(item_index)
+            print>>sys.stderr, cart
         cherrypy.session['cart']=cart
         cherrypy.session.save()
 
+    @cherrypy.expose
+    def void_cart(self):
+        cart={}
+        if cherrypy.session.has_key('cart'):
+            cart=cherrypy.session['cart']
+        if cart.has_key('items'):
+            cart['items']=[]
+        cherrypy.session['cart']=cart
+        cherrypy.session.save()
+                
+    @cherrypy.expose
+    def check_out(self):
+        cart={}
+        print>>sys.stderr, "in checkout"
+        if cherrypy.session.has_key('cart'):
+            cart=cherrypy.session['cart']
+            if cart.has_key('items'):
+                shouldRaiseException=False
+                for item in cart['items']:
+                    if item['bookID']:
+                        try:
+                            Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now())
+                            infostring = "'[] " + item['department']
+                            if item.has_key('booktitle'):
+                                infostring=infostring + ": " +item['booktitle']
+                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'])
+                            cart['items'].remove(item)
+                        except Exception as err:
+                            print>>sys.stderr, err
+                            shouldRaiseException=True
+                    else:
+                        infostring = "'[] " + item['department']
+                        if item.haskey('booktitle'):
+                            infostring=infostring + ": " +item['booktitle']
+                        Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'])
+                        cart['items'].remove(item)
+            print>>sys.stderr, shouldRaiseException
+            if cart['items'].__len__()==0:
+                cherrypy.session['cart']={}
+            else:
+                cherrypy.session['cart']=cart
+            cherrypy.session.save()
+            if shouldRaiseException:
+                raise SQLObjectNotFound
+                                
+         
     @cherrypy.tools.jsonify()
     @cherrypy.expose
     def get_cart(self):
         return cherrypy.session.get('cart')
-        
     
     @cherrypy.expose
-    def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location=""):
+    def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
         self._chooseitemtemplate.empty=True
         self._chooseitemtemplate.title=title
         self._chooseitemtemplate.isbn=isbn
@@ -130,13 +212,7 @@ class Register:
         self._chooseitemtemplate.category=category
         self._chooseitemtemplate.distributor=distributor
         self._chooseitemtemplate.owner=owner
-        self._chooseitemtemplate.publisher=publisher
-        self._chooseitemtemplate.out_of_stock=out_of_stock
-        self._chooseitemtemplate.stock_less_than=stock_less_than
-        self._chooseitemtemplate.stock_more_than=stock_more_than
-        self._chooseitemtemplate.sold_more_than=sold_more_than
-        self._chooseitemtemplate.begin_date=begin_date
-        self._chooseitemtemplate.end_date=end_date
+        self._chooseitemtemplate.publisher=publisher 
         self._chooseitemtemplate.tag=tag
         self._chooseitemtemplate.locations=list(Location.select(orderBy="location_name"))
         self._chooseitemtemplate.location=location
@@ -151,7 +227,7 @@ class Register:
         self._chooseitemtemplate.table_is_form=True
         
         titles=[]
-        fields=[title,author,category,distributor,owner,isbn,publisher,stock_less_than,stock_more_than,sold_more_than,begin_date,end_date,tag,kind]
+        fields=[title,author,category,distributor,owner,isbn,publisher,tag,kind]
         fields_used = [f for f in fields if f != ""]
         
         where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
@@ -172,52 +248,43 @@ class Register:
             where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
         if distributor:
             where_clause_list.append("book.distributor RLIKE '%s'" % escape_string(distributor.strip()))
-        if begin_date:
-            where_clause_list.append("book.sold_when >= '%s'" % escape_string(begin_date))
-        if end_date:
-            where_clause_list.append("book.sold_when < '%s'" % escape_string(end_date))
         if author:
             where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
         if category:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
         where_clause=' AND '.join(where_clause_list)
         titles=[]
-        if len(fields_used)>0 or out_of_stock=="yes":
+        if len(fields_used)>0:
             titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
-        if out_of_stock == 'yes':
-                    titles = [t for t in titles if t.copies_in_status("STOCK") == 0]
-    
-        if stock_less_than != "":
-            titles = [t for t in titles if t.copies_in_status("STOCK") <= int(stock_less_than)]
-    
-        if stock_more_than != "":
-            titles = [t for t in titles if t.copies_in_status("STOCK") >= int(stock_more_than)]
-            
-        if sold_more_than != "":
-            titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
-
+        titles = [t for t in titles if t.copies_in_status("STOCK") >= 1]
+        
         self._chooseitemtemplate.titles=titles
         return self._chooseitemtemplate.respond()
     
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def get_item_by_isbn(self, **kwargs):
+        print>>sys.stderr, kwargs
         if kwargs['isbn']:
             isbn=kwargs['isbn']
-        converted_isbn=isbn.strip('\'\"')
+            print>>sys.stderr, isbn
+        isbn=isbn.strip('\'\"')
+        print>>sys.stderr, isbn
         if (isbn.replace(' ','').__len__()==13):
-            converted_isbn=upc2isbn(isbn.replace(' ',''))
-        t=Title.selectBy(isbn=converted_isbn)
-        print t
-        print list(t)
+            isbn=upc2isbn(isbn.replace(' ',''))
+        t=Title.selectBy(isbn=isbn)
+        b=[]
         if list(t):
-            b=Book.selectBy(titleID=t[0].id).filter(Book.q.status=='STOCK').limit(1)
-            print b
-            print list(b)
-        if list(t) and list(b):
-            return {'title':list(t)[0], 'book':list(b)[0]}
+            for t1 in Title.selectBy(isbn=isbn):
+                for b1 in Book.selectBy(titleID=t1.id).filter(Book.q.status=='STOCK'):
+                    b.append(b1)
+            b.sort(key=lambda x: x.inventoried_when)
+            if b:
+                return [{'titleID':b[0].title.id, 'booktitle':b[0].title.booktitle, 'isbn':b[0].title.isbn, 'bookID':b[0].id, 'ourprice':b[0].ourprice}]
+            else:
+                return []
         else:
-            return {}
+            return []
 
         
 class Admin:
@@ -539,6 +606,7 @@ class InventoryServer:
             self._carttemplate.quantities=cherrypy.session.get('quantities',[])
             return self._carttemplate.respond()    
     
+    @cherrypy.expose
     def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location=""):
         cherrypy.session['lastsearch']=False
         self.common()
@@ -616,6 +684,7 @@ class InventoryServer:
             titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
 
         self._searchtemplate.titles=titles
+        print>>sys.stderr, "GOT TO END"
         return  self._searchtemplate.respond()            
             #~ if len(fields_used)>0 or out_of_stock=="yes":
             #~ self._searchtemplate.empty=False

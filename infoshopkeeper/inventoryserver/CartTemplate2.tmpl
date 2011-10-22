@@ -3,7 +3,7 @@
 #def headscripts
 <script type='text/javascript'>                                         
 	jQuery(document).ready( function(){
-	    var inventory_data1='';
+	    var inventory_data={};
 	    
         jQuery.ajaxSetup({  'cache':false,
                             'error':function(XMLHttpRequest,textStatus, errorThrown) {   
@@ -14,7 +14,26 @@
         });
         
         jQuery('#void-toggle').button();
-
+        
+        jQuery('.remove_item').live('click', function(){
+            table_row_index=jQuery(this).parent().parent().index();
+            console.log(table_row_index);
+            jQuery('table tr:eq('+table_row_index+')').remove();
+            jQuery.post('/register/remove_item_from_cart', {index:table_row_index})
+        });
+        
+        jQuery("#check_out").click(function() {
+            jQuery.post("/register/check_out", function() {
+                jQuery("#cart_table tr").remove();
+            });
+        });
+        
+        jQuery("#void_sale").click(function() {
+            jQuery.post("/register/void_cart", function() {
+                jQuery("#cart_table tr").remove();
+            });
+        });
+        
         jQuery( "#isbn_not_found_error" ).dialog({
             autoOpen: false,
             modal: true,
@@ -33,6 +52,7 @@
                     jQuery(this).parent().parent();
                 },
                 close: function() {
+                    inventory_data={};
                     jQuery(this).find('.isbnfield').val('');
                     jQuery(this).find('.title_list').children().remove();
                 },
@@ -41,10 +61,15 @@
                         jQuery(this).dialog('close');
                     },
                     'Add to Order': function(){
-                        console.log(inventory_data1);
-                        console.log(JSON.stringify(inventory_data1));
-                        jQuery('#cart_table > tbody').append('<tr><td>' + inventory_data1 + '</td></tr>');
-                        jQuery.post('/register/add_item_to_cart', escape(JSON.stringify(inventory_data1)));
+                        console.log(inventory_data);
+                        console.log(JSON.stringify(inventory_data));
+                        console.log( this );
+                        jQuery('#cart_table > tbody').append('<tr><td>'+(((typeof  inventory_data.department) != "undefined")?inventory_data.department:'    ')
+                            + '</td><td>'+(((typeof  inventory_data.isbn) != "undefined")?inventory_data.isbn:'   ') 
+                            +'</td><td>'+(((typeof inventory_data.booktitle) != 'undefined')?inventory_data.booktitle:'')
+                            +'</td><td>'+(((typeof  inventory_data.ourprice) != "undefined")?inventory_data.ourprice:'   ')
+                            +'</td><td><input type="button" class="remove_item" value="Remove" /></td></tr>');
+                        jQuery.post('/register/add_item_to_cart', {item:JSON.stringify(inventory_data)});
                         jQuery(this).dialog('close');
                     }
                 }
@@ -54,12 +79,12 @@
                 return false;
             });
         });
-        
-        jQuery('.isbnfield').blur( function(evt) {          
-            var category_data=jQuery(this).parent().parent().data()
-            var isbnstring=jQuery(this).val();
-            var title_list=jQuery(this).closest('div').find('.title_list')
-            var isbn_error_alert=jQuery(this).closest('body').find('#isbn_not_found_error');
+         
+        isbn_listener = function(evt) {          
+            var category_data=jQuery(evt.target).parent().parent().data()
+            var isbnstring=jQuery(evt.target).val();
+            var title_list=jQuery(evt.target).closest('div').find('.title_list')
+            var isbn_error_alert=jQuery(evt.target).closest('body').find('#isbn_not_found_error');
             isbnstring=isbnstring.toLowerCase();
             isbnstring=isbnstring.replace(/\s+/g, ' ');
 
@@ -67,54 +92,100 @@
                 isbnstring=isbnstring.replace(/[\s-]/g, '');
             }
             
-            if (isbnstring.length>0 && category_data.is_inventoried_item) {
-                jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':isbnstring}, function(inventory_data){
+            console.log(category_data);
+            if (isbnstring.length>0 && category_data.is_inventoried_item == 'True') {
+                jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':JSON.stringify(isbnstring)}, function(inventory_data1){
+                    inventory_data1=inventory_data1[0];
+                    jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried, 'isTaxable':category_data.is_taxable});
                     console.log(inventory_data);
-                    inventory_data1=inventory_data
-                    if (category_data.is_inventoried_item) {
-                        if (inventory_data.title) {
+                    if (category_data.is_inventoried_item ) {
+                        if ((inventory_data1 !== undefined) && (inventory_data1.booktitle !==undefined)) {
                             title_list.append('<li>'+category_data.label+'</li>');
-                            title_list.append('<li>'+inventory_data.title.booktitle+'</li>'); 
-                            title_list.append('<li>'+inventory_data.book.ourprice+'</li>');
+                            title_list.append('<li>'+inventory_data1.booktitle+'</li>'); 
+                            title_list.append('<li>'+inventory_data1.ourprice+'</li>');
+                            jQuery.extend(inventory_data, inventory_data1);
                         } else {
                             isbn_error_alert.dialog('open');
                         }
-                    } else {
+                    } 
+                });
+            } else {
                             title_list.append('<li>'+category_data.label+'</li>');
                             title_list.append('<li>'+isbnstring+'</li>');
-                    }
-                });
+                            jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried, 'isTaxable':category_data.is_taxable});
+                            jQuery.extend(inventory_data, {'ourprice': isbnstring });
             }
 
-            jQuery(this).val(isbnstring);
+            if ( jQuery(evt.target).val() != isbnstring) {
+                jQuery(evt.target).val(isbnstring);
+            }
+            
             evt.preventDefault();
+        }
+        
+        jQuery('.isbnfield').blur( isbn_listener );
+        jQuery('.isbnfield').keypress( function(evt) {
+            if (evt.keyCode == 13) {
+                jQuery(evt.target).blur();
+                evt.preventDefault();
+                return false;
+            }
         });
+        
     });
 </script>
 #end def
 #def pagetitle: Build Cart...
 
 #def body
+    <h1>Register</h1>
     #from etc import departments
-    <label for='void-toggle'>Void</label>
-    <input type='checkbox' id='void-toggle' />
-    #for $dep in $departments
-        <button id='$departments[$dep].name' class='department_button' value=$dep>$departments[$dep]['label']</button>
-        <div id='my-form-$departments[$dep].name' class='my-forms' title='Enter ISBN or Price' data-name=$departments[$dep].name data-label=$departments[$dep].label data-is_inventoried_item=$departments[$dep].isInventoriedItem data-is_taxable=$departments[$dep].isTaxable>
-            <form action='' method='get'>
-                <input id='isbn' class='isbnfield' type='text' name='isbn' /><br>
-           </form>
-            <div id='title_list_panel' class='title_list_panel' name='title_list_panel'>
-                <ul id='title_list' class='title_list' name='title_list'></ul>
-            </div>  
-        </div>
-    #end for
     <div id = 'cart_panel'>
-        <table id='cart_table'>
-            <thead></thead>
-            <tbody></tbody>
-        </table>
+        ##<label for='void-toggle'>Void</label>
+        ##<input type='checkbox' id='void-toggle' />
+        #for $dep in $departments
+            <button id='$dep['name']' class='department_button' value=$dep>$dep['label']</button>
+            <div id='my-form-$dep['name']' class='my-forms' title='Enter ISBN or Price' data-name=$dep['name'] data-label=$dep['label'] data-is_inventoried_item=$dep['isInventoriedItem'] data-is_taxable=$dep['isTaxable']>
+                <form action='' method='get'>
+                    <input id='isbn' class='isbnfield' type='text' name='isbn' />#slurp
+                    #if $dep['isInventoriedItem']
+                        <input type="button" value="Search" onclick="window.open('/register/select_item_search', '_self');" /><br>
+                    #end if
+               </form>
+                <div id='title_list_panel' class='title_list_panel' name='title_list_panel'>
+                    <ul id='title_list' class='title_list' name='title_list'></ul>
+                </div>  
+            </div>
+        #end for
+        #set $column_keys = ['department', 'booktitle', 'isbn', 'ourprice']
+        <div id="cart_table_panel">
+            <table id='cart_table'>
+                <thead></thead>
+                <tbody>
+                    #if $session_data
+                        #if $session_data.items
+                            #for item in $session_data.items
+                                <tr>
+                                    #for $key in $column_keys
+                                        <td>
+                                            #try
+                                                $item[$key]
+                                            #except
+                                                #pass
+                                            #end try
+                                        </td>
+                                    #end for
+                                    <td><input type="button" class="remove_item" value="Remove" /></td>
+                                </tr>
+                            #end for
+                        #end if
+                    #end if
+                </tbody>
+            </table>
+        </div>
+        <button id="void_sale" name="void_sale">Void Entire Sale</button><button id="check_out" name="check_out">Check Out</button>
     </div>
+    
     <div id='isbn_not_found_error' class='error_dialog' title='Error: ISBN not found'>
         Check the ISBN again or use the search button to search the inventory by attributes.
     </div>
