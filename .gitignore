@@ -5,3 +5,6 @@
 *.log.*
 etc.py
 config.py
+infoshopkeeper/inventoryserver/*Template.py
+infoshopkeeper/inventoryserver/*Template2.py
+infoshopkeeper/inventoryserver/Skeleton.py
