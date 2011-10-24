@@ -1,0 +1,7 @@
+*.pyc
+*~
+*.bak
+*.log
+*.log.*
+etc.py
+config.py
