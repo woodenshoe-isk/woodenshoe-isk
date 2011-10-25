@@ -128,7 +128,7 @@
         jQuery('.isbnfield').blur( isbn_listener );
         jQuery('.isbnfield').keypress( function(evt) {
             if (evt.keyCode == 13) {
-                jQuery(this).blur();
+                jQuery(this).closest('.ui-dialog').find('.ui-button')[1].focus();
                 evt.preventDefault();
             }
         });
