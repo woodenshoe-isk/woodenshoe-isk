@@ -58,19 +58,21 @@
                 },
                 buttons: {
                     Cancel: function(){
-                        jQuery(this).dialog('close');
+                        dlg.dialog('close');
                     },
                     'Add to Order': function(){
                         console.log(inventory_data);
                         console.log(JSON.stringify(inventory_data));
                         console.log( this );
-                        jQuery('#cart_table > tbody').append('<tr><td>'+(((typeof  inventory_data.department) != "undefined")?inventory_data.department:'    ')
-                            + '</td><td>'+(((typeof  inventory_data.isbn) != "undefined")?inventory_data.isbn:'   ') 
+                        console.log((((typeof  inventory_data.department) != "undefined")?inventory_data.department:''))
+                        jQuery('#cart_table > tbody').append('<tr><td>'+(((typeof  inventory_data.department) != "undefined")?inventory_data.department:'')
                             +'</td><td>'+(((typeof inventory_data.booktitle) != 'undefined')?inventory_data.booktitle:'')
-                            +'</td><td>'+(((typeof  inventory_data.ourprice) != "undefined")?inventory_data.ourprice:'   ')
+                            + '</td><td>'+(((typeof  inventory_data.isbn) != "undefined")?inventory_data.isbn:'') 
+                            +'</td><td>'+(((typeof  inventory_data.ourprice) != "undefined")?inventory_data.ourprice:'')
                             +'</td><td><input type="button" class="remove_item" value="Remove" /></td></tr>');
-                        jQuery.post('/register/add_item_to_cart', {item:JSON.stringify(inventory_data)});
-                        jQuery(this).dialog('close');
+                        jQuery.post('/register/add_item_to_cart', {item:JSON.stringify(inventory_data)}, function(){
+                            dlg.dialog('close');
+                        });
                     }
                 }
             });
@@ -109,7 +111,7 @@
                         }
                     } 
                 });
-            } else {
+            } else if (isbnstring.length>0 && category_data.is_inventoried_item == 'False') {
                             title_list.append('<li>'+category_data.label+'</li>');
                             title_list.append('<li>'+isbnstring+'</li>');
                             jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried, 'isTaxable':category_data.is_taxable});
@@ -159,6 +161,7 @@
         #end for
         #set $column_keys = ['department', 'booktitle', 'isbn', 'ourprice']
         <div id="cart_table_panel">
+            $session_data
             <table id='cart_table'>
                 <thead></thead>
                 <tbody>
