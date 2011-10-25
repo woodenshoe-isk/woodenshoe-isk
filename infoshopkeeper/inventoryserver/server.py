@@ -100,6 +100,7 @@ class Register:
     @cherrypy.expose
     def build_cart(self, **args):
         self._carttemplate.session_data=cherrypy.session.get('cart')
+        print>>sys.stderr, self._carttemplate.session_data
         return self._carttemplate.respond()
         
     @cherrypy.expose
@@ -129,7 +130,7 @@ class Register:
             cart['items'].append({u'department':t1.kind.kindName.title(), u'booktitle':t1.booktitle, u'isbn':t1.isbn, u'titleID':t1.id, u'bookID':b1.id, u'ourprice':b1.ourprice})
         elif args.has_key('item'):
             print>>sys.stderr, "in item block"
-            cart['items'].append(json.loads(args['item']))
+            cart['items'].append(args['item'])
         
         cherrypy.session['cart']=cart
         cherrypy.session.save()

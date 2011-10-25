@@ -42,8 +42,10 @@ Search the inventory
             console.log(jQuery(event.target));
             console.log(jQuery(event.currentTarget));
             console.log("titleid="+titleID);
-            jQuery.get('/register/add_item_to_cart', {titleid:titleID});
-            return !window.open('/register/build_cart');
+            jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
+                document.location.href= document.location.origin + '/register/build_cart';
+            });
+            return false;
         });
         
 	});
