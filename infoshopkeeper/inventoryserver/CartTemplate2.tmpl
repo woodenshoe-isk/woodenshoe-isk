@@ -139,7 +139,7 @@
 #def pagetitle: Build Cart...
 
 #def body
-    <h1>Register</h1>
+    <h1>Remove Items from Inventory</h1>
     #from etc import departments
     <div id = 'cart_panel'>
         ##<label for='void-toggle'>Void</label>
@@ -160,8 +160,7 @@
         #end for
         #set $column_keys = ['department', 'booktitle', 'isbn', 'ourprice']
         <div id="cart_table_panel">
-            $session_data
-            <table id='cart_table'>
+              <table id='cart_table'>
                 <thead></thead>
                 <tbody>
                     #if $session_data
