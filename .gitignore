@@ -3,8 +3,11 @@
 *.bak
 *.log
 *.log.*
+<<<<<<< HEAD
 etc.py
 config.py
 infoshopkeeper/inventoryserver/*Template.py
 infoshopkeeper/inventoryserver/*Template2.py
 infoshopkeeper/inventoryserver/Skeleton.py
+=======
+>>>>>>> 4f24529... 	new file:   .gitignore
