@@ -125,8 +125,20 @@ checked
 
 <label class="textbox" for="tag">Tag</label> 
 <input class="textbox" type="text" id="tag" name="tag" value="$tag" /><br />
-</div>
 
+<label class="textbox" for="formatType">Format</label> 
+<select class="textbox" id="formatType" name="formatType">
+
+#for $f in $formats
+<option value='$f' 
+##if $f==$formatType
+##selected="true" 
+##end if 
+>$f</option>
+#end for
+</select><br />
+</div>
+<br />
 <label class="textbox" for="kind">Kind</label> 
 <select class="textbox" id="kind" name="kind">
 #for $k in $kinds
@@ -172,7 +184,7 @@ selected="true"
            }'/></td>
     <td>$t.safe('booktitle')</td>
     <td>$t.authors_as_string</td>
-    <td>$t.type</td>
+    <td>${t.type}</td>
     <td>${t.copies_in_status("STOCK")}</td>
     <td>${t.copies_in_status("SOLD")}</td>
     <td>${t.distributors_as_string()}</td>
