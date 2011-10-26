@@ -609,10 +609,12 @@ class InventoryServer:
             return self._carttemplate.respond()    
     
     @cherrypy.expose
-    def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location=""):
+    def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location="", formatType=""):
         cherrypy.session['lastsearch']=False
         self.common()
         cherrypy.session['lastsearch']=cherrypy.url()
+        print>>sys.stderr, "In SEarch"
+
         self._searchtemplate.empty=True
         self._searchtemplate.title=title
         self._searchtemplate.isbn=isbn
@@ -633,6 +635,15 @@ class InventoryServer:
         the_location=location
         if type(the_location)==type([]):
             the_location=the_location[0]
+
+        conn=Title._connection
+        query=Select( Title.q.type, groupBy=Title.q.type)
+        results=conn.queryAll( conn.sqlrepr(query))
+        formatTypelist=[t[0] for t in results]
+        print>>sys.stderr, formatTypelist, formatType
+        self._searchtemplate.formats=formatTypelist
+        self._searchtemplate.formatType=formatType
+        
         self._searchtemplate.kinds=list(Kind.select())
         self._searchtemplate.kind=kind
         the_kind=kind
@@ -657,6 +668,9 @@ class InventoryServer:
         if isbn:
             converted_isbn=upc2isbn(isbn)
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(converted_isbn))
+        if formatType:
+            print>>sys.stderr, formatType, formatType.strip(), escape_string(formatType.strip())
+            where_clause_list.append("title.type RLIKE '%s'" % escape_string(formatType.strip()))
         if owner:
             where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
         if distributor:
@@ -670,6 +684,8 @@ class InventoryServer:
         if category:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
         where_clause=' AND '.join(where_clause_list)
+        print>>sys.stderr, where_clause
+
         titles=[]
         if len(fields_used)>0 or out_of_stock=="yes":
             titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
@@ -686,6 +702,7 @@ class InventoryServer:
             titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
 
         self._searchtemplate.titles=titles
+        print>>sys.stderr, titles
         print>>sys.stderr, "GOT TO END"
         return  self._searchtemplate.respond()            
             #~ if len(fields_used)>0 or out_of_stock=="yes":
