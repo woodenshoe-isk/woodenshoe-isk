@@ -249,6 +249,7 @@ class AmazonThread(Thread):
 
         setLicenseKey(amazon_license_key)
         setSecretAccessKey(amazon_secret_key)
+        setAssociateTag(amazon_associate_tag)
 
         self.amazonQueue = amazonQueue
         self.comparisonQueue = comparisonQueue
