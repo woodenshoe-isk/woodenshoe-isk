@@ -60,6 +60,8 @@ encoder = JSONEncoder(ensure_ascii=False)
 def jsonify_tool_callback(*args, **kwargs):
     response = cherrypy.response
     response.headers['Content-Type'] = 'application/json'
+    print>>sys.stderr, response, '\r', response.body
+    print>>sys.stderr, turbojson.jsonify.encode(response.body)
     response.body = turbojson.jsonify.encode(response.body)  #encoder.iterencode(response.body)
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
 
@@ -552,11 +554,17 @@ class InventoryServer:
         print kwargs
         self.inventory.addToInventory(**kwargs) 
 
+    
     @cherrypy.expose
     @cherrypy.tools.jsonify()
-    def search_isbn(self, isbn=''):
-        self.common()
-        data=self.inventory.lookup_by_isbn(isbn)
+    def test(self):
+        return dict(pig='dog')
+
+
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def search_isbn(self, **args):
+        data=self.inventory.lookup_by_isbn(args['isbn'])
         print "data is"
         print data
         return data

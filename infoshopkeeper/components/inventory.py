@@ -2,7 +2,7 @@ from time import time,asctime,localtime,sleep
 import types,string
 
 import ecs
-from etc import amazon_license_key,amazon_secret_key
+from etc import amazon_license_key,amazon_secret_key, amazon_associate_tag
 from objects.title import Title
 from objects.book import Book
 from objects.author import Author
@@ -20,10 +20,10 @@ class inventory:
         
     def lookup_by_isbn(self,number):
         isbn=""
-	print "number is now: ", number
-	if len(number)>=9:
-		number=re.sub("[-\s]", '', number)
-	print "number is now: ", number
+        print "number is now: ", number
+        if len(number)>=9:
+            number=re.sub("[-\s]", '', number)
+        print "number is now: ", number
         if len(number)==13 or len(number)==18:
             isbn=upc2isbn(number)
         else:
@@ -39,25 +39,26 @@ class inventory:
                 self.known_title= the_titles[0]
                 ProductName = the_titles[0].booktitle.decode("unicode_escape")
                 if len(the_titles[0].author) > 0:
-			authors = [x.authorName.decode("unicode_escape") for x in the_titles[0].author]
+                    authors = [x.authorName.decode("unicode_escape") for x in the_titles[0].author]
                 authors_as_string = string.join(authors,',')
-		if len(the_titles[0].categorys) > 0:
-			print len(the_titles[0].categorys)
-			print the_titles[0].categorys
-                	categories = [x.categoryName.decode("unicode_escape") for x in the_titles[0].categorys]
+                if len(the_titles[0].categorys) > 0:
+                    print len(the_titles[0].categorys)
+                    print the_titles[0].categorys
+                    categories = [x.categoryName.decode("unicode_escape") for x in the_titles[0].categorys]
                 categories_as_string = string.join(categories,',')
                 if len(the_titles[0].books) > 0:
                     ListPrice = the_titles[0].books[0].listprice
                 else:
                     ListPrice = 0
                 Manufacturer = the_titles[0].publisher.decode("unicode_escape")
-		Format=the_titles[0].type.decode("unicode_escape")
+                Format=the_titles[0].type.decode("unicode_escape")
                 Kind=the_titles[0].kind.kindName
  
             else: #we don't have it yet
                 sleep(1) # so amazon doesn't get huffy 
                 ecs.setLicenseKey(amazon_license_key)
                 ecs.setSecretAccessKey(amazon_secret_key)
+                ecs.setAssociateTag(amazon_associate_tag)
                 pythonBooks = ecs.ItemLookup(isbn,IdType="ISBN",SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
                 if pythonBooks:
                     result={}
@@ -76,24 +77,24 @@ class inventory:
                     authors_as_string = string.join(authors,',')
  
                     categories_as_string =""
-		    
-		    def listCategories(browsenodes):
-			def parseBrowseNode( browseNode ):
-				if hasattr(browseNode, 'Ancestors'):
-					for x in  parseBrowseNode( browseNode.Ancestors.pop()):
-						yield x
-				yield browseNode.Name
-				if hasattr(browseNode, 'Children'):
-					for x in browseNode.Children:
-						yield x.Name
-			categoryList=[]
-			for node in browsenodes:
-				categoryList.extend( list(parseBrowseNode( node )))
-			return categoryList
-
-                    #~ for category in b.Subjects:
-                       #~ categories.append(category)
-		    categories=listCategories(b.BrowseNodes)
+                    
+                    def listCategories(browsenodes):
+                        def parseBrowseNode( browseNode ):
+                            if hasattr(browseNode, 'Ancestors'):
+                                for x in  parseBrowseNode( browseNode.Ancestors.pop()):
+                                    yield x
+                            yield browseNode.Name
+                            if hasattr(browseNode, 'Children'):
+                                for x in browseNode.Children:
+                                    yield x.Name
+                        categoryList=[]
+                        for node in browsenodes:
+                            categoryList.extend( list(parseBrowseNode( node )))
+                        return categoryList
+                    
+                                        #~ for category in b.Subjects:
+                                           #~ categories.append(category)
+                    categories=listCategories(b.BrowseNodes)
                     categories_as_string = string.join(categories,',')                   
 
 
@@ -110,9 +111,9 @@ class inventory:
                     if hasattr(b,'ListPrice'):
                         ListPrice=b.ListPrice.FormattedPrice
 
-		    Format=''
-		    if hasattr(b, "Binding"):
-			Format=b.Binding
+                    Format=''
+                    if hasattr(b, "Binding"):
+                        Format=b.Binding
                     
                     Kind='books'
                     
@@ -123,7 +124,7 @@ class inventory:
                     "list_price":ListPrice,
                     "publisher":Manufacturer,
                     "isbn":isbn,
-		    "format":Format,
+                    "format":Format,
                     "kind":Kind,
                     "known_title": self.known_title}
        
@@ -151,8 +152,9 @@ class inventory:
                 
             else: #we don't have it yet
                 sleep(1) # so amazon doesn't get huffy 
-                ecs.setLicense(amazon_license_key)
+                ecs.setLicenseKey(amazon_license_key)
                 ecs.setSecretAccessKey(amazon_secret_key)
+                ecs.setAssociatTag(amazon_associate_tag)
                 pythonItems = ecs.searchByUPC(upc)
                 if pythonItems:
                     result={}
@@ -214,10 +216,10 @@ class inventory:
 
 
     def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",extra_prices={}, tag=''):
-	print "GOT to addToInventory"
-	print known_title
+        print "GOT to addToInventory"
+        print known_title
         if not(known_title):
-	    #add a title
+        #add a title
             the_kinds=list(Kind.select(Kind.q.kindName==kind_name))
             kind_id = None
             if the_kinds:
@@ -227,48 +229,49 @@ class inventory:
             print "type"
             print type
             print "title"
-	    print title
+            print title
             print "publisher"
-	    print publisher
+            print publisher
             print "knowtitle"
-	    print known_title
-	    known_title=Title(isbn=isbn, booktitle=title.encode("ascii", "backslashreplace"), publisher=publisher.encode("ascii", "backslashreplace"),tag=" ",type=types, kindID=kind_id)
-	    print known_title
+            print known_title
+            known_title=Title(isbn=isbn, booktitle=title.encode("ascii", "backslashreplace"), publisher=publisher.encode("ascii", "backslashreplace"),tag=" ",type=types, kindID=kind_id)
+            print known_title
             for rawAuthor in authors:
-	    	author = rawAuthor.encode("ascii", "backslashreplace")
-		print author
-                theAuthors = Author.selectBy(authorName=author)
-		theAuthorsList = list(theAuthors)
-		if len(theAuthorsList) == 1:
-		    known_title.addAuthor(theAuthorsList[0])
-		elif len(theAuthorsList) == 0:
-	 	    a = Author(authorName=author)
-		    known_title.addAuthor(a)
-		else:
-		    # We should SQLDataCoherenceLost here
-		    print "mmm... looks like you have multiple author of the sama name in your database..."
+                author = rawAuthor.encode("ascii", "backslashreplace")
+            print author
+            theAuthors = Author.selectBy(authorName=author)
+            theAuthorsList = list(theAuthors)
+            if len(theAuthorsList) == 1:
+                known_title.addAuthor(theAuthorsList[0])
+            elif len(theAuthorsList) == 0:
+                a = Author(authorName=author)
+                known_title.addAuthor(a)
+            else:
+                # We should SQLDataCoherenceLost here
+                print "mmm... looks like you have multiple author of the sama name in your database..."
             for category in categories:
                 Category(categoryName=category.encode("ascii", "backslashreplace"),title=known_title)
         
-        the_locations=list(Location.select(Location.q.locationName==location))
-        location_id=1
-	if the_locations:
-        	location_id = the_locations[0].id
-        print quantity
-        if not ourprice:
-		ourprice=listprice
-        for i in range(int(quantity)): 
-	    print "book loop"
-            b=Book(title=known_title,status=status.encode("ascii", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("ascii", "backslashreplace"),notes=notes.encode("ascii", "backslashreplace"),consignmentStatus="")
-#            b.extracolumns()
-#            for mp in extra_prices.keys():
-#               setattr(b,string.replace(mp," ",""),extra_prices[mp])
+            the_locations=list(Location.select(Location.q.locationName==location))
+            location_id=1
+            if the_locations:
+                location_id = the_locations[0].id
+            print quantity
+            print "ourprice: ", ourprice, "listprice: ", listprice
+            if not ourprice:
+                ourprice=listprice
+            for i in range(int(quantity)): 
+                print "book loop"
+                b=Book(title=known_title,status=status.encode("ascii", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("ascii", "backslashreplace"),notes=notes.encode("ascii", "backslashreplace"),consignmentStatus="")
+#               b.extracolumns()
+#               for mp in extra_prices.keys():
+#                   setattr(b,string.replace(mp," ",""),extra_prices[mp])
 
 
 
                 
     def getInventory(self,queryTerms):
-	print queryTerms
+        print queryTerms
         keys=queryTerms.keys()
         
         isbnSelect=""
@@ -315,18 +318,18 @@ class inventory:
                 categorySelect="""book.title_id = title.id AND category.title_id=title.id AND category.category_name RLIKE %s""" % (Book.sqlrepr(queryTerms["categoryName"]))
                 #categorySelect=Book.sqlrepr(AND(Field("book","title_id")==Field("title","id"), Field("category","title_id")==Field("title","id"), RLIKE(Field("category","category_name"), queryTerms["categoryName"])))
                 clauseTables.append('category')
-       	# At this time, ubuntu install sqlobject 0.6.1 if apt-get install python2.4-sqlobject,
-		# which make the search crash, since the distinct attribute is defined somewhere after 0.6.1 
+            # At this time, ubuntu install sqlobject 0.6.1 if apt-get install python2.4-sqlobject,
+            # which make the search crash, since the distinct attribute is defined somewhere after 0.6.1 
         try:
-        	books=Book.select(
-				string.join([term for term in [statusSelect,titleSelect,authorSelect,kindSelect,categorySelect] if term !=""]," AND "),
-				clauseTables=clauseTables,
-				distinct=True	 )
+            books=Book.select(
+                string.join([term for term in [statusSelect,titleSelect,authorSelect,kindSelect,categorySelect] if term !=""]," AND "),
+                clauseTables=clauseTables,
+                distinct=True    )
         except TypeError:
-        	books=Book.select(
-				string.join([term for term in [statusSelect,titleSelect,authorSelect,kindSelect,categorySelect] if term !=""]," AND "),
-				clauseTables=clauseTables	)
-			
+            books=Book.select(
+                string.join([term for term in [statusSelect,titleSelect,authorSelect,kindSelect,categorySelect] if term !=""]," AND "),
+                clauseTables=clauseTables   )
+            
         
         results={}
         i=1
@@ -336,34 +339,34 @@ class inventory:
             categoryString=string.join([c.categoryName for c in b.title.categorys],",")
             results[i]=(string.capitalize(theTitle),
                         authorString, 
-                      	b.listprice  if b.listprice is not None else '',
+                        b.listprice  if b.listprice is not None else '',
                         b.title.publisher if b.title.publisher is not None else '',
                         b.status if b.status is not None else'',
                         b.title.isbn,
                         b.distributor if b.distributor is not None else '',
-			b.location.locationName if b.location is not None else '',
+                        b.location.locationName if b.location is not None else '',
                         b.notes if b.notes is not None else '',
                         b.id,
                         b.title.kind and b.title.kind.kindName if b.title.kind is not None else '',
-			categoryString,
-			b.title.type if b.title.type is not None else '')
+            categoryString,
+            b.title.type if b.title.type is not None else '')
         #~ for b in books:
             #~ theTitle=b.title.booktitle.decode("unicode_escape")
             #~ authorString=string.join([a.authorName.decode("unicode_escape") for a in b.title.author],",")
             #~ categoryString=string.join([c.categoryName.decode("unicode_escape") for c in b.title.categorys],",")
             #~ results[i]=(string.capitalize(theTitle),
                         #~ authorString, 
-                      	#~ b.listprice  if b.listprice is not None else '',
+                        #~ b.listprice  if b.listprice is not None else '',
                         #~ b.title.publisher.decode("unicode_escape") if b.title.publisher is not None else '',
                         #~ b.status.decode("unicode_escape") if b.status is not None else'',
                         #~ b.title.isbn,
                         #~ b.distributor.decode("unicode_escape") if b.distributor is not None else '',
-			#~ b.location.locationName.decode("unicode_escape") if b.location is not None else '',
+            #~ b.location.locationName.decode("unicode_escape") if b.location is not None else '',
                         #~ b.notes.decode("unicode_escape") if b.notes is not None else '',
                         #~ b.id,
                         #~ b.title.kind and b.title.kind.kindName if b.title.kind is not None else '',
-			#~ categoryString,
-			#~ b.title.type if b.title.type is not None else '')
+            #~ categoryString,
+            #~ b.title.type if b.title.type is not None else '')
 
             i=i+1                
         print "results are ", results
