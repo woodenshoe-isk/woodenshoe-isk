@@ -551,12 +551,16 @@ class InventoryServer:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
         print kwargs
         self.inventory.addToInventory(**kwargs) 
-
+    
     @cherrypy.expose
     @cherrypy.tools.jsonify()
-    def search_isbn(self, isbn=''):
-        self.common()
-        data=self.inventory.lookup_by_isbn(isbn)
+    def test(self):
+        return {'pig':'dog'}
+        
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def search_isbn(self, **args):
+        data=self.inventory.lookup_by_isbn(args['isbn'])
         print "data is"
         print data
         return data

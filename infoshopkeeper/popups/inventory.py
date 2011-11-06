@@ -330,7 +330,7 @@ class InventoryPopup(wxDialog):
                 print "mprice was %s" % mprice
                 extra_prices[m[0]]=mprice
 
-            self.parent.inventory.addToInventory(title=description,status=writtenStatus,authors=authors,publisher=publisher,listprice=price,isbn=isbn,categories=categories,distributor=distributor,location=location,quantity=quantity,known_title=self.known_title,types=type_name,kind_name=kind,extra_prices=extra_prices,owner=owner,notes=notes)
+            self.parent.inventory.addToInventory(title=description,status=writtenStatus,authors=authors,publisher=publisher,listprice=price,ourprice=price,isbn=isbn,categories=categories,distributor=distributor,location=location,quantity=quantity,known_title=self.known_title,types=type_name,kind_name=kind,extra_prices=extra_prices,owner=owner,notes=notes)
             self.statusBar.SetStatusText("Item " + description + " Inventoried")
             
             self.quantity.SetValue("1")

@@ -69,7 +69,7 @@
                             +'</td><td>'+(((typeof inventory_data.booktitle) != 'undefined')?inventory_data.booktitle:'')
                             + '</td><td>'+(((typeof  inventory_data.isbn) != "undefined")?inventory_data.isbn:'') 
                             +'</td><td>'+(((typeof  inventory_data.ourprice) != "undefined")?inventory_data.ourprice:'')
-                            +'</td><td><input type="button" class="remove_item" value="Remove" /></td></tr>');
+                            +'</td><td><input type="button" class="remove_item" value="Drop from Cart" /></td></tr>');
                         jQuery.post('/register/add_item_to_cart', {item:JSON.stringify(inventory_data)}, function(){
                             dlg.dialog('close');
                         });
@@ -176,7 +176,7 @@
                                             #end try
                                         </td>
                                     #end for
-                                    <td><input type="button" class="remove_item" value="Remove" /></td>
+                                    <td><input type="button" class="remove_item" value="Drop from Cart" /></td>
                                 </tr>
                             #end for
                         #end if
@@ -184,7 +184,7 @@
                 </tbody>
             </table>
         </div>
-        <button id="void_sale" name="void_sale">Void Entire Sale</button><button id="check_out" name="check_out">Check Out</button>
+        <button id="void_sale" name="void_sale">Void Entire Sale</button><button id="check_out" name="check_out">Remove Items from Inventory</button>
     </div>
     
     <div id='isbn_not_found_error' class='error_dialog' title='Error: ISBN not found'>
