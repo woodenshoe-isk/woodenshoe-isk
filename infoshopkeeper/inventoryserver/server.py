@@ -60,9 +60,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 encoder = turbojson.jsonify.JSONEncoder(ensure_ascii=False)
 
 def jsonify_tool_callback(*args, **kwargs):
-
     cherrypy.response.headers['Content-type'] = 'application/json; charset=utf-8'
-    body=json.dumps(response.body, ensure_ascii=False).encode('utf-8')
+    body=json.dumps(cherrypy.response.body, ensure_ascii=False).encode('utf-8')
     cherrypy.response.headers['Content-length']=len(body)
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
@@ -564,7 +563,6 @@ class InventoryServer:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
         print kwargs
         self.inventory.addToInventory(**kwargs) 
-
 
     @cherrypy.tools.jsonify()
     @cherrypy.expose
