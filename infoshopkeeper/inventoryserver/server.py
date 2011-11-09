@@ -84,7 +84,7 @@ class Noteboard:
     def __init__(self):
         self._notestemplate = NotesTemplate()
         self.menudata=MenuData
-        MenuData.setMenuData({'6':('Notes', '/notes/noteboard', [])}) 
+        MenuData.setMenuData({'5':('Notes', '/notes/noteboard', [])}) 
         
     @cherrypy.expose
     def noteboard(self):
@@ -316,7 +316,7 @@ class Admin:
         self._kindlisttemplate = KindListTemplate()
         self._locationedittemplate = LocationEditTemplate()
         self._locationlisttemplate = LocationListTemplate()
-        MenuData.setMenuData({'7':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
+        MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
                                                  ])})
                                                  
@@ -371,10 +371,12 @@ class InventoryServer:
     
         self.inventory=inventory.inventory()
         self.conn=db.connect()
+        
         MenuData.setMenuData({'2': ('Search the Inventory', '/search', [])})
         MenuData.setMenuData({'3': ('Add to Inventory', '/add_to_inventory', [])})
-        MenuData.setMenuData({'5': ('Review Transactions', '/transactions', [])})
-
+        MenuData.setMenuData({'4': ('Reports', '/reports',
+                                        [(i.metadata['name'], '/report?reportname=' + i.metadata['action'], []) for i in self.reportlist])})
+        
 
     def loadUserByUsername(self, login):
         ulist=[("woodenshoebooks","woodenshoe"), ]

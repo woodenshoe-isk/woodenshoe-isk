@@ -8,7 +8,7 @@
             "bJQueryUI": true,
             "bAutoWidth":false,
             "sPaginationType": "full_numbers",
-            "aoColumnDefs": [{ "sWidth": "75%", "aTargets": [ 0 ] },]
+            "aoColumnDefs": [{ "sWidth": "33%", "aTargets": [ -3,-2,-1] },]
        });
     });
 </script>
@@ -21,7 +21,6 @@ Report: ${report.metadata['name']}
 #def body
 <h1>${report.metadata['name']}</h1>
 ${report.queryForm()}
-<hr />
 #if $do_query
 <table class="sortable" id="report_results_table" >
 <thead>
