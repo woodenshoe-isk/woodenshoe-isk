@@ -36,26 +36,21 @@
 #end block
 </head>
 <body>
+#def generateMenu( $iterable )
+#for $i in $iterable
+    <li><a href='$i[1]'>$i[0]</a>
+    #if $i[2]
+    <ul>
+    $generateMenu( $i[2] )
+    </ul>
+    #end if
+    </li>
+#end for
+#end def
+
 <div class="toolbar">
 <ul class="nav">
-<li><a href="/register/build_cart">Remove Items from Inventory</a></li>
-<li><a href="/search">Search the inventory</a></li>
-<li><a href='/add_to_inventory'>Add to Inventory</a></li>
-<li><a href="/reports">Get reports</a>
-    <ul>
-    #for $r in $reports
-    <li><a href="/report?reportname=${r['action']}">${r['name']}</a></li>
-    #end for
-    </ul>
-</li>
-<li><a href="/transactions">Review Transactions</a></li>
-<li><a href='/notes/noteboard'>Notes</a></li>
-<li><a href="">Admin</a>
-    <ul>
-    <li><a href="/admin/kindlist">Edit Item Kinds</a></li>
-    <li><a href="/admin/locationlist">Edit Item Locations</a></li>
-    </ul>
-</li>
+$generateMenu( $menudata.getMenuData() )
 </ul>
 </div>
 #set $lastsearch=0
