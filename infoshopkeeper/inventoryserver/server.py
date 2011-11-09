@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# coding: UTF-8
 import cherrypy
 import uuid
 import sys
@@ -55,16 +57,24 @@ import re
 
 import os.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
-encoder = JSONEncoder(ensure_ascii=False)
+encoder = turbojson.jsonify.JSONEncoder(ensure_ascii=False)
 
 def jsonify_tool_callback(*args, **kwargs):
-    response = cherrypy.response
-    response.headers['Content-Type'] = 'application/json'
-    print>>sys.stderr, response, '\r', response.body
-    print>>sys.stderr, turbojson.jsonify.encode(response.body)
-    response.body = turbojson.jsonify.encode(response.body)  #encoder.iterencode(response.body)
+    cherrypy.response.headers['Content-type'] = 'application/json; charset=utf-8'
+    body=json.dumps(cherrypy.response.body, ensure_ascii=False).encode('utf-8')
+    cherrypy.response.headers['Content-length']=len(body)
+    cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
 
+class MenuData:
+    menuData={}
+    
+    def getMenuData():
+        return [MenuData.menuData[key] for key in sorted(MenuData.menuData.keys())] 
+    
+    def setMenuData(dictionaryOfMenuLists):
+        MenuData.menudata.update(dictionaryOfMenuLists)
+        
 class Noteboard:
     def __init__(self):
         self._notestemplate = NotesTemplate();
@@ -504,7 +514,7 @@ class InventoryServer:
         self._checkouttemplate.quantities=cherrypy.session.get('quantities',[])
         return self._checkouttemplate.respond()
     
-    def add_to_inventory(self, isbn="", quantity=1, title="", listprice=0.0, ourprice=0.0, authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
+    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
         self.common()
         self._add_to_inventory_template.isbn=isbn
         self._add_to_inventory_template.quantity=quantity
@@ -554,15 +564,8 @@ class InventoryServer:
         print kwargs
         self.inventory.addToInventory(**kwargs) 
 
-    
-    @cherrypy.expose
     @cherrypy.tools.jsonify()
-    def test(self):
-        return dict(pig='dog')
-
-
     @cherrypy.expose
-    @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
         data=self.inventory.lookup_by_isbn(args['isbn'])
         print "data is"

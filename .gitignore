@@ -3,7 +3,9 @@
 *.bak
 *.log
 *.log.*
+__init__.py
 etc.py
+test.py
 config.py
 infoshopkeeper/inventoryserver/*Template.py
 infoshopkeeper/inventoryserver/*Template2.py
