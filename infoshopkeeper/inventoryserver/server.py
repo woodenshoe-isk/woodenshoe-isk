@@ -13,6 +13,20 @@ import json
 
 from sqlobject.sqlbuilder import *
 
+
+class MenuData:
+    menuData={}
+   
+    @classmethod
+    def getMenuData(cls):
+        return [MenuData.menuData[key] for key in sorted(MenuData.menuData.keys())] 
+    
+    @classmethod
+    def setMenuData(cls, dictionaryOfMenuLists):
+        MenuData.menuData.update(dictionaryOfMenuLists)
+     
+
+
 from components import db
 from components import inventory
 from objects.title import Title
@@ -66,18 +80,11 @@ def jsonify_tool_callback(*args, **kwargs):
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
 
-class MenuData:
-    menuData={}
-    
-    def getMenuData():
-        return [MenuData.menuData[key] for key in sorted(MenuData.menuData.keys())] 
-    
-    def setMenuData(dictionaryOfMenuLists):
-        MenuData.menudata.update(dictionaryOfMenuLists)
-        
 class Noteboard:
     def __init__(self):
-        self._notestemplate = NotesTemplate();
+        self._notestemplate = NotesTemplate()
+        self.menudata=MenuData
+        MenuData.setMenuData({'6':('Notes', '/notes/noteboard', [])}) 
         
     @cherrypy.expose
     def noteboard(self):
@@ -108,6 +115,8 @@ class Register:
     def __init__(self):
         self._carttemplate = CartTemplate2()
         self._chooseitemtemplate = ChooseItemTemplate()
+        self.menudata=MenuData
+        MenuData.setMenuData( {'1': ('Remove Items from Inventory', '/register/build_cart', []) })
     
     @cherrypy.expose
     def build_cart(self, **args):
@@ -307,7 +316,10 @@ class Admin:
         self._kindlisttemplate = KindListTemplate()
         self._locationedittemplate = LocationEditTemplate()
         self._locationlisttemplate = LocationListTemplate()
-        
+        MenuData.setMenuData({'7':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
+                                                   ('Edit Item Locations', '/admin/locationlist', []),
+                                                 ])})
+                                                 
     @cherrypy.expose
     def kindedit(self,**args):
         if ('kindName' in args.keys()):
@@ -359,6 +371,10 @@ class InventoryServer:
     
         self.inventory=inventory.inventory()
         self.conn=db.connect()
+        MenuData.setMenuData({'2': ('Search the Inventory', '/search', [])})
+        MenuData.setMenuData({'3': ('Add to Inventory', '/add_to_inventory', [])})
+        MenuData.setMenuData({'5': ('Review Transactions', '/transactions', [])})
+
 
     def loadUserByUsername(self, login):
         ulist=[("woodenshoebooks","woodenshoe"), ]

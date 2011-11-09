@@ -58,6 +58,24 @@
 </li>
 </ul>
 </div>
+#def generateMenu( $iterable )
+#for $i in $iterable
+    <li><a href='$i[1]'>$i[0]</a>
+    #if $i[2]
+    <ul>
+    $generateMenu( $i[2] )
+    <li>
+    #end if
+    </li>
+#end for
+#end def
+
+<div class="toolbar">
+$menudata.getMenuData()
+<ul class="nav">
+$generateMenu( $menudata.getMenuData() )
+</ul>
+</div>
 #set $lastsearch=0
 #if $lastsearch
 <a href="$lastsearch">Return to search results...</a>
