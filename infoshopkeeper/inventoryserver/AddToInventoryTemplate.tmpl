@@ -38,7 +38,7 @@ from Skeleton import Skeleton
 			}
 
 			if (isbnDirty == false) {
-				jQuery.getJSON( '/search_isbn', {isbn:isbnstring}, function(data){
+				jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
 					jQuery.each(data, function(key, value) {
 						if (key == 'publisher') {
 							jQuery('#publisher').val(value);
@@ -68,7 +68,7 @@ from Skeleton import Skeleton
 			return false;
 		});
         jQuery('#add_to_inventory_form').validate( function(form) {
-            jQuery(form).ajaxForm( {url:'/add_item_to_inventory', clearForm:false, success:function(){
+            jQuery(form).ajaxForm( {url:'/admin/add_item_to_inventory', clearForm:false, success:function(){
                     jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
                     jQuery("#quantity").val(1);
                     jQuery("#listprice").val('0.0');
