@@ -175,7 +175,7 @@ selected="true"
 </thead>
 <tbody>
 #for $t in $titles
-  <tr onclick="window.open('/titleedit?id=$t.id');">
+  <tr ondblclick="document.location.href='/titleedit?id=$t.id';">
     <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
                event.stopPropagation();
            }

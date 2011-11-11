@@ -20,7 +20,7 @@ class NewItemReport(Report):
 	return "<tr><th>Title</th><th>Author</th><th>Kind</th><th>Price</th></tr>"
 
     def format_results(self,results):
-        return ["<tr onclick=\"window.open('/titleedit?id=%s');\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[0],r[1], r[2], r[3], r[4])  for r in results]
+        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[0],r[1], r[2], r[3], r[4])  for r in results]
 
 
     def _queryForm(self):
