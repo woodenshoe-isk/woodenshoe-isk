@@ -20,6 +20,7 @@ class inventory:
         
     def lookup_by_isbn(self,number):
         isbn=""
+        number=re.sub("^([\'\"])(.*)\\1$", '\\2', number)
         print "number is now: ", number
         if len(number)>=9:
             number=re.sub("[-\s]", '', number)
@@ -36,6 +37,7 @@ class inventory:
             self.known_title= False
             the_titles=list(titles)
             if len(the_titles) > 0:
+                print "in titles"
                 self.known_title= the_titles[0]
                 ProductName = the_titles[0].booktitle.decode("unicode_escape")
                 if len(the_titles[0].author) > 0:
@@ -55,11 +57,15 @@ class inventory:
                 Kind=the_titles[0].kind.kindName
  
             else: #we don't have it yet
+                print "in isbn"
                 sleep(1) # so amazon doesn't get huffy 
                 ecs.setLicenseKey(amazon_license_key)
                 ecs.setSecretAccessKey(amazon_secret_key)
                 ecs.setAssociateTag(amazon_associate_tag)
+                
+                print "about to search", isbn, isbn[0]
                 pythonBooks = ecs.ItemLookup(isbn,IdType="ISBN",SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
+                print pythonBooks
                 if pythonBooks:
                     result={}
                     authors=[]
@@ -78,24 +84,39 @@ class inventory:
  
                     categories_as_string =""
                     
-                    def listCategories(browsenodes):
-                        def parseBrowseNode( browseNode ):
-                            if hasattr(browseNode, 'Ancestors'):
-                                for x in  parseBrowseNode( browseNode.Ancestors.pop()):
-                                    yield x
-                            yield browseNode.Name
-                            if hasattr(browseNode, 'Children'):
-                                for x in browseNode.Children:
-                                    yield x.Name
-                        categoryList=[]
-                        for node in browsenodes:
-                            categoryList.extend( list(parseBrowseNode( node )))
-                        return categoryList
-                    
-                                        #~ for category in b.Subjects:
-                                           #~ categories.append(category)
-                    categories=listCategories(b.BrowseNodes)
-                    categories_as_string = string.join(categories,',')                   
+                    # a bit more complicated of a tree walk than it needs be.
+                    # set up to still have the option of category strings like "history -- us"
+                    # switched to sets to quickly remove redundancies.
+                    def parseBrowseNodes(bNodes):
+                        def parseBrowseNodesInner(item):
+                            bn=set()
+                            if hasattr(item, 'Name'):
+                                bn.add(item.Name)
+                            if hasattr(item, 'Ancestors'):
+                                for i in item.Ancestors:
+                                    bn.update(parseBrowseNodesInner(i))
+                                    if hasattr(i, 'Name'):
+                                        bn.update([i.Name])   
+                            if hasattr(item, 'Children'):
+                                for i in item.Children:
+                                    bn.update(parseBrowseNodesInner(i))
+                                    if hasattr(item, 'Name'):
+                                        bn.update([i.Name])
+                            if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
+                                if hasattr(item, 'Name'):
+                                    return set([item.Name])
+                                else:
+                                    return set()
+                            return bn
+                        nodeslist=[parseBrowseNodesInner(i) for i in bNodes ]
+                        nodes=set()
+                        for n in nodeslist:
+                            nodes = nodes.union(n)
+                        return nodes
+
+                    categories=parseBrowseNodes(b.BrowseNodes)
+                    categories_as_string = string.join(categories,',')
+                    print categories, categories_as_string
 
 
                     ProductName=""
@@ -116,6 +137,7 @@ class inventory:
                         Format=b.Binding
                     
                     Kind='books'
+            print "returning"
                     
             return {"title":ProductName,
                     "authors":authors,
@@ -251,18 +273,18 @@ class inventory:
                 print "mmm... looks like you have multiple author of the sama name in your database..."
             for category in categories:
                 Category(categoryName=category.encode("ascii", "backslashreplace"),title=known_title)
-        
-            the_locations=list(Location.select(Location.q.locationName==location))
-            location_id=1
-            if the_locations:
-                location_id = the_locations[0].id
-            print quantity
-            print "ourprice: ", ourprice, "listprice: ", listprice
-            if not ourprice:
-                ourprice=listprice
-            for i in range(int(quantity)): 
-                print "book loop"
-                b=Book(title=known_title,status=status.encode("ascii", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("ascii", "backslashreplace"),notes=notes.encode("ascii", "backslashreplace"),consignmentStatus="")
+    
+        the_locations=list(Location.select(Location.q.locationName==location))
+        location_id=1
+        if the_locations:
+            location_id = the_locations[0].id
+        print quantity
+        print "ourprice: ", ourprice, "listprice: ", listprice
+        if not ourprice:
+            ourprice=listprice
+        for i in range(int(quantity)): 
+            print "book loop"
+            b=Book(title=known_title,status=status.encode("ascii", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("ascii", "backslashreplace"),notes=notes.encode("ascii", "backslashreplace"),consignmentStatus="")
 #               b.extracolumns()
 #               for mp in extra_prices.keys():
 #                   setattr(b,string.replace(mp," ",""),extra_prices[mp])

@@ -3,89 +3,101 @@ from Skeleton import Skeleton
 
 #def headscripts
 <script type="text/javascript" src="/javascript/jquery.form.js"></script>
-
 <script type="text/javascript" src="/javascript/jquery.validate.min.js"></script>
 <script type="text/javascript">                                         
-	var isbnDirty = false;
-	jQuery(document).ready(function() {
+    var isbnDirty = false;
+    jQuery(document).ready(function() {
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
                 alert(textStatus);
                 alert(errorThrown);
                 alert(XMLHttpRequest.responseText);
           
         }});
-		jQuery('.textbox').bind('keypress', function(evt) {
-               		if (evt.keyCode == 13||evt.chatCode == 13) {
-                    		/* FOCUS ELEMENT */
-                    		var inputs = jQuery(this).parents("form").eq(0).find(":input");
-                    		var idx = inputs.index(this);
+        
+        jQuery('#isbn').focus();
+        
+        jQuery('.textbox').bind('keypress', function(evt) {
+                    if (evt.keyCode == 13||evt.chatCode == 13) {
+                            /* FOCUS ELEMENT */
+                            var inputs = jQuery(this).parents("form").eq(0).find(":input");
+                            var idx = inputs.index(this);
  
-                    		if (idx == inputs.length - 1) {
-                        		inputs[0].select()
-                    		} else {
-                        		inputs[idx + 1].focus(); //  handles submit buttons
-                        		inputs[idx + 1].select();
-                    		}	
-                    		return false;
-               		}	
-		});
-		jQuery('#isbn').change( function() {
-			var isbnstring=jQuery(this).val();
-			isbnstring=isbnstring.toLowerCase();
-
-			if (isbnstring.length>11) {
-				isbnstring.replace('/[\s-]/g', '');
-			}
-
-			if (isbnDirty == false) {
-				jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
-					jQuery.each(data, function(key, value) {
-						if (key == 'publisher') {
-							jQuery('#publisher').val(value);
-						} else if ( key == 'authors_as_string') {
-							jQuery('#authors').val(value);
-						} else if ( key == 'categories_as_string') {
-							jQuery('#categories').val(value);
-						} else if ( key == 'title') {
-							jQuery('#title').val(value);
-						} else if ( key == 'list_price') {
-							jQuery('#listprice').val(value);
-							jQuery('#ourprice').val(value);
-						} else if (key == 'isbn') {
-							jQuery('#isbn').val(value);
-						} else if ( key == 'format') {
-							jQuery('#types').val(value);
-						} else if (key ==  'kind') {
-							jQuery('#kind_name').val(value);
-						} else if ( key == 'known_title') {
-							jQuery('#known_title').val(value);
-						}
-					});
-				});
-				isbnDirty = true;
-
-			}
-			return false;
-		});
-        jQuery('#add_to_inventory_form').validate( function(form) {
-            jQuery(form).ajaxForm( {url:'/admin/add_item_to_inventory', clearForm:false, success:function(){
-                    jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
-                    jQuery("#quantity").val(1);
-                    jQuery("#listprice").val('0.0');
-                    jQuery("#ourprice").val('0.0');
-                    isbnDirty=false;
-                }
-            });
-                            
+                            if (idx == inputs.length - 1) {
+                                inputs[0].select()
+                            } else {
+                                inputs[idx + 1].focus(); //  handles submit buttons
+                                inputs[idx + 1].select();
+                            }   
+                            return false;
+                    }   
         });
-		jQuery('#add_to_inventory_form').bind('reset', function(){
+        
+        jQuery('#isbn').blur( function() {
+            var isbnstring=jQuery(this).val();
+            isbnstring=isbnstring.toLowerCase();
+
+            if (isbnstring.length>11) {
+                isbnstring.replace('/[\s-]/g', '');
+            }
+
+            if (isbnDirty == false) {
+                jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
+                    data=data[0]
+                    jQuery.each(data, function(key, value) {
+                        if (key == 'publisher') {
+                            jQuery('#publisher').val(value);
+                        } else if ( key == 'authors_as_string') {
+                            jQuery('#authors').val(value);
+                        } else if ( key == 'categories_as_string') {
+                            jQuery('#categories').val(value);
+                        } else if ( key == 'title') {
+                            jQuery('#title').val(value);
+                        } else if ( key == 'list_price') {
+                            jQuery('#listprice').val(value);
+                            jQuery('#ourprice').val(value);
+                        } else if (key == 'isbn') {
+                            jQuery('#isbn').val(value);
+                        } else if ( key == 'format') {
+                            jQuery('#types').val(value);
+                        } else if (key ==  'kind') {
+                            jQuery('#kind_name').val(value);
+                        } else if ( key == 'known_title') {
+                            jQuery('#known_title').val(value);
+                        }
+                    });
+                });
+                isbnDirty = true;
+            }
+            return false;
+        });
+        
+        jQuery('#add_to_inventory_form').validate({
+            submitHandler: function(form) {
+                jQuery('#add_to_inventory_form').ajaxSubmit({
+                    url:'/admin/add_item_to_inventory', 
+                    clearForm:false, 
+                    type:'post', 
+                    success:function(){
+                        jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                        jQuery("#quantity").val(1);
+                        jQuery("#listprice").val('0.0');
+                        jQuery("#ourprice").val('0.0');
+                        isbnDirty=false;
+                    }
+                });
+                return false;
+            }                 
+        });
+        
+        jQuery('#add_to_inventory_form').bind('reset', function(){
                     jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
                     jQuery("#quantity").val(1);
                     jQuery("#listprice").val('0.0');
                     jQuery("#ourprice").val('0.0');
                     isbnDirty=false;
-		});
-	});
+        });
+    }
+        );
 </script> 
 #end def
 
@@ -96,7 +108,7 @@ Add item to  inventory
 #def body
 <h1>Add to Inventory</h1>
 <br />
-<form id="add_to_inventory_form" method="post" action="/add_item_to_inventory" //~style="visibility:hidden; display:none">
+<form id="add_to_inventory_form" method="post" //~style="visibility:hidden; display:none">
 
 <label class="textbox" for="isbn">Item ID (UPC or ISBN)</label> 
 <input class="textbox required" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" /><br />
@@ -177,7 +189,7 @@ selected="true"
 
 <input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
 
-<input class="submit" type="submit" value='Add to Inventory'>
+<input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
 <input class='reset' type='reset' value='Cancel'>
 <br />
 </form>

@@ -71,11 +71,13 @@ import re
 
 import os.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
-encoder = turbojson.jsonify.JSONEncoder(ensure_ascii=False)
 
+turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
 def jsonify_tool_callback(*args, **kwargs):
+    print>>sys.stderr, "in jsonify"
     cherrypy.response.headers['Content-type'] = 'application/json; charset=utf-8'
-    body=json.dumps(cherrypy.response.body, ensure_ascii=False).encode('utf-8')
+    body=turbojson.jsonify.encode(cherrypy.response.body).encode('utf-8')
+    print>>sys.stderr, "body changed ", body
     cherrypy.response.headers['Content-length']=len(body)
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
@@ -389,7 +391,7 @@ class Admin:
         return self._add_to_inventory_template.respond()
 
     @cherrypy.expose
-    def add_item_to_inventory(self, *args, **kwargs):
+    def add_item_to_inventory(self, **kwargs):
         print "kwargs are:" 
         print kwargs
         kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
@@ -401,15 +403,16 @@ class Admin:
         else:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
         print kwargs
-        self.inventory.addToInventory(**kwargs) 
+        self.inventory.addToInventory(**kwargs)
 
-    @cherrypy.tools.jsonify()
     @cherrypy.expose
+    @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
+        print>>sys.stderr, "in search_isbn"
         data=self.inventory.lookup_by_isbn(args['isbn'])
-        print "data is"
-        print data
-        return data
+        print>>sys.stderr, "data is"
+        print>>sys.stderr, data
+        return [data]
     add_to_inventory.search_isbn=search_isbn
             
 class InventoryServer:
