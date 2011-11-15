@@ -8,7 +8,6 @@ import operator
 class SQLObjectWithFormGlue(SQLObject):
     _cacheValues=False
     _cols=None
- 	    
     
     def form_to_object(myClass,formdata):
         try:
@@ -44,6 +43,61 @@ class SQLObjectWithFormGlue(SQLObject):
 
     
     def object_to_form(self):
+        def handleForeignKey(col):
+            colName=col.joinName
+    
+            eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
+            
+            colClass=eval(colName.capitalize())
+            toObjects=list(colClass.select())
+            if self.sortTheseKeys:
+                #pass
+                toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
+    
+            
+            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
+            for o in toObjects:
+                equals_fragment=""
+                try:
+                    if o.id==getattr(self,colName+"ID"):
+                        equals_fragment="SELECTED='true'"
+                    form_fragment=form_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id,equals_fragment,getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
+                    
+                except:
+                    import sys
+                    print "Unexpected error:", sys.exc_info()[1]
+            form_fragment=form_fragment+"</SELECT><br />"
+            return form_fragment
+            
+        def handleString(col):
+            # look at http://formencode.org/docs/htmlfill.html
+            form_fragment = """<label class='textbox' for='id_%s'>
+                                 %s
+                               </label>
+                               <input class='textbox' type='text' name='%s' id='id_%s'/>
+                               """ % (col.name,col.name,col.name,col.name)
+            value=getattr(self,col.name)
+            if 'tostring' in dir(value):
+                value=value.tostring()
+            defaults =  {col.name:value}
+            parser = htmlfill.FillingParser(defaults)
+            parser.feed(form_fragment)
+            parser.close()
+            html_fragment=parser.text()
+            return html_fragment+"<br />"
+        
+        def handleUnicodeStr(col):
+            return handleString(col)
+    
+        def handleFloat(col):
+            return handleString(col)
+    
+        def handleBlob(col):
+            return handleString(col)
+    
+        def handleDateTime(col):
+            return handleString(col)
+
         formhtml = "<input type='hidden' name='id' value='%s' />" % (self.id)
         try:
             cols=self.__class__.__getattribute__(self, 'sqlmeta').columns
@@ -54,15 +108,15 @@ class SQLObjectWithFormGlue(SQLObject):
                 raise NameError("Class has no attribute sqlmeta.columns or _colums")
         for c in cols.values():
             if type(c)==SOStringCol:
-                formhtml = formhtml + self.handleString(c)
+                formhtml = formhtml + handleString(c)
             if type(c)==SOUnicodeCol:
-                formhtml = formhtml + self.handleUnicodeStr(c)
+                formhtml = formhtml + handleUnicodeStr(c)
             if type(c)==SOBLOBCol:
-                formhtml = formhtml + self.handleBlob(c)
+                formhtml = formhtml + handleBlob(c)
             if type(c)==SOFloatCol:
-                formhtml = formhtml + self.handleFloat(c)
+                formhtml = formhtml + handleFloat(c)
             if type(c)==SODateTimeCol:
-                formhtml = formhtml + self.handleDateTime(c)
+                formhtml = formhtml + handleDateTime(c)
             if type(c)==SOForeignKey:
                 try:
                     if c.joinName in self.listTheseKeys:
@@ -73,63 +127,90 @@ class SQLObjectWithFormGlue(SQLObject):
         formhtml=formhtml+"<input class='submit' type='submit'><br />"
         return formhtml
 
-
-    def handleForeignKey(self,col):
-        colName=col.joinName
-
-        exec ("from objects.%s import %s" %(colName,colName.capitalize()))
-        
-        colClass=eval(colName.capitalize())
-        toObjects=list(colClass.select())
-        if self.sortTheseKeys:
-            #pass
-            toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
-
-		
-        form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
-        for o in toObjects:
-            equals_fragment=""
-            try:
-                if o.id==getattr(self,colName+"ID"):
-                    equals_fragment="SELECTED='true'"
-                form_fragment=form_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id,equals_fragment,getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
-                
-            except:
-                import sys
-                print "Unexpected error:", sys.exc_info()[1]
-        form_fragment=form_fragment+"</SELECT><br />"
-        return form_fragment
-        
-    def handleString(self,col):
-        # look at http://formencode.org/docs/htmlfill.html
-        form_fragment = """<label class='textbox' for='id_%s'>
-                             %s
-                           </label>
-                           <input class='textbox' type='text' name='%s' id='id_%s'/>
-                           """ % (col.name,col.name,col.name,col.name)
-        value=getattr(self,col.name)
-        if 'tostring' in dir(value):
-            value=value.tostring()
-        defaults =  {col.name:value}
-        parser = htmlfill.FillingParser(defaults)
-        parser.feed(form_fragment)
-        parser.close()
-        html_fragment=parser.text()
-        return html_fragment+"<br />"
+    def object_to_view(self):
+        def handleForeignKey(col):
+            colName=col.joinName
     
-    def handleUnicodeStr(self, col):
-	return self.handleString(col)
+            eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
+            
+            colClass=eval(colName.capitalize())
+            toObjects=list(colClass.select())
+            if self.sortTheseKeys:
+                #pass
+                toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
+    
+            
+            view_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
+            for o in toObjects:
+                equals_fragment=""
+                try:
+                    if o.id==getattr(self,colName+"ID"):
+                        equals_fragment="SELECTED='true'"
+                    view_fragment=view_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id,equals_fragment,getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
+                    
+                except:
+                    import sys
+                    print "Unexpected error:", sys.exc_info()[1]
+            view_fragment=view_fragment+"</SELECT><br />"
+            return view_fragment
+            
+        def handleString(col):
+            # look at http://formencode.org/docs/htmlfill.html
+            view_fragment = """<label class='textbox' for='id_%s'>
+                                 %s
+                               </label>
+                               <input class='textbox' type='text' name='%s' id='id_%s'/>
+                               """ % (col.name,col.name,col.name,col.name)
+            value=getattr(self,col.name)
+            if 'tostring' in dir(value):
+                value=value.tostring()
+            defaults =  {col.name:value}
+            parser = htmlfill.FillingParser(defaults)
+            parser.feed(view_fragment)
+            parser.close()
+            html_fragment=parser.text()
+            return html_fragment+"<br />"
+        
+        def handleUnicodeStr(col):
+            return handleString(col)
+    
+        def handleFloat(col):
+            return handleString(col)
+    
+        def handleBlob(col):
+            return handleString(col)
+    
+        def handleDateTime(col):
+            return handleString(col)
 
-    def handleFloat(self,col):
-        return self.handleString(col)
+        viewhtml = "<input type='hidden' name='id' value='%s' />" % (self.id)
+        try:
+            cols=self.__class__.__getattribute__(self, 'sqlmeta').columns
+        except:
+            try: 
+                cols=self.__class__.__getattribute__(self, '_columns')
+            except:
+                raise NameError("Class has no attribute sqlmeta.columns or _colums")
+        for c in cols.values():
+            if type(c)==SOStringCol:
+                viewhtml = viewhtml + handleString(c)
+            if type(c)==SOUnicodeCol:
+                viewhtml = viewhtml + handleUnicodeStr(c)
+            if type(c)==SOBLOBCol:
+                viewhtml = viewhtml + handleBlob(c)
+            if type(c)==SOFloatCol:
+                viewhtml = viewhtml + handleFloat(c)
+            if type(c)==SODateTimeCol:
+                viewhtml = viewhtml + handleDateTime(c)
+            if type(c)==SOForeignKey:
+                try:
+                    if c.joinName in self.listTheseKeys:
+                        viewhtml = viewhtml + self.handleForeignKey(c)
+                except:
+                    pass
 
-    def handleBlob(self,col):
-        return self.handleString(col)
-
-    def handleDateTime(self,col):
-        return self.handleString(col)
-
-
+        viewhtml=viewhtml+"<input class='submit' type='submit'><br />"
+        return viewhtml
 
     def safe(self,col):
         value=getattr(self,col)

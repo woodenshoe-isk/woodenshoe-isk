@@ -2,8 +2,9 @@
 #extends Skeleton
 
 #def headscripts
-<script type="text/javascript">                                         
+<script type="text/javascript">
     jQuery(document).ready( function(){
+        jQuery('form').find('input:first').focus();    
         jQuery('#report_results_table').dataTable({
             "bJQueryUI": true,
             "bAutoWidth":false,

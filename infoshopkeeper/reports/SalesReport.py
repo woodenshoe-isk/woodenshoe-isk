@@ -27,7 +27,7 @@ class SalesReport(Report, PdfReport):
     # 11/10/2008 john fixed this manually
     #        return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4].tostring(),r[1])  for r in results]
     #   return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4],r[1])  for r in results]
-        return ["<tr onclick=\"window.open('/titleedit?id=%s');\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[0],r[1],r[2],r[3],r[4], r[5])  for r in results]
+        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[0],r[1],r[2],r[3],r[4], r[5])  for r in results]
     
     def format_header(self):
 	return "<tr><th>Date Sold</th><th>Title</th><th>Price</th><th>Copies In Stock</th><th>Copies Sold</th></tr>"
