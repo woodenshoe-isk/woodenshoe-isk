@@ -3,6 +3,7 @@
 #def headscripts
 <script type='text/javascript'>                                         
 	jQuery(document).ready( function(){
+        jQuery('form:first input:first').focus();    	    
         jQuery.ajaxSetup({  'cache':false,
                             'error':function(XMLHttpRequest,textStatus, errorThrown) {   
                                 alert(textStatus + '\r' +

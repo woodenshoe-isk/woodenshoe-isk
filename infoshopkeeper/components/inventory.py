@@ -93,17 +93,23 @@ class inventory:
                             if hasattr(item, 'Name'):
                                 bn.add(item.Name)
                             if hasattr(item, 'Ancestors'):
+                                print "hasansc"   
                                 for i in item.Ancestors:
                                     bn.update(parseBrowseNodesInner(i))
+                                    print "bn ", bn
                                     if hasattr(i, 'Name'):
-                                        bn.update([i.Name])   
+                                       print "itemname ", i.Name
+                                       print "bn plus ", bn.update([i.Name])   
                             if hasattr(item, 'Children'):
+                                print "haschildren"
                                 for i in item.Children:
                                     bn.update(parseBrowseNodesInner(i))
+                                    print "bn ", bn
                                     if hasattr(item, 'Name'):
-                                        bn.update([i.Name])
+                                        print "bn plus ", bn.update([i.Name])
                             if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
                                 if hasattr(item, 'Name'):
+                                    print "itemname", item.Name
                                     return set([item.Name])
                                 else:
                                     return set()
@@ -113,6 +119,9 @@ class inventory:
                         for n in nodeslist:
                             nodes = nodes.union(n)
                         return nodes
+
+                    categories=parseBrowseNodes(b.BrowseNodes)
+                    categories_as_string = string.join(categories,',')                   
 
                     categories=parseBrowseNodes(b.BrowseNodes)
                     categories_as_string = string.join(categories,',')

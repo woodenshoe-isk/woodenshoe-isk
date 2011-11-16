@@ -35,7 +35,7 @@ Search the inventory
         jQuery('#results_table td:nth-child(9), #results_table th:nth-child(9)').hide();
         jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
                                                 'sPaginationType':'full_numbers'});
-        jQuery('#results_table tr').click(function(event) {
+        jQuery('#results_table tr').dblclick(function(event) {
             event.preventDefault();
             titleID=jQuery(this).children().last()[0].innerHTML
             console.log(jQuery(this));
