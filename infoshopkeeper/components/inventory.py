@@ -78,23 +78,43 @@ class inventory:
  
                     categories_as_string =""
                     
-                    def listCategories(browsenodes):
-                        def parseBrowseNode( browseNode ):
-                            if hasattr(browseNode, 'Ancestors'):
-                                for x in  parseBrowseNode( browseNode.Ancestors.pop()):
-                                    yield x
-                            yield browseNode.Name
-                            if hasattr(browseNode, 'Children'):
-                                for x in browseNode.Children:
-                                    yield x.Name
-                        categoryList=[]
-                        for node in browsenodes:
-                            categoryList.extend( list(parseBrowseNode( node )))
-                        return categoryList
-                    
-                                        #~ for category in b.Subjects:
-                                           #~ categories.append(category)
-                    categories=listCategories(b.BrowseNodes)
+                    # a bit more complicated of a tree walk than it needs be.
+                    # set up to still have the option of category strings like "history -- us"
+                    # switched to sets to quickly remove redundancies.
+                    def parseBrowseNodes(bNodes):
+                        def parseBrowseNodesInner(item):
+                            bn=set()
+                            if hasattr(item, 'Name'):
+                                bn.add(item.Name)
+                            if hasattr(item, 'Ancestors'):
+                                print "hasansc"   
+                                for i in item.Ancestors:
+                                    bn.update(parseBrowseNodesInner(i))
+                                    print "bn ", bn
+                                    if hasattr(i, 'Name'):
+                                       print "itemname ", i.Name
+                                       print "bn plus ", bn.update([i.Name])   
+                            if hasattr(item, 'Children'):
+                                print "haschildren"
+                                for i in item.Children:
+                                    bn.update(parseBrowseNodesInner(i))
+                                    print "bn ", bn
+                                    if hasattr(item, 'Name'):
+                                        print "bn plus ", bn.update([i.Name])
+                            if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
+                                if hasattr(item, 'Name'):
+                                    print "itemname", item.Name
+                                    return set([item.Name])
+                                else:
+                                    return set()
+                            return bn
+                        nodeslist=[parseBrowseNodesInner(i) for i in bNodes ]
+                        nodes=set()
+                        for n in nodeslist:
+                            nodes = nodes.union(n)
+                        return nodes
+
+                    categories=parseBrowseNodes(b.BrowseNodes)
                     categories_as_string = string.join(categories,',')                   
 
 

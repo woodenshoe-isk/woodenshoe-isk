@@ -10,7 +10,6 @@ from Cheetah.Template import Template
 from simplejson import JSONEncoder
 import turbojson
 import json
-
 from sqlobject.sqlbuilder import *
 
 from components import db
@@ -60,10 +59,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 encoder = turbojson.jsonify.JSONEncoder(ensure_ascii=False)
 
 def jsonify_tool_callback(*args, **kwargs):
-    cherrypy.response.headers['Content-type'] = 'application/json; charset=utf-8'
-    body=json.dumps(cherrypy.response.body, ensure_ascii=False).encode('utf-8')
-    cherrypy.response.headers['Content-length']=len(body)
-    cherrypy.response.body=body
+    response = cherrypy.response
+    response.headers['Content-Type'] = 'application/json'
+    response.body = turbojson.jsonify.encode(response.body)  #encoder.iterencode(response.body)
+
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
 
 class MenuData:
@@ -85,6 +84,7 @@ class Noteboard:
     
     @cherrypy.expose
     @cherrypy.tools.jsonify()
+    #@log(tohtml=True, tofile='wsgi.log', tostream=True, toprint=True)
     def get_notes(self, **kwargs):
         notes=[['<ul><li>%s</li><li>%s</li><li>%s</li></ul>' % (n.author, n.whenEntered, n.message)] for n in Notes.select().orderBy('-id')]
         return notes
@@ -277,6 +277,7 @@ class Register:
     
     @cherrypy.expose
     @cherrypy.tools.jsonify()
+    #@log(tohtml=True, tofile='wsgi.log', tostream=True, toprint=True)
     def get_item_by_isbn(self, **kwargs):
         print>>sys.stderr, kwargs
         if kwargs['isbn']:
@@ -307,6 +308,10 @@ class Admin:
         self._kindlisttemplate = KindListTemplate()
         self._locationedittemplate = LocationEditTemplate()
         self._locationlisttemplate = LocationListTemplate()
+        self._add_to_inventory_template=AddToInventoryTemplate()
+    
+        self.inventory=inventory.inventory()
+        self.conn=db.connect()
         
     @cherrypy.expose
     def kindedit(self,**args):
@@ -335,7 +340,68 @@ class Admin:
     def locationlist(self,**args):
         self._locationlisttemplate.locations=list(Location.select(orderBy="location_name"))
         return self._locationlisttemplate.respond()
+
+    @cherrypy.expose
+    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
+        self.common()
+        self._add_to_inventory_template.isbn=isbn
+        self._add_to_inventory_template.quantity=quantity
+        self._add_to_inventory_template.title=title
+        self._add_to_inventory_template.authors=authors
+        self._add_to_inventory_template.listprice=listprice
+        self._add_to_inventory_template.ourprice=ourprice
+        self._add_to_inventory_template.publisher=publisher
+        self._add_to_inventory_template.categories=categories
         
+        conn=Book._connection
+        query=Select( Book.q.distributor, groupBy=Book.q.distributor)
+        results=conn.queryAll( conn.sqlrepr(query))
+        distributorlist=[t[0] for t in results] 
+        self._add_to_inventory_template.distributors=distributorlist
+        self._add_to_inventory_template.distributor=distributor 
+        self._add_to_inventory_template.locations=list(Location.select(orderBy="location_name"))
+        self._add_to_inventory_template.location=location
+        self._add_to_inventory_template.owner=owner
+        self._add_to_inventory_template.status=status
+        self._add_to_inventory_template.tag=tag
+        self._add_to_inventory_template.kinds=list(Kind.select())
+        self._add_to_inventory_template.kind=kind
+        
+        conn=Title._connection
+        query=Select( Title.q.type, groupBy=Title.q.type)
+        results=conn.queryAll( conn.sqlrepr(query))
+        typelist=[t[0] for t in results] 
+        self._add_to_inventory_template.formats=typelist
+        self._add_to_inventory_template.format=type
+        self._add_to_inventory_template.known_title=known_title
+
+        return self._add_to_inventory_template.respond()
+
+    @cherrypy.expose
+    def add_item_to_inventory(self, *args, **kwargs):
+        print "kwargs are:" 
+        print kwargs
+        kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
+        kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
+        kwargs['authors']=kwargs['authors'].split(',')
+        kwargs['categories'] = kwargs['categories'].split(',')
+        if kwargs['known_title'] == 'false':
+            kwargs['known_title']=False
+        else:
+            kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
+        print kwargs
+        self.inventory.addToInventory(**kwargs) 
+
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    #@log(tohtml=True, tofile='wsgi.log', tostream=True, toprint=True)
+    def search_isbn(self, **args):
+        data=self.inventory.lookup_by_isbn(args['isbn'])
+        print "data is"
+        print data
+        return [data]
+    add_to_inventory.search_isbn=search_isbn
+    
 class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -355,7 +421,6 @@ class InventoryServer:
         self._reportlisttemplate = ReportListTemplate()
         self._reporttemplate = ReportTemplate()
         self._transactionstemplate = TransactionsTemplate()
-        self._add_to_inventory_template=AddToInventoryTemplate()
     
         self.inventory=inventory.inventory()
         self.conn=db.connect()
@@ -513,65 +578,6 @@ class InventoryServer:
         
         self._checkouttemplate.quantities=cherrypy.session.get('quantities',[])
         return self._checkouttemplate.respond()
-    
-    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
-        self.common()
-        self._add_to_inventory_template.isbn=isbn
-        self._add_to_inventory_template.quantity=quantity
-        self._add_to_inventory_template.title=title
-        self._add_to_inventory_template.authors=authors
-        self._add_to_inventory_template.listprice=listprice
-        self._add_to_inventory_template.ourprice=ourprice
-        self._add_to_inventory_template.publisher=publisher
-        self._add_to_inventory_template.categories=categories
-        
-        conn=Book._connection
-        query=Select( Book.q.distributor, groupBy=Book.q.distributor)
-        results=conn.queryAll( conn.sqlrepr(query))
-        distributorlist=[t[0] for t in results] 
-        self._add_to_inventory_template.distributors=distributorlist
-        self._add_to_inventory_template.distributor=distributor 
-        self._add_to_inventory_template.locations=list(Location.select(orderBy="location_name"))
-        self._add_to_inventory_template.location=location
-        self._add_to_inventory_template.owner=owner
-        self._add_to_inventory_template.status=status
-        self._add_to_inventory_template.tag=tag
-        self._add_to_inventory_template.kinds=list(Kind.select())
-        self._add_to_inventory_template.kind=kind
-        
-        conn=Title._connection
-        query=Select( Title.q.type, groupBy=Title.q.type)
-        results=conn.queryAll( conn.sqlrepr(query))
-        typelist=[t[0] for t in results] 
-        self._add_to_inventory_template.formats=typelist
-        self._add_to_inventory_template.format=type
-        self._add_to_inventory_template.known_title=known_title
-
-        return self._add_to_inventory_template.respond()
-
-    @cherrypy.expose
-    def add_item_to_inventory(self, *args, **kwargs):
-        print "kwargs are:" 
-        print kwargs
-        kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
-        kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
-        kwargs['authors']=kwargs['authors'].split(',')
-        kwargs['categories'] = kwargs['categories'].split(',')
-        if kwargs['known_title'] == 'false':
-            kwargs['known_title']=False
-        else:
-            kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
-        print kwargs
-        self.inventory.addToInventory(**kwargs) 
-
-    @cherrypy.tools.jsonify()
-    @cherrypy.expose
-    def search_isbn(self, **args):
-        data=self.inventory.lookup_by_isbn(args['isbn'])
-        print "data is"
-        print data
-        return data
-    add_to_inventory.search_isbn=search_isbn
     
     def addtocart(self,**args):
         self.common() 
@@ -838,7 +844,6 @@ class InventoryServer:
     categoryedit.exposed = True
     titleedit.exposed = True
     titlelist.exposed = True
-    add_to_inventory.exposed = True
 
 
 

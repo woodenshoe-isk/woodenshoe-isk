@@ -28,7 +28,14 @@ $title.object_to_form
 <a class="listinglink" href="/bookedit?id=$b.id">edit</a>
 </td>
 <td>
-<b>copy from $b.distributor owned by $b.owner <br />inventoried on $b.inventoried_when at \$$b.ourprice<br /> with status '$b.status'<br/>in location '$b.location.locationName'<br /></b>
+<b>copy from $b.distributor owned by $b.owner <br />
+inventoried on $b.inventoried_when at \$$b.ourprice<br />
+with status '$b.status'
+#if $b.status != 'STOCK'
+ on $b.sold_when
+#end if
+<br/>
+in location '$b.location.locationName'<br /></b>
 </td>
 <td>
 add this copy to cart: <input type="checkbox" name="copy_id" value="$b.id" />

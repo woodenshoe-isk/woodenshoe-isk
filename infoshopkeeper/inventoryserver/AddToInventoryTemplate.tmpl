@@ -38,7 +38,7 @@ from Skeleton import Skeleton
 			}
 
 			if (isbnDirty == false) {
-				jQuery.getJSON( '/search_isbn', {isbn:isbnstring}, function(data){
+				jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
 					jQuery.each(data, function(key, value) {
 						if (key == 'publisher') {
 							jQuery('#publisher').val(value);
