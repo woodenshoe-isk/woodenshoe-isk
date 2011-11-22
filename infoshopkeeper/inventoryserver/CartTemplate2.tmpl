@@ -97,7 +97,7 @@
             if (isbnstring.length>0 && category_data.is_inventoried_item == 'True') {
                 jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':JSON.stringify(isbnstring)}, function(inventory_data1){
                     inventory_data1=inventory_data1[0];
-                    jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried, 'isTaxable':category_data.is_taxable});
+                    jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried_item, 'isTaxable':category_data.is_taxable});
                     console.log(inventory_data);
                     if (category_data.is_inventoried_item ) {
                         if ((inventory_data1 !== undefined) && (inventory_data1.booktitle !==undefined)) {
@@ -113,7 +113,7 @@
             } else if (isbnstring.length>0 && category_data.is_inventoried_item == 'False') {
                             title_list.append('<li>'+category_data.label+'</li>');
                             title_list.append('<li>'+isbnstring+'</li>');
-                            jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried, 'isTaxable':category_data.is_taxable});
+                            jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried_item, 'isTaxable':category_data.is_taxable});
                             jQuery.extend(inventory_data, {'ourprice': isbnstring });
             }
 

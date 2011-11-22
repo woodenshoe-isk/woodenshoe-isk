@@ -107,6 +107,7 @@ border-color: #000;
 border-style: solid;
 }
 div#cart_panel {
+width:95%;
 float:left;
 background-color:cccccc;
 padding: 10px;
@@ -121,13 +122,10 @@ width: 100%;
 background-color: White;
 border-width:2px;
 border-color:#000;
-border-style:solid;min-height: 500px;
-min-height: 50px;
-height: auto !important;
-height: 50px;
-}
-table#xcart_table tbody tr {
-width:100%;
+border-style:solid;
+height: 100px;
+min-height: 100px;
+min-width: 100%;
 }
 div#cart_table_panel {
 min-height: 50px;

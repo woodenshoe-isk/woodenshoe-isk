@@ -142,16 +142,8 @@ class Register:
             print>>sys.stderr, "MAKE ITEM ARRAY"
             cart['items']=[]
         
-        if args.has_key('titleid'):
-            print>>sys.stderr, "in title block"
-            print>>sys.stderr, args['titleid']
-            t1=Title.selectBy(id=args['titleid'] )[0]
-            print>>sys.stderr, t1
-            b1=Book.selectBy(titleID=t1.id).filter(Book.q.status=='STOCK')[0]
-            print>>sys.stderr, b1
-            cart['items'].append({u'department':t1.kind.kindName.title(), u'booktitle':t1.booktitle, u'isbn':t1.isbn, u'titleID':t1.id, u'bookID':b1.id, u'ourprice':b1.ourprice})
-        elif args.has_key('item'):
-            print>>sys.stderr, "in item block", args['item'], type(args['item']), json.loads(args['item'])
+        if args.has_key('item'):
+            print>>sys.stderr, "in item block", args['item'], type(args['item'])
             cart['items'].append(json.loads(args['item']))
         
         cherrypy.session['cart']=cart
@@ -178,18 +170,14 @@ class Register:
 
     @cherrypy.expose
     def void_cart(self):
-        cart={}
         if cherrypy.session.has_key('cart'):
-            cart=cherrypy.session['cart']
-        if cart.has_key('items'):
-            cart['items']=[]
-        cherrypy.session['cart']=cart
+            cherrypy.session['cart']={}
         cherrypy.session.save()
                 
     @cherrypy.expose
     def check_out(self):
         cart={}
-        print>>sys.stderr, "in checkout"
+        print "in checkout"
         if cherrypy.session.has_key('cart'):
             cart=cherrypy.session['cart']
             if cart.has_key('items'):
@@ -201,7 +189,7 @@ class Register:
                             infostring = "'[] " + item['department']
                             if item.has_key('booktitle'):
                                 infostring=infostring + ": " +item['booktitle']
-                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'])
+                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                             cart['items'].remove(item)
                         except Exception as err:
                             print>>sys.stderr, err
@@ -210,7 +198,7 @@ class Register:
                         infostring = "'[] " + item['department']
                         if item.haskey('booktitle'):
                             infostring=infostring + ": " +item['booktitle']
-                        Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'])
+                        Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                         cart['items'].remove(item)
             print>>sys.stderr, shouldRaiseException
             if cart['items'].__len__()==0:
@@ -222,10 +210,10 @@ class Register:
                 raise SQLObjectNotFound
                                 
          
-    @cherrypy.tools.jsonify()
     @cherrypy.expose
+    @cherrypy.tools.jsonify()
     def get_cart(self):
-        return cherrypy.session.get('cart')
+        return [cherrypy.session.get('cart')]
     
     @cherrypy.expose
     def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
@@ -328,6 +316,7 @@ class Admin:
                                                  
     @cherrypy.expose
     def kindedit(self,**args):
+        print args
         if ('kindName' in args.keys()):
             self._kindedittemplate.kind=Kind.form_to_object(Kind,args)
             return self.kindlist()

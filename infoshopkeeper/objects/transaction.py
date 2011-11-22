@@ -24,7 +24,8 @@ class Transaction(SQLObjectWithFormGlue):
     schedule = StringCol()            
     info =StringCol()
     owner =StringCol()
-    cashier =StringCol() 
+    cashier =StringCol()
+    cartID=StringCol()
 
     def object_to_form(self):
         self.extracolumns()
