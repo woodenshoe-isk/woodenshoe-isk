@@ -56,8 +56,6 @@ for r in rows:
 	if 'tostring' in dir(info_string):
 		info_string=info_string.tostring()
 
-	print "%s | %s | %s" % (r[2],ljust("%s" % (info_string[:50]),50),price_string)
+	#print "%s | %s | %s" % (r[2],ljust("%s" % (info_string[:50]),50),price_string)
 
-
-print
-print "Total Sales:  %.2f" % total
+#print "Total Sales:  %.2f" % total

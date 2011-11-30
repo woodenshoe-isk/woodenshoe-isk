@@ -38,11 +38,9 @@ class inventoried_merchandise:
         if len(number)==13:
             isbn=upc2isbn(number)
         books =  Book.select(AND(Book.q.titleID==Title.q.id,Title.q.isbn==isbn,Book.q.status=="STOCK") )
-        print books
         if len(list(books))==1:
             theBook = books[0]
             if theBook:
-                print theBook
                 self.setBook(theBook)
                 desc=theBook.title.booktitle
                 self.setDescription("%s" % desc)
@@ -115,6 +113,7 @@ class inventoried_merchandise:
         try:
             self.book.sellme() # marks as sold
         except:
+            print "sellme failed"
             pass
 
         cursor.close()

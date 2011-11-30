@@ -30,7 +30,7 @@ class ConsignmentPopup(wxDialog):
         cursor=conn.cursor()
         cursor.execute('select distinct(owner) from book where status = "SOLD" and (consignment_status != "PAID" or consignment_status IS NULL) order by owner')
         self.owner_list = ["%s" % c[0] for c in cursor.fetchall()]
-       	print self.owner_list 
+        #print self.owner_list 
         cursor.close()
         
         wxDialog.__init__(self, parent,-1,"Pay consigners for sold items")
@@ -47,9 +47,9 @@ class ConsignmentPopup(wxDialog):
     def PayConsigner(self,event):
         
         owner=self.consigner.GetStringSelection()
-	print self.consigner.GetCurrentSelection()
-	print self.consigner.GetSelection()
-	print self.consigner.GetStringSelection()
+        #print self.consigner.GetCurrentSelection()
+        #print self.consigner.GetSelection()
+        #print self.consigner.GetStringSelection()
         books=Book.select(Book.q.owner==owner)
         frame = wxFrame(None, -1, "check in list" , pos=(50,50), size=(500,600),
                          style=wxNO_FULL_REPAINT_ON_RESIZE|wxDEFAULT_FRAME_STYLE)

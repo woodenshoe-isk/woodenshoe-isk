@@ -18,8 +18,6 @@ class MembersList:
        
     def get(self, id):
         member = Member.get(id)
-        print member
-        
         return member
 
     

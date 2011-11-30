@@ -25,7 +25,7 @@ class add:
     
     
     def inventory_merchandise(self, frame_object,event,label):
-        print WOODEN_SHOE
+    #print WOODEN_SHOE
 	if WOODEN_SHOE:
                 dlg=wx.MessageDialog(frame_object, "PLease remember to check the special orders box. If a book has a slip in the box, put it on the hold shelf and call the customer.", "Alert!", wx.OK)
 		dlg.ShowModal()

@@ -36,7 +36,7 @@ def do_the_books():
             newtitles=new.fetchall()
             
         if len(newtitles) ==0:
-            print "adding title"
+            #print "adding title"
             #we need to add this title
             new.execute("INSERT INTO title values ('',%s,%s,%s,'','')",(isbn,title,publisher))
             newtitleid=new_db_conn.insert_id()
@@ -158,14 +158,14 @@ def create_new_tables():
     
     
 
-print "creating new tables"
+#print "creating new tables"
 create_new_tables()
 
-print "carrying over unchanged data"
+#print "carrying over unchanged data"
 move_unchanged_data()
 
-print "converting inventory"
+#print "converting inventory"
 do_the_books()
 
-print "faking sales dates"
+#print "faking sales dates"
 new.execute("UPDATE book set sold_when=now() where status='SOLD'")

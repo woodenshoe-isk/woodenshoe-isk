@@ -64,10 +64,10 @@ class wxFrame1(wxFrame):
         pass
     
     def _init_ctrls(self, prnt):
-	self.cfg = configuration()
-	title = self.cfg.get("title")
-	wxFrame.__init__(self, id=-1, name='', parent=prnt,
-			pos=wxPoint(35, 47), 
+        self.cfg = configuration()
+        title = self.cfg.get("title")
+        wxFrame.__init__(self, id=-1, name='', parent=prnt,
+                        pos=wxPoint(35, 47), 
                         style=wxDEFAULT_FRAME_STYLE, title=title)
         self._init_utils()
         self.SetSizer(self.build_GUI()) 
@@ -78,12 +78,12 @@ class wxFrame1(wxFrame):
        
         self.parent=parent
         self._init_ctrls(parent)
-	self.orderboxes={
-		"default":self.orderbox,
-	}
-        self.tab_list.Append("default","default")	
-	
-	self.current_orderbox_name="default"
+        self.orderboxes={
+                "default":self.orderbox,
+        }
+        self.tab_list.Append("default","default")       
+        
+        self.current_orderbox_name="default"
         self.cashbox=cashbox()
         self.membersList=MembersList()
         self.inventory=inventory()
@@ -102,60 +102,61 @@ class wxFrame1(wxFrame):
     def Generate_OnItem_Button(self,item_number):
         return lambda event : self.orderbox.append(item(item_number))
 
-	
+        
     def changeOrderBox(self,orderbox_name):
-	self.order_list.Clear()
-	self.orderbox=self.orderboxes[orderbox_name]
-	self.orderbox.redisplay()
-	self.current_orderbox_name=orderbox_name			
-	
-	self.tab_list.SetSelection(self.orderbox.list_position)	
-	print "Setting selection to %s at %s " % (orderbox_name,self.orderbox.list_position)
-	for k in self.orderboxes.keys():
-		print "%s %s" %(k,self.orderboxes[k].list_position)
+        self.order_list.Clear()
+        self.orderbox=self.orderboxes[orderbox_name]
+        self.orderbox.redisplay()
+        self.current_orderbox_name=orderbox_name                        
+        
+        self.tab_list.SetSelection(self.orderbox.list_position)     
+        #print "Setting selection to %s at %s " % (orderbox_name,self.orderbox.list_position)
+        for k in self.orderboxes.keys():
+                #print "%s %s" %(k,self.orderboxes[k].list_position)
 
     def deleteOrderBox(self,orderbox_name):
-	print "deleting orderbox %s" % orderbox_name
-	removed=self.orderboxes[orderbox_name].list_position
-	self.tab_list.Delete(self.orderboxes[orderbox_name].list_position)
-	del self.orderboxes[orderbox_name]
-	for obox_name in self.orderboxes.keys():
-		obox=self.orderboxes[obox_name]
-		if obox.list_position>removed:
-			obox.list_position = obox.list_position - 1
-	self.changeOrderBox("default")
+        #print "deleting orderbox %s" % orderbox_name
+        removed=self.orderboxes[orderbox_name].list_position
+        self.tab_list.Delete(self.orderboxes[orderbox_name].list_position)
+        del self.orderboxes[orderbox_name]
+        for obox_name in self.orderboxes.keys():
+                obox=self.orderboxes[obox_name]
+                if obox.list_position>removed:
+                        obox.list_position = obox.list_position - 1
+        self.changeOrderBox("default")
 
 #    def newOrderBox(self,orderbox_name):
-#	self.orderboxes[orderbox_name]=orderbox(self.order_list,self)
-#	self.orderbox=self.orderboxes[orderbox_name]	
+#       self.orderboxes[orderbox_name]=orderbox(self.order_list,self)
+#       self.orderbox=self.orderboxes[orderbox_name]        
 
     def saveOrderBox(self,orderbox_name):
-	
-	#if name was default
-	if self.current_orderbox_name=="default":	
-		self.orderboxes["default"]=orderbox(self.order_list,self,"default",0)
-		# current orderbox gets a name
-		self.orderboxes[orderbox_name]=self.orderbox	
-		self.orderboxes[orderbox_name].list_position=self.tab_list.GetCount()
+        
+        #if name was default
+        if self.current_orderbox_name=="default":       
+                self.orderboxes["default"]=orderbox(self.order_list,self,"default",0)
+                # current orderbox gets a name
+                self.orderboxes[orderbox_name]=self.orderbox        
+                self.orderboxes[orderbox_name].list_position=self.tab_list.GetCount()
 
-	else:
-		self.orderboxes[orderbox_name]=orderbox(self.order_list,self,orderbox_name,self.tab_list.GetCount())	
+        else:
+                self.orderboxes[orderbox_name]=orderbox(self.order_list,self,orderbox_name,self.tab_list.GetCount())        
 
 
-	print "Saving tab %s with position %s" % (orderbox_name,self.orderboxes[orderbox_name].list_position);
-	self.tab_list.Append(orderbox_name,orderbox_name)
-	
-	self.current_orderbox_name=orderbox_name	
-	self.orderbox=self.orderboxes[orderbox_name]
+        #print "Saving tab %s with position %s" % (orderbox_name,self.orderboxes[orderbox_name].list_position);
+        self.tab_list.Append(orderbox_name,orderbox_name)
+        
+        self.current_orderbox_name=orderbox_name        
+        self.orderbox=self.orderboxes[orderbox_name]
         self.order_list.Clear()
         self.orderbox.redisplay()
-	self.tab_list.SetSelection(self.orderbox.list_position)	
+        self.tab_list.SetSelection(self.orderbox.list_position)     
 
 
-	print "SAVED %s at Position %s" %(orderbox_name,self.orderbox.list_position) 
-	for k in self.orderboxes.keys():
-		print "%s %s" %(k,self.orderboxes[k].list_position)
-	
+        #print "SAVED %s at Position %s" %(orderbox_name,self.orderbox.list_position) 
+        for k in self.orderboxes.keys():
+                #print "%s %s" %(k,self.orderboxes[k].list_position)
+                pass
+        
 
     
 
@@ -196,11 +197,11 @@ class wxFrame1(wxFrame):
             self.orderbox.displayFinalTotal()
 
     def OnSaveOrder(self, event):
-	if self.save_orderbox_name.GetValue()!="":
-		self.saveOrderBox(self.save_orderbox_name.GetValue())
-		self.save_orderbox_name.SetValue("")
-	else:
-		print "NO TAB NAME SPECIFIED"
+        if self.save_orderbox_name.GetValue()!="":
+                self.saveOrderBox(self.save_orderbox_name.GetValue())
+                self.save_orderbox_name.SetValue("")
+        else:
+                print "NO TAB NAME SPECIFIED"
 
     def do_receiptPopup(self,event,payment_info):
         win = ReceiptPopup(self,payment_info)
@@ -243,10 +244,10 @@ class wxFrame1(wxFrame):
         self.orderbox.remove_selected()
 
     def OnVoid_button(self, event):
-	print "voiding orderbox %s" % self.current_orderbox_name
-	self.orderbox.void()
-	if not(self.current_orderbox_name == "default"):
-		self.deleteOrderBox(self.current_orderbox_name)        
+        #print "voiding orderbox %s" % self.current_orderbox_name
+        self.orderbox.void()
+        if not(self.current_orderbox_name == "default"):
+                self.deleteOrderBox(self.current_orderbox_name)        
 
 
     def OnCheckoutButton(self,event):
@@ -282,12 +283,12 @@ class wxFrame1(wxFrame):
         self.orderbox.select(event.GetSelection())
 
     def OnTabSelected(self,event):
-	tab_number=event.GetSelection()
-	print "Tab at position %s selected" % (tab_number) 
-	self.changeOrderBox(self.tab_list.GetString(tab_number))
-	print "Changing to tab " + self.tab_list.GetString(tab_number)
-	
-#	self.tab_list.Delete(tab_number)
+        tab_number=event.GetSelection()
+        #print "Tab at position %s selected" % (tab_number) 
+        self.changeOrderBox(self.tab_list.GetString(tab_number))
+        #print "Changing to tab " + self.tab_list.GetString(tab_number)
+        
+#       self.tab_list.Delete(tab_number)
     def sizer_add(self, sizer, args):
         if isinstance(args[0], StringTypes)!=true:
             item = args[0]
@@ -325,7 +326,7 @@ class wxFrame1(wxFrame):
         col_sizer = []
         orderboxAndSearchpanel = 0
         sizer_list = self.cfg.get("sizer_list")
-	for x in range(len(sizer_list)):
+        for x in range(len(sizer_list)):
             # This condition checks if the subarray is a subarray of box
             # definition or just a box definition
             if len(sizer_list[x])>3 and isinstance(sizer_list[x][0], StringTypes) != true:
@@ -359,7 +360,7 @@ class wxFrame1(wxFrame):
         return self.searchInventory
 
     def make_saved_sale_sizer(self):
-	# Make the box for the saved sales... 
+        # Make the box for the saved sales... 
         savedSaleSizer = wxStaticBoxSizer(wxStaticBox(parent=self, id=-1, label="Save sale"),
             wxHORIZONTAL)
         self.savedSaleAddSaleSizer = wxBoxSizer(wxVERTICAL) 
@@ -370,8 +371,8 @@ class wxFrame1(wxFrame):
         self.savedSaleAddSaleSizer.Add(self.save_order);
         self.savedSaleAddSaleSizer.Add(self.save_orderbox_name);
         self.tab_list = wxListBox(choices=[], id=-1,
-			name='tab_list', parent=self,
-			size=wxSize(110, 65), style=wxLIST_FORMAT_RIGHT, validator=wxDefaultValidator)
+                        name='tab_list', parent=self,
+                        size=wxSize(110, 65), style=wxLIST_FORMAT_RIGHT, validator=wxDefaultValidator)
         EVT_LISTBOX(self.tab_list, self.tab_list.GetId(), self.OnTabSelected)
         savedSaleSizer.Add(self.savedSaleAddSaleSizer)
         savedSaleSizer.Add(self.tab_list, flag=wxGROW, proportion=1) 
@@ -409,14 +410,14 @@ class wxFrame1(wxFrame):
         self.saleUpperButtonsSizer.Add(self.remove_button)
         self.saleUpperButtonsSizer.Add(self.void_button)
          
-	    # The order list and display list will be added as is in the
-		# saleSizer, since they're alone on their lines...
+            # The order list and display list will be added as is in the
+                # saleSizer, since they're alone on their lines...
         self.order_list = wxListBox(choices=[], id=-1,
               name='order_list', parent=self, 
               size=wxSize(200, 312), style=wxLIST_FORMAT_RIGHT, 
-			  validator=wxDefaultValidator)
+                          validator=wxDefaultValidator)
         EVT_LISTBOX(self.order_list, self.order_list.GetId(), self.OnOrderItemSelected)
-		
+                
         self.display_field = wxTextCtrl(id=-1,
               name='display_field', parent=self, 
               size=wxSize(200, 32), style=wxTE_PROCESS_ENTER, value='0')
@@ -426,7 +427,7 @@ class wxFrame1(wxFrame):
         self.numberbox=numberbox(self.display_field) 
         self.orderbox=orderbox(self.order_list,self,"default",0)
  
-        # The sale and discount buttons		
+        # The sale and discount buttons             
         self.saleLowerButtonsSizer = wxBoxSizer(wxHORIZONTAL) 
         self.total_button = wxButton(id=-1,
               label='subtotal', name='total_button', parent=self,
@@ -442,8 +443,8 @@ class wxFrame1(wxFrame):
         self.saleLowerButtonsSizer.Add(self.total_button)
         self.saleLowerButtonsSizer.Add(self.discount_button)
 
-		# We make a grid for the payment mode, since there could be
-		# more than 3 here
+                # We make a grid for the payment mode, since there could be
+                # more than 3 here
         self.salePaymentModeSizer = wxGridSizer(rows=1, cols=3, vgap=10, hgap=10)
         self.credit_button = wxButton(id=-1,
                                       label='credit', name='credit_button', parent=self, 
@@ -476,7 +477,7 @@ class wxFrame1(wxFrame):
     def make_simple_items_notebook(self):
         simple_items = self.cfg.get("simple_items")
         self.simple_items_notebook=simpleItemNotebook(id=-1,name="si_notebook", parent=self)
-        for x in range(len(simple_items)):	
+        for x in range(len(simple_items)):      
             try:
                 simple_items[x]
                 page_name="stuff"
@@ -495,7 +496,7 @@ class wxFrame1(wxFrame):
                                  name='item_%i' % (x+1),
                                  parent=my_page,
                                  pos=wxPoint(100* (my_page.counter % 5), 32 * (my_page.counter / 5)),
-				                 size=wxSize(100, 32), style=0)
+                                                 size=wxSize(100, 32), style=0)
                 setattr(self,"item_%i" % (x+1), newButton)
                 my_page.counter=my_page.counter+1
                 EVT_BUTTON(getattr(self,"item_%i" % (x+1)),
@@ -512,7 +513,7 @@ class wxFrame1(wxFrame):
     def make_complex_items_notebook(self):
         complex_items = self.cfg.get("complex_items")
         self.complex_items_notebook=complexItemNotebook(id=-1,name="co_notebook",parent=self)
-        for x in range(len(complex_items)):	
+        for x in range(len(complex_items)):     
             try:
                 complex_items[x]
                 page_name="stuff"
@@ -551,39 +552,39 @@ class wxFrame1(wxFrame):
     
     def make_misc_functions_menu(self):
         misc_functions = self.cfg.get("misc_functions")
-	self.misc_functions_menubar=wxMenuBar()
+        self.misc_functions_menubar=wxMenuBar()
         self.modulefunc = {}
         module4button = {}
         self.menu = {}
         self.menuitems = {}
-        for x in range(len(misc_functions)):	
+        for x in range(len(misc_functions)):        
             try:
-		page_name="tasks"
+                page_name="tasks"
                 try:
                     page_name=misc_functions[x][3]["page"]                                
                 except:
                     pass
-                print "adding "+misc_functions[x][0]+" on "+ page_name
+                #print "adding "+misc_functions[x][0]+" on "+ page_name
                 if not self.menu.has_key(page_name):
                     self.menu[page_name] = wxMenu()
                 a = self.menu[page_name].Append(x+99, misc_functions[x][0], misc_functions[x][2])
                 try:
-		    modul = __import__('factories.'+misc_functions[x][1], globals(),[],[1])
-		except:    
+                    modul = __import__('factories.'+misc_functions[x][1], globals(),[],[1])
+                except:    
                     print "Factory %s crashed when opening it... " % misc_functions[x][1]
                 try:
-		    clas = getattr(modul, misc_functions[x][2])
-		    module4button[x] = clas()
-		except:    
+                    clas = getattr(modul, misc_functions[x][2])
+                    module4button[x] = clas()
+                except:    
                     print "Factory %s crashed when loading class %s" % (misc_functions[x][1], misc_functions[x][2])
                 try:
                     self.modulefunc[x] = self.module4button[x].GenerateOnPress(self, misc_functions[x][0])
-		except:    
+                except:    
                     print "Factory %s GenerateOnPress function is fucked over " % misc_functions[x][2]
-		    a = module4button[x].GenerateOnPress(self, misc_functions[x][2])
-		    a(event)
+                    a = module4button[x].GenerateOnPress(self, misc_functions[x][2])
+                    a(event)
 
-		    
+                    
                 self.Bind(wx.EVT_MENU,  self.modulefunc[x], id=x+99)
             except:
                 a="outofrange"
@@ -595,8 +596,8 @@ class wxFrame1(wxFrame):
     def make_misc_functions_notebook(self):
         misc_functions = self.cfg.get("misc_functions")
         self.misc_functions_notebook=miscFunctionNotebook(id=-1,name="misc_notebook",parent=self)
-	module4button = {}
-        for x in range(len(misc_functions)):	
+        module4button = {}
+        for x in range(len(misc_functions)):        
             try:
                 misc_functions[x]
                 page_name="tasks"
@@ -605,7 +606,7 @@ class wxFrame1(wxFrame):
                     page_name=misc_functions[x][3]["page"]
                 except:
                     pass
-                print "adding "+misc_functions[x][0]+" on "+page_name
+                #print "adding "+misc_functions[x][0]+" on "+page_name
 
                 if (not(self.misc_functions_notebook.hasPage(page_name))):
                     self.misc_functions_notebook.addPage(page_name)
@@ -621,10 +622,10 @@ class wxFrame1(wxFrame):
                                  size=wxSize(180, 32), style=0))
                 my_page.counter=my_page.counter+1
                 try:
-		    modul = __import__('factories.'+misc_functions[x][1], globals(),[],[1])
-		    clas = getattr(modul, misc_functions[x][2])
-		    module4button[x] = clas()
-		except:    
+                    modul = __import__('factories.'+misc_functions[x][1], globals(),[],[1])
+                    clas = getattr(modul, misc_functions[x][2])
+                    module4button[x] = clas()
+                except:    
                     print "Factory %s crashed when loading class %s... " % (misc_functions[x][1], misc_functions[x][2])
  
                 EVT_BUTTON(getattr(self,"miscfunc%i" % (x+1)),
@@ -648,7 +649,7 @@ class wxFrame1(wxFrame):
         self.note_list.initialize(self)
 
         self.messageTextCtrl = wxTextCtrl(self, -1, "",size=(180, 50),
-						style=wxTE_MULTILINE)
+                                                style=wxTE_MULTILINE)
         self.messageAuthorLabel = wxStaticText(self,-1,"your name:")
         self.messageAuthorTextCtrl = wxTextCtrl(self, -1,
                         "",size=(92, -1))

@@ -41,7 +41,7 @@ path_base = os.path.dirname(__file__)
 # stand-alone using the built-in CherryPy server.
 #
 def start_modpython():
-    print "in start_modpython"
+    #print "in start_modpython"
     cherrypy.engine.SIGHUP = None
     cherrypy.engine.SIGTERM = None
     cherrypy.tree.mount(DVD(), config=cherrypy_global_config_file)

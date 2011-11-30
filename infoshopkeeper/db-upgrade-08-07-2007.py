@@ -66,11 +66,11 @@ def shrink(new_db_conn):
     shrinka=new_db_conn.cursor()
     # sql for get the count of all duplicated authors, and the number of the smallest author id
     # which got that name
-    print("SELECT author_name, COUNT(author_name) AS num, min(author.id) FROM author GROUP BY author_name HAVING num > 1")
+    #print("SELECT author_name, COUNT(author_name) AS num, min(author.id) FROM author GROUP BY author_name HAVING num > 1")
     shrinka.execute("SELECT author_name, COUNT(author_name) AS num, min(author.id) FROM author GROUP BY author_name HAVING num > 1")
     a = shrinka.fetchall()
     for b in a:
-        print "The author %s is present %s time in the database. The lowest id of his occurence is %s" % (b[0], b[1], b[2])
+        #print "The author %s is present %s time in the database. The lowest id of his occurence is %s" % (b[0], b[1], b[2])
         getWrongs=new_db_conn.cursor()
 	# This select all author.id having the same name but which aren't the smallest id of the author name
 	getWrongs.execute("SELECT DISTINCT author.id FROM author_title, author WHERE author.id = author_title.author_id AND author.author_name = \"%s\" AND author.id <> %s" %
@@ -90,7 +90,7 @@ new.execute("show tables")
 sentinel = 0
 for a in new.fetchall():
     if a[0] == "author_title":
-        print "author_title does exist !"
+        #print "author_title does exist !"
 	# The new table is already there, so we set the sentinel to 1
 	sentinel = 1
 	# And we check the integrity of the relations, to be sure that
@@ -104,10 +104,10 @@ for a in new.fetchall():
 	allLinked = integrity.fetchall()
 	the_list = []
 	for iter in allLinked:
-	    print iter[0]
+	    #print iter[0]
 	    the_list.append(str(iter[0]))
 	the_stringed_list = ",".join(the_list)
-	print the_stringed_list
+	#print the_stringed_list
 	integrity=new_db_conn.cursor()
 	integrity.execute("SELECT title.id FROM title WHERE title.id NOT IN (%s)" % the_stringed_list)
 	allNotLinked = integrity.fetchall()
@@ -115,19 +115,19 @@ for a in new.fetchall():
             transferor=new_db_conn.cursor()
             transferor.execute("select author.id, title.id from title, author where author.title_id = title.id")
             allNotLinked = transferor.fetchall()
-            print "adding " + str(len(allNotLinked)) + " links the multiple join !"
+            #print "adding " + str(len(allNotLinked)) + " links the multiple join !"
             for iter in allNotLinked:
 	        #print iter
                 adder=new_db_conn.cursor()
-	        print("insert into author_title (author_id, title_id) values (\"%s\", \"%s\")" % (iter[0], iter[1]))
+	        #print("insert into author_title (author_id, title_id) values (\"%s\", \"%s\")" % (iter[0], iter[1]))
 	        adder.execute("insert into author_title (author_id, title_id) values (\"%s\", \"%s\")" % (iter[0], iter[1]))
 	shrink(new_db_conn)
-	print "Done !"
+	#print "Done !"
 	sys.exit(0)
 	    
 
 if sentinel==0:
-    print "author_title doesn't exist"
+    #print "author_title doesn't exist"
     # We create the table
     new.execute("""
     CREATE TABLE `author_title` (
@@ -142,14 +142,14 @@ if sentinel==0:
     transferor=new_db_conn.cursor()
     transferor.execute("select author.id, title.id from title, author where author.title_id = title.id")
     allNotLinked = transferor.fetchall()
-    print "adding " + str(len(allNotLinked)) + " links the multiple join !"
+    #print "adding " + str(len(allNotLinked)) + " links the multiple join !"
     for iter in allNotLinked:
 	# print iter
         adder=new_db_conn.cursor()
-	print("insert into author_title (author_id, title_id) values (\"%s\", \"%s\")" % (iter[0], iter[1]))
+	#print("insert into author_title (author_id, title_id) values (\"%s\", \"%s\")" % (iter[0], iter[1]))
 	adder.execute("insert into author_title (author_id, title_id) values (\"%s\", \"%s\")" % (iter[0], iter[1]))
-print "Done adding the links to author_title, going to shrink the list of authors"	
+#print "Done adding the links to author_title, going to shrink the list of authors"	
 shrink(new_db_conn)
-print "Done !"
+#print "Done !"
 sys.exit(0)
 

@@ -33,7 +33,7 @@ rows=cursor.fetchall()
 total = 0
 
 for r in rows:
-	#print "Dealing with %s"  %r[1]
+	print "Dealing with %s"  %r[1]
 	if isbn.isValid(r[1]):
 		prefix=r[1][:-1]
 		cursor.execute("SELECT * from title where isbn RLIKE %s and not (isbn = %s)",('^%s' % prefix,r[1]))

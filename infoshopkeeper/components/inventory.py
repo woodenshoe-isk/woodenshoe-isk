@@ -21,31 +21,31 @@ class inventory:
     def lookup_by_isbn(self,number):
         isbn=""
         number=re.sub("^([\'\"])(.*)\\1$", '\\2', number)
-        print "number is now: ", number
+        #print "number is now: ", number
         if len(number)>=9:
             number=re.sub("[-\s]", '', number)
-        print "number is now: ", number
+        #print "number is now: ", number
         if len(number)==13 or len(number)==18:
             isbn=upc2isbn(number)
         else:
             isbn=number
-        print "NUMBER was " +number+ ",ISBN was "+isbn
+        #print "NUMBER was " +number+ ",ISBN was "+isbn
         if len(isbn)>0:
             #first we check our database
             titles =  Title.select(Title.q.isbn==isbn)
-            print titles #debug
+            #print titles #debug
             self.known_title= False
             the_titles=list(titles)
             if len(the_titles) > 0:
-                print "in titles"
+                #print "in titles"
                 self.known_title= the_titles[0]
                 ProductName = the_titles[0].booktitle.decode("unicode_escape")
                 if len(the_titles[0].author) > 0:
                     authors = [x.authorName.decode("unicode_escape") for x in the_titles[0].author]
                 authors_as_string = string.join(authors,',')
                 if len(the_titles[0].categorys) > 0:
-                    print len(the_titles[0].categorys)
-                    print the_titles[0].categorys
+                    #print len(the_titles[0].categorys)
+                    #print the_titles[0].categorys
                     categories = [x.categoryName.decode("unicode_escape") for x in the_titles[0].categorys]
                 categories_as_string = string.join(categories,',')
                 if len(the_titles[0].books) > 0:
@@ -57,15 +57,15 @@ class inventory:
                 Kind=the_titles[0].kind.kindName
  
             else: #we don't have it yet
-                print "in isbn"
+                #print "in isbn"
                 sleep(1) # so amazon doesn't get huffy 
                 ecs.setLicenseKey(amazon_license_key)
                 ecs.setSecretAccessKey(amazon_secret_key)
                 ecs.setAssociateTag(amazon_associate_tag)
                 
-                print "about to search", isbn, isbn[0]
+                #print "about to search", isbn, isbn[0]
                 pythonBooks = ecs.ItemLookup(isbn,IdType="ISBN",SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
-                print pythonBooks
+                #print pythonBooks
                 if pythonBooks:
                     result={}
                     authors=[]
@@ -93,23 +93,15 @@ class inventory:
                             if hasattr(item, 'Name'):
                                 bn.add(item.Name)
                             if hasattr(item, 'Ancestors'):
-                                print "hasansc"   
+                                #print "hasansc"   
                                 for i in item.Ancestors:
                                     bn.update(parseBrowseNodesInner(i))
-                                    print "bn ", bn
-                                    if hasattr(i, 'Name'):
-                                       print "itemname ", i.Name
-                                       print "bn plus ", bn.update([i.Name])   
                             if hasattr(item, 'Children'):
-                                print "haschildren"
                                 for i in item.Children:
                                     bn.update(parseBrowseNodesInner(i))
-                                    print "bn ", bn
-                                    if hasattr(item, 'Name'):
-                                        print "bn plus ", bn.update([i.Name])
+                                    #print "bn ", bn
                             if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
                                 if hasattr(item, 'Name'):
-                                    print "itemname", item.Name
                                     return set([item.Name])
                                 else:
                                     return set()
@@ -125,7 +117,7 @@ class inventory:
 
                     categories=parseBrowseNodes(b.BrowseNodes)
                     categories_as_string = string.join(categories,',')
-                    print categories, categories_as_string
+                    #print categories, categories_as_string
 
 
                     ProductName=""
@@ -146,7 +138,6 @@ class inventory:
                         Format=b.Binding
                     
                     Kind='books'
-            print "returning"
                     
             return {"title":ProductName,
                     "authors":authors,
@@ -165,7 +156,7 @@ class inventory:
         if len(upc)>0:
             #first we check our database
             titles =  Title.select(Title.q.isbn==upc)
-            print titles #debug
+            #print titles #debug
             self.known_title= False
             the_titles=list(titles)
             if len(the_titles) > 0:
@@ -247,29 +238,18 @@ class inventory:
 
 
     def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",extra_prices={}, tag=''):
-        print "GOT to addToInventory"
-        print known_title
+        #print "GOT to addToInventory"
+        #print known_title
         if not(known_title):
         #add a title
             the_kinds=list(Kind.select(Kind.q.kindName==kind_name))
             kind_id = None
             if the_kinds:
                 kind_id = the_kinds[0].id
-            print "isbn"
-            print isbn
-            print "type"
-            print type
-            print "title"
-            print title
-            print "publisher"
-            print publisher
-            print "knowtitle"
-            print known_title
             known_title=Title(isbn=isbn, booktitle=title.encode("ascii", "backslashreplace"), publisher=publisher.encode("ascii", "backslashreplace"),tag=" ",type=types, kindID=kind_id)
-            print known_title
+            #print known_title
             for rawAuthor in authors:
                 author = rawAuthor.encode("ascii", "backslashreplace")
-            print author
             theAuthors = Author.selectBy(authorName=author)
             theAuthorsList = list(theAuthors)
             if len(theAuthorsList) == 1:
@@ -287,12 +267,10 @@ class inventory:
         location_id=1
         if the_locations:
             location_id = the_locations[0].id
-        print quantity
-        print "ourprice: ", ourprice, "listprice: ", listprice
         if not ourprice:
             ourprice=listprice
         for i in range(int(quantity)): 
-            print "book loop"
+            #print "book loop"
             b=Book(title=known_title,status=status.encode("ascii", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("ascii", "backslashreplace"),notes=notes.encode("ascii", "backslashreplace"),consignmentStatus="")
 #               b.extracolumns()
 #               for mp in extra_prices.keys():
@@ -302,7 +280,7 @@ class inventory:
 
                 
     def getInventory(self,queryTerms):
-        print queryTerms
+        #print queryTerms
         keys=queryTerms.keys()
         
         isbnSelect=""
@@ -400,7 +378,7 @@ class inventory:
             #~ b.title.type if b.title.type is not None else '')
 
             i=i+1                
-        print "results are ", results
+        #print "results are ", results
         return results
 
     

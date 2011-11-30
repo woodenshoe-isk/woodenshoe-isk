@@ -38,8 +38,8 @@ class CheckoutPopup(wxDialog):
         self.notebook.AddPage(self.show_member_panel, "Existing member")
         self.mastersizer.Add(self.notebook)
         self.SetSizer(self.mastersizer)
-        for i in self.parent.orderbox.items:
-            print i.database_id, "... ", i.id
+        # for i in self.parent.orderbox.items:
+        #   print i.database_id, "... ", i.id
         #self.b = wxButton(self, -1, "Checkout", (15, 80))
         #EVT_BUTTON(self, self.b.GetId(), self.Checkout)
         #self.b.SetDefault()
@@ -47,13 +47,13 @@ class CheckoutPopup(wxDialog):
 
     def Borrow(self, id):
         borrower = self.parent.membersList.get(id)
-        print borrower
+        #print borrower
         for i in self.parent.orderbox.items:
             # Check if this work on sqlobject 0.7... I got
             # lots of problem on 0.6.1, and itemID __isn't__
             # defined in emprunt, which is plain weirdness
             e = Emprunt(borrower = id, itemID=i.database_id)
-            print i.database_id
+            #print i.database_id
         self.parent.orderbox.setBorrowed() 
         self.parent.orderbox.void()
         self.Close()

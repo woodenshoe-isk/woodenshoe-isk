@@ -16,8 +16,8 @@ class orderbox:
         self.totaled=False
         self.finalized=False
         self.conn=db.connect()
-	self.name=name
-	self.list_position=list_position
+        self.name=name
+        self.list_position=list_position
 
     def isEmpty(self):
         if len(self.items)>=1:
@@ -86,6 +86,7 @@ class orderbox:
         self.tax_amount=float("%.2f" % (taxable_total_amount*taxrate))
 
     def finalize_items(self):
+        #print "in order_display finalize_items"
         if self.finalized == False:
             for item in self.items:
                 item.finalizeOrder(self.conn.cursor(),self.parent.cashbox.cashier)

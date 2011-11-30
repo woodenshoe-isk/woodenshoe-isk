@@ -68,7 +68,19 @@ class SQLObjectWithFormGlue(SQLObject):
                     print "Unexpected error:", sys.exc_info()[1]
             form_fragment=form_fragment+"</SELECT><br />"
             return form_fragment
+
+        def handleEnum(col):
+            form_fragment = "<label class='textbox' for='id_%s'>%s</label><select name='%sID' class='textbox'>" % (col.name, col.name, col.name)
+            value=getattr(self, col.name)
+            for enumval in col.enumValues:
+                selected_fragment=''
+                if value==enumval:
+                    selected_fragment= "selected='true'"
+                form_fragment= form_fragment + "<option value='%s' %s>%s</option>" % (enumval, selected_fragment, enumval)
+            form_fragment= form_fragment + "</select><br />"
+            return form_fragment
             
+                                           
         def handleString(col):
             # look at http://formencode.org/docs/htmlfill.html
             form_fragment = """<label class='textbox' for='id_%s'>
@@ -117,12 +129,15 @@ class SQLObjectWithFormGlue(SQLObject):
                 formhtml = formhtml + handleFloat(c)
             if type(c)==SODateTimeCol:
                 formhtml = formhtml + handleDateTime(c)
+            if type(c)==SOEnumCol:
+                formhtml = formhtml + handleEnum(c)
             if type(c)==SOForeignKey:
                 try:
                     if c.joinName in self.listTheseKeys:
                         formhtml = formhtml + self.handleForeignKey(c)
                 except:
                     pass
+
 
         formhtml=formhtml+"<input class='submit' type='submit'><br />"
         return formhtml

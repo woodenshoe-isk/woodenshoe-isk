@@ -292,8 +292,8 @@ def search(search_type, keyword, product_line, type = "heavy", page = None,
     usock = u.open(url)
     xmldoc = minidom.parse(usock)
 
-#     from xml.dom.ext import PrettyPrint
-#     PrettyPrint(xmldoc)
+#     from xml.dom.ext import Prettyprint
+#     Prettyprint(xmldoc)
 
     usock.close()
     if search_type == "BlendedSearch":

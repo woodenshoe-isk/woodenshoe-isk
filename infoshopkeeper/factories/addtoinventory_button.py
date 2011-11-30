@@ -8,7 +8,6 @@ def GenerateOnPress(frame_object,label):
 
 
 def inventory_merchandise(frame_object,event,label):
-    print WOODEN_SHOE
     if WOODEN_SHOE:
            try:
                 dlg=wx.MessageDialog(self, "Fill in (at least) title and price!", "Alert!", wxOK)

@@ -42,8 +42,8 @@ for r in rows:
 	price = r[1]
 	total=total + r[1]
 	price_string = rjust("%.2f" % r[1],10)
-	print "%s | %s | %s" % (r[2],ljust(r[4][:100],50),price_string)
+	#print "%s | %s | %s" % (r[2],ljust(r[4][:100],50),price_string)
 
 
-print
-print "Total Sales:  %.2f" % total
+#print
+#print "Total Sales:  %.2f" % total

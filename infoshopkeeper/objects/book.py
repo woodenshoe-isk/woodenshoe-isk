@@ -14,42 +14,43 @@ cfg = configuration()
 #_connection = db.SQLObjconnect()
 
 class Book(SQLObjectWithFormGlue):
-	_connection = db.conn() 
-	listprice=FloatCol()
-	ourprice=FloatCol()
-	inventoried_when=DateTimeCol(default=now)
-	sold_when=DateTimeCol(default=now)  # we ignore this until the status gets set to "SOLD"  
-	status = StringCol(default="STOCK")
-	consignmentStatus = StringCol()            
-	distributor =StringCol()
-	#location = StringCol()
-	owner =StringCol()
-	notes =StringCol()
+    _connection = db.conn() 
+    listprice=FloatCol()
+    ourprice=FloatCol()
+    inventoried_when=DateTimeCol(default=now)
+    sold_when=DateTimeCol(default=now)  # we ignore this until the status gets set to "SOLD"  
+    status = EnumCol(enumValues=(u'STOCK', u'SOLD', u'DELETED'), default=u"STOCK")
+    consignmentStatus = StringCol()            
+    distributor =StringCol()
+    #location = StringCol()
+    owner =StringCol()
+    notes =StringCol()
 
-	location = ForeignKey('Location')
-	listTheseKeys=('location')
-	sortTheseKeys='locationName'
+    location = ForeignKey('Location')
+    listTheseKeys=('location')
+    sortTheseKeys='locationName'
  
 
-	title = ForeignKey('Title')
-	multiplied=False
+    title = ForeignKey('Title')
+    multiplied=False
 
-        def getTitle(self):
+    def getTitle(self):
                 return self.title
-	
-        def object_to_form(self):
-		self.extracolumns()
-		return SQLObjectWithFormGlue.object_to_form(self)
+    
+    def object_to_form(self):
+        self.extracolumns()
+        return SQLObjectWithFormGlue.object_to_form(self)
 
-	def extracolumns(self):
-		if not(self.multiplied):
-			for mp in cfg.get("multiple_prices"):
-				self.sqlmeta.addColumn(FloatCol(string.replace(mp[0]," ",""),default=0))
-			self.multiplied=True
-	def sellme(self):
-		self.status="SOLD"
-		self.sold_when=now()
+    def extracolumns(self):
+        if not(self.multiplied):
+            for mp in cfg.get("multiple_prices"):
+                self.sqlmeta.addColumn(FloatCol(string.replace(mp[0]," ",""),default=0))
+            self.multiplied=True
+    
+    def sellme(self):
+        self.status="SOLD"
+        self.sold_when=now()
 
-	def change_status(self,new_status):
-		self.status=new_status
+    def change_status(self,new_status):
+        self.status=new_status
 

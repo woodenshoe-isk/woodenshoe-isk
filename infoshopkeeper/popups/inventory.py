@@ -174,7 +174,7 @@ class InventoryPopup(wxDialog):
         query=Select( Title.q.type, groupBy=Title.q.type)
         results=conn.queryAll( conn.sqlrepr(query))
         typelist=[t[0] for t in results] 
-        print "TypeList: ", typelist
+        #print "TypeList: ", typelist
         
 	self.static10=wxStaticText(self, -1, "Format:")
         self.types=wxChoice(id=-1,name="merchandise_type", parent=self,choices=typelist, style=0)
@@ -224,7 +224,7 @@ class InventoryPopup(wxDialog):
     def OnKeyDown(self,event):
         keycode = event.GetKeyCode()
         if event.AltDown() == 1:
-            print keycode
+            #print keycode
             self.keybuffer= "%s%s" % (self.keybuffer,keycode-48)
             if len(self.keybuffer) == 3:
                 keybuffer_as_int= int(self.keybuffer) - 48
@@ -236,15 +236,15 @@ class InventoryPopup(wxDialog):
 
 
     def OnTextEnter(self,event):
-	print "IN OnTextEnter"
-	print "isbn " + self.number.GetValue()
+	#print "IN OnTextEnter"
+	#print "isbn " + self.number.GetValue()
 	if self.isbn_dirty==False:
 		self.known_title=False
 		id=self.number.GetValue()
 		
 		if (len(id) == 10 or len(id) == 13 or len(id)==17):
 		    item=self.parent.inventory.lookup_by_isbn(id)
-		    print item
+		    #print item
 		else:
 		    item=self.parent.inventory.lookup_by_upc(id)
 	      
@@ -272,7 +272,7 @@ class InventoryPopup(wxDialog):
 		    #self.isbn_dirty=True
 
 	else:
-		print "SHOWING DIALOG"
+		#print "SHOWING DIALOG"
 		dlg=wxMessageDialog(parent=self, message="You haven't added the last isbn to inventory. Press \"ADD\" or \"Cancel\"", caption="Alert!",  style=wx.OK|wx.ICON_EXCLAMATION)
 		dlg.ShowModal()
 		dlg.EndModal(wx.ID_OK)
@@ -289,7 +289,7 @@ class InventoryPopup(wxDialog):
         self.EndModal(1)
 
     def OnAdd(self,event):
-	print "ON ADD"
+	#print "ON ADD"
 	self.isbn_dirty=False
         description=self.description.GetValue() 
         try: 
@@ -297,7 +297,7 @@ class InventoryPopup(wxDialog):
             price_corrected=string.replace(price_raw,"$","")
             price = float(price_corrected)
         except Exception,e:
-            print str(e)
+            #print str(e)
             price=0
             
         if len(description) > 0 and price > 0:
@@ -327,7 +327,7 @@ class InventoryPopup(wxDialog):
                 mprice_raw=(self.prices.pages[m[0]]).price_ctrl.GetValue()
                 mprice_corrected=string.replace(mprice_raw,"$","")
                 mprice = float(mprice_corrected)
-                print "mprice was %s" % mprice
+                #print "mprice was %s" % mprice
                 extra_prices[m[0]]=mprice
 
             self.parent.inventory.addToInventory(title=description,status=writtenStatus,authors=authors,publisher=publisher,listprice=price,ourprice=price,isbn=isbn,categories=categories,distributor=distributor,location=location,quantity=quantity,known_title=self.known_title,types=type_name,kind_name=kind,extra_prices=extra_prices,owner=owner,notes=notes)

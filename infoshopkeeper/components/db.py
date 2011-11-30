@@ -33,12 +33,12 @@ elif dbtype is 'sqlite':
         return time.strftime('%Y-%m-%d %H:%M:%S')
     
     def regexp(regex, val):
-        print regex, val, bool(re.search(regex, val, re.I))
+        #print regex, val, bool(re.search(regex, val, re.I))
         return bool(re.search(regex, val, re.I))
     
     class SQLiteCustomConnection(sqlite.Connection):
         def __init__(self, *args, **kwargs):
-            print '@@@ SQLiteCustomConnection: registering functions'
+            #print '@@@ SQLiteCustomConnection: registering functions'
             sqlite.Connection.__init__(self, *args, **kwargs)
             SQLiteCustomConnection.registerFunctions(self)
         

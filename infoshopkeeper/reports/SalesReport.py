@@ -42,8 +42,7 @@ class SalesReport(Report, PdfReport):
             rows_height.append(None)
         colwidths = ( None,None,None,None,None,None,None,None)
         
-        
-        print results
+        #print results
         t = Table( results )
         #t = Table( results, colwidths, rows_height )
         GRID_STYLE = TableStyle(

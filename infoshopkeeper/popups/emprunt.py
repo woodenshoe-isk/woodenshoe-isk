@@ -152,7 +152,7 @@ class CheckEmpruntPanel(wxPanel,wxColumnSorterMixin):
         usercondition["ln"]=self.lastnameString
             
         for x in Emprunt.select("return_date is null"):
-            print x.date
+            #print x.date
             isGood=1
             item = x.getItem()
             member = x.getBorrower()
@@ -160,29 +160,34 @@ class CheckEmpruntPanel(wxPanel,wxColumnSorterMixin):
             title = titres.booktitle
             a = Author.select("title_id=\'%d\'" % titres.id)
             a = list(a)
-            print "6..."
+            #print "6..."
             if len(a) > 1 or len(a) == 0:
-                print "Shit !"
+                #print "Shit !"
+                pass
             author = a[0].authorName
-            print author
+            #print author
             if len(usercondition) >= 1:
                 if len(usercondition["fn"]) > 0 and not(member.first_name.find(usercondition['fn'])):
                     isGood=0
                 else:
-                    print "f n matches"
+                    #print "f n matches"
+                    pass
                 if len(usercondition["ln"]) > 0 and not(member.last_name.find(usercondition['ln'])):
                     isGood=0
                 else:
-                    print "l n matches"
+                    #print "l n matches"
+                    pass
             if len(bookcondition) >= 1:
                 if len(bookcondition["title"]) > 0 and not(title.find(bookcondition['title'])):
                     isGood=0
                 else:
-                    print "title matches"
+                    #print "title matches"
+                    pass
                 if len(bookcondition["author"]) > 0 and not(author.find(bookcondition["author"])):
                     isGood=0
                 else:
-                    print "author matches"
+                    #print "author matches"
+                    pass
             if isGood == 1:
                 self.list.InsertStringItem(i,title)
                 self.list.SetStringItem(i,1,author)

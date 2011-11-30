@@ -92,7 +92,6 @@ class InventoriedMerchandisePopup(wxDialog):
     def OnKeyDown(self,event):
         keycode = event.GetKeyCode()
         if event.AltDown() == 1:
-            print keycode
             self.keybuffer= "%s%s" % (self.keybuffer,keycode-48)
             if len(self.keybuffer) == 3:
                 keybuffer_as_int= int(self.keybuffer) - 48
@@ -106,7 +105,6 @@ class InventoriedMerchandisePopup(wxDialog):
     def OnTextEnter(self,event):
         id=self.number.GetValue()
         result=self.merchandise.retrieve(id)
-	print result, id
         if result==1:
             self.number.SetEditable(False)
             self.description.SetValue(self.merchandise.getDescription())
@@ -120,7 +118,6 @@ class InventoriedMerchandisePopup(wxDialog):
 
     def OnText(self,event):
         id=self.number.GetValue()
-	print id
         if len(id) == 13 or len(id) == 18:
             # we have a upc
             result=self.merchandise.retrieve(id)

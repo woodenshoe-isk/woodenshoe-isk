@@ -13,7 +13,7 @@ class TransactionReport(Report, PdfReport):
     show_header=True
      
     def query(self,args):
-        print>>sys.stderr, "in query", args
+        #print>>sys.stderr, "in query", args
         what="%%%s%%" % args.get('what', '')
         action=args.get('action', '')
         begin_date=args.get('begin_date','1990-01-01')
@@ -33,7 +33,7 @@ class TransactionReport(Report, PdfReport):
             clauses.append("transactionLog.date <= ADDDATE('%s',INTERVAL 1 DAY)" % end_date )
 
         results=Transaction.select( ' AND '.join(clauses))
-        print>>sys.stderr, 'Results:', results
+        #print>>sys.stderr, 'Results:', results
         return results
     
     def format_results(self,results):
@@ -56,7 +56,7 @@ class TransactionReport(Report, PdfReport):
         colwidths = ( None,None,None,None,None,None,None,None)
         
         
-        print results
+        #print results
         t = Table( results )
         #t = Table( results, colwidths, rows_height )
         GRID_STYLE = TableStyle(

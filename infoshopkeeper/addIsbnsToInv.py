@@ -16,17 +16,18 @@ class ISBNToBeEntered(SQLObject):
 inv=inventory()
 titles=ISBNToBeEntered.select()
 for t in titles:
-    print t
+    #print t
     try:
-	titleinfo=inv.lookup_by_isbn(t.isbn)
+    	titleinfo=inv.lookup_by_isbn(t.isbn)
     except:
-	print "isbn %s seems to be invalid" % t.isbn
-    print titleinfo
+        #print "isbn %s seems to be invalid" % t.isbn
+        pass
+    #print titleinfo
     if isinstance(titleinfo['list_price'],unicode):
 	correctedprice=float(titleinfo['list_price'].replace('$',''))
     else:
 	correctedprice=float(titleinfo['list_price'])
-    print correctedprice
+    #print correctedprice
     inv.addToInventory(authors=titleinfo['authors'], categories=','.split(titleinfo['categories_as_string']), types=titleinfo['format'], isbn=titleinfo['isbn'], known_title=titleinfo['known_title'], price=correctedprice, publisher=titleinfo['publisher'], title=titleinfo['title'], location=t.location, quantity=t.count, kind_name='books')
 
 

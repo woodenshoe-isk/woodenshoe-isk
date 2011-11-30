@@ -41,10 +41,10 @@ class multiplePricesNotebook(wxNotebook):
         master_page_name=[m for m in self.pages.keys() if self.pages[m].master][0]
         master_page=self.pages[master_page_name]
         new_master_price=float(string.replace(master_page.GetValue(),"$",""))
-	cfg = configuration()
-	for mp in cfg.get("multiple_prices"):
+        cfg = configuration()
+        for mp in cfg.get("multiple_prices"):
             if mp[0] != master_page_name:
-                print mp[1]
+                #print mp[1]
                 self.pages[mp[0]].SetValue("%s" % (mp[1]*new_master_price))
                 
             
