@@ -25,11 +25,11 @@ from wsgiapp_local import application
     #def getMenuData(cls):
     #def setMenuData(cls, dictionaryOfMenuLists):
 #def jsonify_tool_callback(*args, **kwargs):
+
 #class Noteboard:
     #def noteboard(self):
     #def get_notes(self, **kwargs):
     #def post_note(self, author='', message='', **kwargs):
-
 class Test_Noteboard(unittest.TestCase):
     def setUp(self):
         try:

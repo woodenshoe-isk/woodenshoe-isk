@@ -21,6 +21,9 @@ import shelve
 
 import pdb
 
+from persistentqueue import PersistentQueue
+import cPickle
+
 my_logger = logging.getLogger('MyLogger')
 my_logger.setLevel(logging.DEBUG)
 
@@ -41,14 +44,17 @@ def freeze(list):
 
 
 def main():
-    amazonQueue = MyQueue()
-    addExtraInfoQueue=MyQueue()
-    comparisonQueue= MyQueue()
-    guiQueue = MyQueue()
+    amazonQueue = MyQueue('/tmp/persistentqueue/amazonqueue')
+    addExtraInfoQueue=MyQueue('/tmp/persistentqueue/addextrainfoqueue')
+    comparisonQueue= MyQueue('/tmp/persistentqueue/comparisonqueue')
+    guiQueue = MyQueue('/tmp/persistentqueue/guiqueue')
     
     #Get all valid isbns and put them in a queue for amazon
-    for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn, limit=200))):
-        amazonQueue.put({'isbn':x[0]})
+    #Since we are using a persistent queue, we only need do this once,
+    #otherwise it will keep adding the same items redundantly.
+    if amazonQueue.qsize() == 0:
+        for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn, limit=500))):
+            amazonQueue.put({'isbn':x[0]})
     
     #We've finished all isbns & aren't just blocking for input
     amazonQueue.setDoneWaiting(True)
@@ -58,7 +64,7 @@ def main():
     amazonThread.start()
     
     #Get category and item format while we have the amazon info record
-    #We do this for each item because we don't have this stuff yet
+    #We do this for each item because we don't have this informationf yet
     addExtraInfoThread=AddExtraInfoThread(addExtraInfoQueue)
     addExtraInfoThread.start()
     
@@ -72,7 +78,7 @@ def main():
     #gui loop for dealing with corrections
     while keepRunning:
         try:
-            correction1 = guiQueue.get(False)
+            correction1 = guiQueue.get(True, 1)
             
             #print title if no correction
             if len(correction1['booktitleList'])==1:
@@ -84,9 +90,9 @@ def main():
                 for i, x in enumerate(correction1['booktitleList']):
                     print '%s. %s' % (i, x)
                     try:
-			readline.add_history(x)
-		    except:
-			break
+                        readline.add_history(x)
+                    except:
+                        break
                 inputline=raw_input("Which Title do you want to keep?\n")
                 result=''
                 #break on quit.
@@ -121,11 +127,11 @@ def main():
                     else:
                         authorString=authorString[0:-1]
                         print '\n',
-		    print type(authorString)
+                    print type(authorString)
                     try:
-			readline.add_history(authorString.encode("utf-8"))
-		    except:
-			break
+                        readline.add_history(authorString.encode("utf-8"))
+                    except:
+                        break
                 #number of choice is fine, else use readline hist for editing or choosing
                 inputline=raw_input("Which set of authors do you want to keep?\n(Separate authors by tabs)\n")
                 result=[]
@@ -142,60 +148,34 @@ def main():
                         result=inputline.split('\t')
                 #add authors to title
                 for a in result:
-		    print a
+                    print a
                     #add author to author table if not there already
                     if len(list(Author.selectBy(authorName=a)))==0:
                          Author(authorName=a)
-		    elif Author.selectBy(authorName=a)[0].authorName.lower() == a.lower():
-			author1=Author.selectBy(authorName=a)[0]
-			print author1
-			author1.authorName = a+'12345'
-			print author1
-			author1.authorName = a
-			print author1
-                    for t in correction1['ourTitles']:
-                        #connect author to title
-                        if a not in t.author:
-                            t.addAuthor(Author.selectBy(authorName=a)[0])
-			print t.author
-			print result
+                    elif Author.selectBy(authorName=a)[0].authorName.lower() == a.lower():
+                        author1=Author.selectBy(authorName=a)[0]
+                        print author1
+                        author1.authorName = a+'12345'
+                        print author1
+                        author1.authorName = a
+                        print author1
+                        for t in correction1['ourTitles']:
+                            #connect author to title
+                            if a not in t.author:
+                                t.addAuthor(Author.selectBy(authorName=a)[0])
+                print t.author
+                print result
                         #remove authors from title that aren't in result
                 for a1 in t.author:
                     if a1.authorName not in result:
                         t.removeAuthor(a1)
-		print t.author
+                print t.author
                 print 'You entered: %s' % result
                 
-	    ''' #print publisher if no correction
-            if len(correction1['publisherList'])==1:
-                print correction1['publisherList'][0]
-            #add publisher to readline
-            #ask which one to keep
-            else:
-                readline.clear_history()
-                for i, x in enumerate(correction1['publisherList']):
-                    print '%s. %s' % (i, x)
-                    readline.add_history(x)
-                inputline=raw_input("Which Publisher do you want to keep?\n")
-                result=''
-                #break on quit.
-                #accepts the number of the right publisher (try)
-                #also lets you use the readline history to page & edit yourself (except)
-                if inputline=='q':
-                    keepRunning=False
-                    break
-                else:
-                    try:
-                        result=correction1['publisherList'][int(inputline)]
-                    except ValueError:
-                        result=inputline
-                print 'You entered: %s' % result
-                for t in correction1['ourTitles']:
-                    t.set(publisher=result)'''
-                
+
             guiQueue.task_done()
         except Empty:
-	    print "quiqueue ", guiQueue.isDoneWaiting()
+            print "quiqueue ", guiQueue.isDoneWaiting()
             if guiQueue.isDoneWaiting():
                 keepRunning=False
             time.sleep(2)
@@ -231,9 +211,9 @@ class Category(SQLObjectWithFormGlue):
 
 
 #A queue w/ a semaphore for programmatic signalling of when we're really done
-class MyQueue(Queue):
-    def __init__(self):
-        Queue.__init__(self)
+class MyQueue(PersistentQueue):
+    def __init__(self, *args):
+        PersistentQueue.__init__(self, args[0], cache_size=512, marshal=cPickle)
         self.doneWaiting=False
 
     def isDoneWaiting(self):
@@ -284,14 +264,15 @@ class AmazonThread(Thread):
             #put a copy in comparisonQueue so we can compare
             #our title/author info w/ amazon's
             try:
-                title1 = self.amazonQueue.get(False)
-		try:
-			amazonTitle1=self.getFromAmazon(title1)
-			self.comparisonQueue.put({'amazonItem':amazonTitle1})
-			self.addExtraInfoQueue.put({'amazonItem':amazonTitle1})
-		except:
-			pass
-		print self.amazonQueue.qsize()
+                title1 = self.amazonQueue.get(True, 1)
+            
+                try:
+                    amazonTitle1=self.getFromAmazon(title1)
+                    self.comparisonQueue.put({'amazonItem':amazonTitle1})
+                    self.addExtraInfoQueue.put({'amazonItem':amazonTitle1})
+                except:
+                    pass
+                print self.amazonQueue.qsize()
                 self.amazonQueue.task_done()
             except Empty:
                 #if we've made it through all isbns & aren't
@@ -326,30 +307,38 @@ class AddExtraInfoThread(Thread):
             #edit format. kill "mass market" or "trade" from paperback
             ourFormat=self.regexp.sub("", amazonItem.Binding)
             title.format=ourFormat
-	    title.publisher=amazonItem.Publisher
+            title.publisher=amazonItem.Publisher
 
-	    def listCategories(browsenodes):
-			def parseBrowseNode( browseNode ):
-				if hasattr(browseNode, 'Ancestors'):
-					if len(browseNode.Ancestors) > 0:
-						for x in  parseBrowseNode( browseNode.Ancestors.pop()):
-							yield x
-				try:
-				    yield browseNode.Name
-				except:
-				    pass
-				if hasattr(browseNode, 'Children'):
-					if len(browseNode.Children) > 0:
-						for x in browseNode.Children:
-							yield x.Name
-			categoryList=[]
-			for node in browsenodes:
-				categoryList.extend( list(parseBrowseNode( node )))
-			return categoryList
+            # a bit more complicated of a tree walk than it needs be.
+            # set up to still have the option of category strings like "history -- us"
+            # switched to sets to quickly remove redundancies.
+            def parseBrowseNodes(bNodes):
+                def parseBrowseNodesInner(item):
+                    bn=set()
+                    if hasattr(item, 'Name'):
+                        bn.add(item.Name)
+                    if hasattr(item, 'Ancestors'):
+                        #print "hasansc"   
+                        for i in item.Ancestors:
+                            bn.update(parseBrowseNodesInner(i))
+                    if hasattr(item, 'Children'):
+                        for i in item.Children:
+                            bn.update(parseBrowseNodesInner(i))
+                            #print "bn ", bn
+                    if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
+                        if hasattr(item, 'Name'):
+                            return set([item.Name])
+                        else:
+                            return set()
+                    return bn
+                nodeslist=[parseBrowseNodesInner(i) for i in bNodes ]
+                nodes=set()
+                for n in nodeslist:
+                    nodes = nodes.union(n)
+                return nodes
 
-                    #~ for category in b.Subjects:
-                       #~ categories.append(category)
-	    categories=listCategories(amazonItem.BrowseNodes)
+            categories=parseBrowseNodes(amazonItem.BrowseNodes)
+
             for item in categories:
                 if len(list(Category.selectBy(title=title.id, categoryName=item)))==0:
                     Category(title=title, categoryName=item)
@@ -357,7 +346,7 @@ class AddExtraInfoThread(Thread):
     def run(self):
         while self.keepRunning:
             try:
-                amazonTitle1 = self.addExtraInfoQueue.get(False)
+                amazonTitle1 = self.addExtraInfoQueue.get(True, 3)
                 titleList1=Title.selectBy(isbn=amazonTitle1['amazonItem'].ISBN)
                 self.processTitle(amazonTitle1['amazonItem'], titleList1)
                 self.addExtraInfoQueue.task_done()
@@ -416,7 +405,7 @@ class ComparisonThread(Thread):
             amazonPublisher=amazonItem.Publisher
         publisherList.append(amazonPublisher)
         
-        #uhiquify puglisher & mark as dirty if list > 1
+        #uniquify publisher & mark as dirty if list > 1
         uniquePublisherList=freeze(publisherList)
         if (uniquePublisherList.__len__()>1):
             corrections['publisherDirty']=True
@@ -470,7 +459,7 @@ class ComparisonThread(Thread):
     def run(self):
         while self.keepRunning:
             try:
-                amazonTitle1 = self.comparisonQueue.get(False)
+                amazonTitle1 = self.comparisonQueue.get(True, 3)
                 titleList1=Title.selectBy(isbn=amazonTitle1['amazonItem'].ISBN)
                 self.processTitle(amazonTitle1, titleList1)
                 self.comparisonQueue.task_done()
