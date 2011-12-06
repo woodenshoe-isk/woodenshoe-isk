@@ -221,9 +221,9 @@ border-color:#000;
 border-style:solid;
 }
 input.submit {
-margin-left: 320px;
+margin-left: 15em;
 background-color:#c44;
-width:350px;
+width:15em;
 font-family: lucida,sans-serif;
 font-size: 120%;
 border-width:2px;
@@ -240,8 +240,8 @@ border-style:solid;
 }
 label.textbox {
 text-align: right;
-width: 300px;
-padding-right: 20px;
+width: 15em;
+padding-right: 1em;
 }
 br {
 clear: left;
@@ -263,7 +263,7 @@ div.showhide a {
 color: #c44;
 }
 .slidingDiv {
-height:350px;
+height:22em;
 padding:20px;
 margin-top:20px;
 }
@@ -337,9 +337,9 @@ div.dataTables_info {
 width: 40%;
 }
 .dataTables_paginate {
-width: 400px;
-height: 22px;
-line-height: 22px;
+width: 25em;
+height: 1em;
+line-height: 1em;
 }
 div.dataTables_paginate span.paginate_button,
 div.dataTables_paginate span.paginate_active {

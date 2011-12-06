@@ -27,8 +27,6 @@ class NewItemReport(Report):
         val="<select class='textbox' id='kind' name='kind'>"
         for k in list(Kind.select()):
             val = val+"<option value='%s'>%s</option>" % (k.id,k.kindName)
-	import sys
-	sys.stdout.write(val)
         val=val+"</select>"
 	
         return val

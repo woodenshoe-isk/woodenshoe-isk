@@ -25,11 +25,11 @@ from wsgiapp_local import application
     #def getMenuData(cls):
     #def setMenuData(cls, dictionaryOfMenuLists):
 #def jsonify_tool_callback(*args, **kwargs):
+
 #class Noteboard:
     #def noteboard(self):
     #def get_notes(self, **kwargs):
     #def post_note(self, author='', message='', **kwargs):
-
 class Test_Noteboard(unittest.TestCase):
     def setUp(self):
         try:
@@ -190,7 +190,7 @@ class Test_Admin(unittest.TestCase ):
             pass
         
     def test_admin_class_instantiates(self):
-        self.assertIsInstance(self._my_class, Admin, "Admin class did not instantiate8 properly")
+        self.assertIsInstance(self._my_class, Admin, "Admin class did not instantiate properly")
             
     def test_kindedit_unit(self):
         code, error=tidylib.tidy_document(self._my_class.kindedit(), options={'show-errors':1,'show-warnings':0})
@@ -307,7 +307,6 @@ class Test_Admin(unittest.TestCase ):
     #def transactions(self,**args):
     #def reports(self,**args):
     #def report(self,**args):
-    
 class Test_InventoryServer(unittest.TestCase ):
     
     def setUp(self):

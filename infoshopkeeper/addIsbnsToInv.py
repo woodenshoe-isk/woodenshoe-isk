@@ -24,7 +24,7 @@ for t in titles:
         pass
     #print titleinfo
     if isinstance(titleinfo['list_price'],unicode):
-	correctedprice=float(titleinfo['list_price'].replace('$',''))
+	    correctedprice=float(titleinfo['list_price'].replace('$',''))
     else:
 	correctedprice=float(titleinfo['list_price'])
     #print correctedprice

@@ -193,7 +193,7 @@ class Register:
                             Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                             cart['items'].remove(item)
                         except Exception as err:
-                            #print>>sys.stderr, err
+                            #print>>sys.stderr, "error in selling book", err
                             shouldRaiseException=True
                     else:
                         infostring = "'[] " + item['department']
@@ -201,7 +201,7 @@ class Register:
                             infostring=infostring + ": " +item['booktitle']
                         Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                         cart['items'].remove(item)
-            #print>>sys.stderr, shouldRaiseException
+            #print>>sys.stderr, "shouldraiseexception?", shouldRaiseException
             if cart['items'].__len__()==0:
                 cherrypy.session['cart']={}
             else:
