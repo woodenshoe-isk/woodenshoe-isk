@@ -311,6 +311,7 @@ class Admin:
         MenuData.setMenuData({'3': ('Add to Inventory', '/admin/add_to_inventory', [])})
         MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
+                                                   ('Bug Reports/Issues', 'localhost:8050/trac', []),
                                                  ])})
                                                  
     @cherrypy.expose
