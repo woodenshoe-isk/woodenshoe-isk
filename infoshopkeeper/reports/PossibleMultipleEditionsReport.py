@@ -1,3 +1,5 @@
+##return books with same title & different isbn
+##mostly we're looking for hardcovers to return
 from Report import Report
 
 from objects.kind import Kind

@@ -12,7 +12,11 @@ import turbojson
 import json
 from sqlobject.sqlbuilder import *
 
-
+#Class that manages dictionary of menu items.
+#Format for adding a menu:
+#   {'1': [('menu display title', 'menu action', [ 'submenu of same triplet format' ]), ]}
+#The dictionary is so that different webapps can add menus in any and it's not dependent on
+#load order of apps. No way yet to cause two webapps to both add to same menu
 class MenuData:
     menuData={}
    
@@ -71,6 +75,8 @@ import re
 import os.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
+
+#decorator function to return json
 turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
 def jsonify_tool_callback(*args, **kwargs):
     #print>>sys.stderr, "in jsonify"
@@ -81,23 +87,26 @@ def jsonify_tool_callback(*args, **kwargs):
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
 
+#Noteboard app
 class Noteboard:
     def __init__(self):
         self._notestemplate = NotesTemplate()
         self.menudata=MenuData
         MenuData.setMenuData({'5':('Notes', '/notes/noteboard', [])}) 
-        
+   
+    #handler for noteboard template call   
     @cherrypy.expose
     def noteboard(self):
         return self._notestemplate.respond()
     
+    #get all notes in Notes and format as list of uls
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def get_notes(self, **kwargs):
         notes=[['<ul><li>%s</li><li>%s</li><li>%s</li></ul>' % (n.author, n.whenEntered, n.message)] for n in Notes.select().orderBy('-id')]
         return notes
         
-    
+    #post note to database
     @cherrypy.expose
     def post_note(self, author='', message='', **kwargs):
         if kwargs:
@@ -112,20 +121,23 @@ class Noteboard:
             if kwargs['message']:
                 #print "using kwargs to add note"
                 Notes(author=kwargs['author'], message=kwargs['message'])
-   
+
+#Class for register   
 class Register:
     def __init__(self):
         self._carttemplate = CartTemplate2()
         self._chooseitemtemplate = ChooseItemTemplate()
         self.menudata=MenuData
         MenuData.setMenuData( {'1': ('Remove Items from Inventory', '/register/build_cart', []) })
-    
+
+    #return cart template    
     @cherrypy.expose
     def build_cart(self, **args):
         self._carttemplate.session_data=cherrypy.session.get('cart')
         #print>>sys.stderr, "BuildCart: ", self._carttemplate.session_data
         return self._carttemplate.respond()
-        
+    
+    #actually add items to cart
     @cherrypy.expose
     def add_item_to_cart(self, **args):
         import sys
@@ -133,21 +145,28 @@ class Register:
         #print>>sys.stderr, args, repr(args)
         cart={}
         #print>>sys.stderr, "SESSION IS: ", cherrypy.session
+        
+        #check to see if there's a cart & get it
         if cherrypy.session.has_key('cart'):
             #print>>sys.stderr, "CART EXISTS"         
             cart = cherrypy.session.pop('cart')
+        #or make a cart. id is hes uuid
         else:
             #print>>sys.stderr, "MAKE CART" 
             cart['uuid']=uuid.uuid1().hex
+        
+        #if there's no list of items start one
         if not cart.has_key('items'):
             #print>>sys.stderr, "MAKE ITEM ARRAY"
             cart['items']=[]
         
+        #add item to item key list
         if args.has_key('item'):
             #print>>sys.stderr, "in item block", args['item'], type(args['item'])
             cart['items'].append(json.loads(args['item']))
         
         cherrypy.session['cart']=cart
+        #have to save or it all gets forgot
         cherrypy.session.save()
         #print>>sys.stderr, "CART NOW IS: ", cherrypy.session.get('cart');
         #print>>sys.stderr, "SESSION NOW IS: ", cherrypy.session
@@ -157,33 +176,44 @@ class Register:
         #print>>sys.stderr, "args are ", args
         #print>>sys.stderr, type(int(args['index']))
         #print>>sys.stderr, int(args['index'])        
+        
+        #arg should be index number of item we want to ditch
         item_index=int(args['index'])
         cart={}
+        #is there a cart?
         if cherrypy.session.has_key('cart'):
             cart=cherrypy.session['cart']
             #print>>sys.stderr, cart, cart['items'], cart['items'][item_index]
+        #if so, are there items in it?
         if cart.has_key('items'):
             #print>>sys.stderr, "has items"
+            #pop item number n
             cart['items'].pop(item_index)
             #print>>sys.stderr, cart
         cherrypy.session['cart']=cart
         cherrypy.session.save()
-
+    
+    #ditch the whole cart
     @cherrypy.expose
     def void_cart(self):
         if cherrypy.session.has_key('cart'):
             cherrypy.session['cart']={}
         cherrypy.session.save()
-                
+    
+    #check out cart
     @cherrypy.expose
     def check_out(self):
         cart={}
-        #print "in checkout"
+        #is there a cart?
         if cherrypy.session.has_key('cart'):
             cart=cherrypy.session['cart']
+            #does it have items
             if cart.has_key('items'):
                 shouldRaiseException=False
                 for item in cart['items']:
+                    #if it is an inventoried item
+                    #mark item sold, record transaction
+                    #and remove from cart
                     if item['bookID']:
                         try:
                             Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now())
@@ -195,27 +225,32 @@ class Register:
                         except Exception as err:
                             #print>>sys.stderr, "error in selling book", err
                             shouldRaiseException=True
+                    #if it's a noninventoried item just 
+                    #record transaction and remove from cart
                     else:
                         infostring = "'[] " + item['department']
                         if item.haskey('booktitle'):
                             infostring=infostring + ": " +item['booktitle']
                         Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                         cart['items'].remove(item)
-            #print>>sys.stderr, "shouldraiseexception?", shouldRaiseException
+            #it should be zero but just in case
+            #there was an error, items with error are still kept
             if cart['items'].__len__()==0:
                 cherrypy.session['cart']={}
             else:
                 cherrypy.session['cart']=cart
+            #save cart 
             cherrypy.session.save()
+            #raise the delayed exception
             if shouldRaiseException:
                 raise SQLObjectNotFound
-                                
-         
+                                    
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def get_cart(self):
         return [cherrypy.session.get('cart')]
     
+    #search for in stock items by attribute
     @cherrypy.expose
     def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
         self._chooseitemtemplate.empty=True
@@ -240,10 +275,15 @@ class Register:
         self._chooseitemtemplate.table_is_form=True
         
         titles=[]
+        
+        #used to check that any filtering is done
         fields=[title,author,category,distributor,owner,isbn,publisher,tag,kind]
         fields_used = [f for f in fields if f != ""]
         
+        #start out with the join clauses in the where clause list
         where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
+        
+        #add filter clauses if they are called for
         if the_kind:
             where_clause_list .append("title.kind_id = '%s'" % escape_string(the_kind))
         if the_location and len(the_location)>1:
@@ -265,39 +305,53 @@ class Register:
             where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
         if category:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
+        
+        #AND all where clauses together
         where_clause=' AND '.join(where_clause_list)
         titles=[]
+        
+        #do search. 
         if len(fields_used)>0:
             titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
+        
+        #filter only in stock copies
         titles = [t for t in titles if t.copies_in_status("STOCK") >= 1]
         
         self._chooseitemtemplate.titles=titles
         return self._chooseitemtemplate.respond()
     
+    #search by isbn to find item
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def get_item_by_isbn(self, **kwargs):
         #print>>sys.stderr, kwargs
         isbn=kwargs.get('isbn', '')
+        
+        #strip spaces and quotes from isbn string
         isbn=isbn.strip('\'\"')
         #print>>sys.stderr, isbn
         if (isbn.replace(' ','').__len__()==13):
             isbn=upc2isbn(isbn.replace(' ',''))
-        t=Title.selectBy(isbn=isbn)
+        
+        #search for isbn
+        titlelist=list(Title.selectBy(isbn=isbn))
         b=[]
-        if list(t):
-            for t1 in Title.selectBy(isbn=isbn):
+        #if we find it search for associated books in stock
+        if titlelist:
+            for t1 in titlelist:
                 for b1 in Book.selectBy(titleID=t1.id).filter(Book.q.status=='STOCK'):
                     b.append(b1)
             b.sort(key=lambda x: x.inventoried_when)
             if b:
                 return [{'titleID':b[0].title.id, 'booktitle':b[0].title.booktitle, 'isbn':b[0].title.isbn, 'bookID':b[0].id, 'ourprice':b[0].ourprice}]
+            #if there's no in stock books 
             else:
                 return []
+        #if we don't have title
         else:
             return []
 
-        
+#Administrative tasks
 class Admin:
     def __init__(self):
         self._kindedittemplate = KindEditTemplate()
@@ -309,11 +363,13 @@ class Admin:
         self.inventory=inventory.inventory()
         
         MenuData.setMenuData({'3': ('Add to Inventory', '/admin/add_to_inventory', [])})
+        #notice trac is on here but it's run out of its own wsgi script
         MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
                                                    ('Bug Reports/Issues', 'localhost:8050/trac', []),
                                                  ])})
-                                                 
+    
+    #hook for kind edit template
     @cherrypy.expose
     def kindedit(self,**args):
         #print args
@@ -324,11 +380,13 @@ class Admin:
             self._kindedittemplate.kind=Kind.form_to_object(Kind,args)
             return self._kindedittemplate.respond()
     
+    #hook for kind list template
     @cherrypy.expose    
     def kindlist(self,**args):
         self._kindlisttemplate.kinds=list(Kind.select())
         return self._kindlisttemplate.respond()
     
+    #hook for location edit template
     @cherrypy.expose
     def locationedit(self,**args):
         if ('locationName' in args.keys()):
@@ -337,12 +395,14 @@ class Admin:
         else:
             self._locationedittemplate.location=Location.form_to_object(Location,args)
             return self._locationedittemplate.respond()
-            
+    
+    #hook for location list template
     @cherrypy.expose
     def locationlist(self,**args):
         self._locationlisttemplate.locations=list(Location.select(orderBy="location_name"))
         return self._locationlisttemplate.respond()
-
+    
+    #hook for add to inventory template
     @cherrypy.expose
     def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
         self._add_to_inventory_template.isbn=isbn
@@ -376,7 +436,10 @@ class Admin:
         self._add_to_inventory_template.format=type
         self._add_to_inventory_template.known_title=known_title
         return self._add_to_inventory_template.respond()
-
+    
+    #wrapper to inventory.addToInventory to be added
+    #after a few minor manipulations. Ditches dollar sign, makes 
+    #prices floats and turns categories & authors into lists
     @cherrypy.expose
     def add_item_to_inventory(self, **kwargs):
         #print "kwargs are:" 
@@ -391,17 +454,18 @@ class Admin:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
         #print kwargs
         self.inventory.addToInventory(**kwargs)
-
+    
+    #wrapper to inventory.search_inventory
+    #looks for an item in database, if we don't have it, 
+    #looks in amazon
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
-        #print>>sys.stderr, "in search_isbn"
         data=self.inventory.lookup_by_isbn(args['isbn'])
-        #print>>sys.stderr, "data is"
-        #print>>sys.stderr, data
         return [data]
     add_to_inventory.search_isbn=search_isbn
-            
+
+#Mostly does searching and generating reports            
 class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -451,38 +515,42 @@ class InventoryServer:
     def common(self):
         for x in [getattr(self,x) for x in dir(self) if 'template' in x]:
             x.lastsearch=cherrypy.session.get('lastsearch',False)
-        
+    
+    #hook to index template
     @cherrypy.expose
     def index(self,**args):
         self.common()
-        cherrypy.session['c'] = cherrypy.session.get('c',0)+1
-        #print   cherrypy.session['c']
         return self._indextemplate.respond()
     
+    #hook to book edit template
     @cherrypy.expose
     def bookedit(self,**args):
         self.common()
         self._bookedittemplate.book=Book.form_to_object(Book,args)
         return self._bookedittemplate.respond()
-
+    
+    #hook to author edit template
     @cherrypy.expose
     def authoredit(self,**args):
         self.common()
         self._authoredittemplate.author=Author.form_to_object(Author,args)
         return self._authoredittemplate.respond()
     
+    #hook to category edit template
     @cherrypy.expose
     def categoryedit(self,**args):
         self.common()
         self._categoryedittemplate.category=Category.form_to_object(Category,args)
         return self._categoryedittemplate.respond()
     
+    #hook to title edit template
     @cherrypy.expose
     def titleedit(self,**args):
         self.common()
         self._titleedittemplate.title=Title.form_to_object(Title,args)
         return self._titleedittemplate.respond()
-
+    
+    #hook to title list template
     @cherrypy.expose
     def titlelist(self,**args):
         self.common()
@@ -517,7 +585,8 @@ class InventoryServer:
                 httptools.redirect(cherrypy.session['lastsearch'])  
         except:
             return self._titlelisttemplate.respond()
-
+    
+    #old checkout template
     @cherrypy.expose
     def checkout(self,**args):
         self.common()
@@ -586,6 +655,7 @@ class InventoryServer:
         self._checkouttemplate.quantities=cherrypy.session.get('quantities',[])
         return self._checkouttemplate.respond()
     
+    #old add to cart function
     @cherrypy.expose
     def addtocart(self,**args):
         self.common() 
@@ -634,6 +704,7 @@ class InventoryServer:
             self._carttemplate.quantities=cherrypy.session.get('quantities',[])
             return self._carttemplate.respond()    
     
+    #search by attribute
     @cherrypy.expose
     def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location="", formatType=""):
         cherrypy.session['lastsearch']=False
@@ -656,30 +727,36 @@ class InventoryServer:
         self._searchtemplate.begin_date=begin_date
         self._searchtemplate.end_date=end_date
         self._searchtemplate.tag=tag
+        #find locations for dropdown
         self._searchtemplate.locations=list(Location.select(orderBy="location_name"))
         self._searchtemplate.location=location
         the_location=location
         if type(the_location)==type([]):
             the_location=the_location[0]
 
+        #find formats of items for dropdown
+        #it's more complicated because we only want the type field
         conn=Title._connection
         query=Select( Title.q.type, groupBy=Title.q.type)
         results=conn.queryAll( conn.sqlrepr(query))
         formatTypelist=[t[0] for t in results]
-        #print>>sys.stderr, formatTypelist, formatType
         self._searchtemplate.formats=formatTypelist
         self._searchtemplate.formatType=formatType
         
+        #get list of kinds for dropdown
         self._searchtemplate.kinds=list(Kind.select())
         self._searchtemplate.kind=kind
         the_kind=kind
         if type(the_kind) == type([]):
             the_kind=the_kind[0]
         
+        #find out if fields are used or if we are filtering on
+        #in stock
         titles=[]
         fields=[title,author,category,distributor,owner,isbn,publisher,stock_less_than,stock_more_than,sold_more_than,begin_date,end_date,tag,kind]
         fields_used = [f for f in fields if f != ""]
         
+        #start building the filter list
         where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
         if the_kind:
             where_clause_list .append("title.kind_id = '%s'" % escape_string(the_kind))
@@ -711,27 +788,31 @@ class InventoryServer:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
         where_clause=' AND '.join(where_clause_list)
         #print>>sys.stderr, where_clause
-
+        
+        #do search first. Note it currently doesnt let you search for every book in database
         titles=[]
         if len(fields_used)>0 or out_of_stock=="yes":
             titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
+        
+        #filter for stock status
         if out_of_stock == 'yes':
                     titles = [t for t in titles if t.copies_in_status("STOCK") == 0]
     
+        #filter on specific numbers in stock
         if stock_less_than != "":
             titles = [t for t in titles if t.copies_in_status("STOCK") <= int(stock_less_than)]
     
         if stock_more_than != "":
             titles = [t for t in titles if t.copies_in_status("STOCK") >= int(stock_more_than)]
-            
+        
+        #filter by items sold
         if sold_more_than != "":
             titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
 
         self._searchtemplate.titles=titles
-        #print>>sys.stderr, titles
-        #print>>sys.stderr, "GOT TO END"
         return  self._searchtemplate.respond()            
 
+    #old transactions template
     @cherrypy.expose    
     def transactions(self,**args):
         self.common()
@@ -761,18 +842,23 @@ class InventoryServer:
         return  self._transactionstemplate.respond()
 
         
-
+    #hook to list of reports
     @cherrypy.expose
     def reports(self,**args):
         self.common()
         self._reportlisttemplate.reports=[r.metadata for r in self.reportlist]
         return  self._reportlisttemplate.respond()
-
+    
+    #hook to the specific report template
     @cherrypy.expose
     def report(self,**args):
         self.common()
+        #get report data by name
         the_report=[r for r in self.reportlist if r.metadata['action']==args['reportname']][0](args)
+        #set report template to correct template
         self._reporttemplate.report=the_report
+        
+        #get results if query done
         if args.get('query_made','no')=='yes':
             self._reporttemplate.do_query=True
             results=the_report.query(args)
@@ -783,6 +869,7 @@ class InventoryServer:
                 self._reporttemplate.total=the_report.get_total(results)
             else:
                 self._reporttemplate.total=0
+        #or naked template otherwise
         else:
             self._reporttemplate.do_query=False
             

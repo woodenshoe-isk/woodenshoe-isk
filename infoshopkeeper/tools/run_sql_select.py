@@ -7,6 +7,8 @@ def run_sql_select( query_string):
     # '''
     query=db.connect().cursor()
     query.execute(query_string )
+    
+    #get names of columns
     headers=[ h[0] for h in query.description ]
     
     results=[]

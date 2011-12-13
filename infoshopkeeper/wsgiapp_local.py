@@ -1,5 +1,6 @@
 import os
 import sys
+#let sys.out be seen in apache log
 sys.stdout = sys.stderr
 sys.path.append(os.path.dirname(__file__))
 
@@ -17,12 +18,14 @@ from inventoryserver.server import Register
 from inventoryserver.server import Admin
 from inventoryserver.server import Noteboard
 
+#run under apache
 cherrypy.config.update({'environment': 'embedded'})
 
 if cherrypy.__version__.startswith('3.0') and cherrypy.engine.state == 0:
     cherrypy.engine.start(blocking=False)
     atexit.register(cherrypy.engine.stop)
 
+#mount our apps
 root=InventoryServer()
 root.register=Register()
 root.admin=Admin()

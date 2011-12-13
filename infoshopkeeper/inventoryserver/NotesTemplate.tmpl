@@ -1,9 +1,14 @@
+##Read/Leave notes on the notes page
+
 #from Skeleton import Skeleton
 #extends Skeleton
 #def headscripts
 <script type='text/javascript'>                                         
 	jQuery(document).ready( function(){
+	    //give focus to first field of notes form
         jQuery('form:first input:first').focus();    	    
+        
+        //set up ajax error handling
         jQuery.ajaxSetup({  'cache':false,
                             'error':function(XMLHttpRequest,textStatus, errorThrown) {   
                                 alert(textStatus + '\r' +
@@ -11,13 +16,15 @@
                                       XMLHttpRequest.responseText);
                             }
         });
- 
+        
+        //populate table with contents of notes table.
+        //dataTable does pagination, etc, for free
         jQuery.getJSON('/notes/get_notes', null, function( json ) {
-	        jQuery('#message_table').dataTable({    'aaData':json,
-	                                                'aaSorting':[],
-	                                                'bProcessing':true,
-	                                                'oSearch': {'sSearch':'', bRegex:false, bSmart:true},
-	                                                'sPaginationType':'full_numbers'});
+            jQuery('#message_table').dataTable({    'aaData':json,
+                                                    'aaSorting':[],
+                                                    'bProcessing':true,
+                                                    'oSearch': {'sSearch':'', bRegex:false, bSmart:true},
+                                                    'sPaginationType':'full_numbers'});
         });
     });
 </script>

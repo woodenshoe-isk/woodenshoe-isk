@@ -18,10 +18,8 @@ class TransactionReport(Report, PdfReport):
         action=args.get('action', '')
         begin_date=args.get('begin_date','1990-01-01')
         end_date=args.get('end_date','2030-01-01')
-#         self.cursor.execute("""SELECT * FROM transactionLog WHERE action='SALE' AND info LIKE %s AND date>=%s AND date<=ADDDATE(%s,INTERVAL 1 DAY) order by date""",(what,begin_date,end_date ))
-#         self.cursor.execute("""SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) as copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) as copies_sold FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN book b2 ON b1.title_id=b2.title_id JOIN kind k1 ON t1.kind_id=k1.id WHERE (b1.status='SOLD' AND (k1.kind_name LIKE %s OR t1.booktitle LIKE %s) AND (b1.sold_when>=%s AND b1.sold_when<=ADDDATE(%s,INTERVAL 1 DAY)))   GROUP BY b1.id ORDER BY b1.sold_when""", (what, what, begin_date, end_date))
-#         results= self.cursor.fetchall()
-#         self.cursor.close()
+        
+        #build table of clauses for WHERE 
         clauses=[]
         if what:
             clauses.append("transactionLog.info LIKE '%%%s%%'" % what )
@@ -37,13 +35,10 @@ class TransactionReport(Report, PdfReport):
         return results
     
     def format_results(self,results):
-    # 11/10/2008 john fixed this manually
-    #        return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4].tostring(),r[1])  for r in results]
-    #   return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4],r[1])  for r in results]
         return ["<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (r.date, r.action, r.info, r.amount)  for r in results]
     
     def format_header(self):
-	return "<tr><th>Date</th><th>Action</th><th>Info</th><th>Amount</th></tr>"
+        return "<tr><th>Date</th><th>Action</th><th>Info</th><th>Amount</th></tr>"
 
     def format_results_as_pdf(self,results):
         self.defineConstants()

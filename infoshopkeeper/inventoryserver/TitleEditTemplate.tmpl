@@ -1,3 +1,7 @@
+##edit information for a particular title
+##linked classes, like author and book appear and
+##are editable by links to thier own templates
+
 #from Skeleton import Skeleton
 #extends Skeleton
 
@@ -8,16 +12,20 @@ Editing ${title.booktitle}
 #def body
 <h1>Edit a Title</h1>
 
+##show the title info as editable form
 <form method="get" action="/titleedit">
 $title.object_to_form
 </form>
+
+##show the author records with button to edit each author record
 <h2>Author(s):</h2>
 <!-- 11/10/2008 john fixed manually -->
 #for $a in $title.author
 <div><span>$a.authorName</span><a class="listinglink" href="/authoredit?id=$a.id">edit</a></div>
 #end for
 
-
+##show records for each individual copy.
+##each is editable in a book edit template
 <h2>Copies</h2>
 <form action="/addtocart">
 #for $b in $title.books
@@ -49,6 +57,7 @@ add this copy to cart: <input type="checkbox" name="copy_id" value="$b.id" />
 <input class="submit" type="submit" name="delete" onclick="return confirm('Are you sure?');" value="Delete selected copies" />-->
 </form>
 
+##show category records. Each is editable in its own category edit template
 <h2>Keywords::</h2>
 #for $c in $title.categorys
 <div class="listing"><span class="listing">$c.categoryName</span><a class="listinglink" href="/categoryedit?id=$c.id">edit</a></div>

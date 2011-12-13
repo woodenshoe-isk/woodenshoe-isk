@@ -53,7 +53,7 @@ def main():
     #Since we are using a persistent queue, we only need do this once,
     #otherwise it will keep adding the same items redundantly.
     if amazonQueue.qsize() == 0:
-        for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn, limit=500))):
+        for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn, limit=50))):
             amazonQueue.put({'isbn':x[0]})
     
     #We've finished all isbns & aren't just blocking for input
@@ -64,7 +64,7 @@ def main():
     amazonThread.start()
     
     #Get category and item format while we have the amazon info record
-    #We do this for each item because we don't have this informationf yet
+    #We do this for each item because we don't have this information yet
     addExtraInfoThread=AddExtraInfoThread(addExtraInfoQueue)
     addExtraInfoThread.start()
     
@@ -78,7 +78,7 @@ def main():
     #gui loop for dealing with corrections
     while keepRunning:
         try:
-            correction1 = guiQueue.get(True, 1)
+            correction1 = guiQueue.get(True, 3)
             
             #print title if no correction
             if len(correction1['booktitleList'])==1:
@@ -354,7 +354,7 @@ class AddExtraInfoThread(Thread):
             except Empty:
                 if self.addExtraInfoQueue.isDoneWaiting():
                     self.keepRunning=False
-                time.sleep(1)
+                time.sleep(0)
 
 
 class ComparisonThread(Thread):
@@ -468,7 +468,7 @@ class ComparisonThread(Thread):
                 if self.comparisonQueue.isDoneWaiting():
                     self.keepRunning=False
                     self.guiQueue.setDoneWaiting(True)
-            time.sleep(1)
+            time.sleep(0)
 
 
 if __name__ == '__main__':

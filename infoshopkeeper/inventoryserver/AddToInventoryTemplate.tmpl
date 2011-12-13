@@ -7,6 +7,7 @@ from Skeleton import Skeleton
 <script type="text/javascript">                                         
     var isbnDirty = false;
     jQuery(document).ready(function() {
+        //Ajax setup for error handling
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
                 alert(textStatus);
                 alert(errorThrown);
@@ -14,8 +15,10 @@ from Skeleton import Skeleton
           
         }});
         
+        //give isbn text box cursor focus 
         jQuery('#isbn').focus();
         
+        //make return go to next text box instead of submit
         jQuery('.textbox').bind('keypress', function(evt) {
                     if (evt.keyCode == 13||evt.chatCode == 13) {
                             /* FOCUS ELEMENT */
@@ -32,16 +35,21 @@ from Skeleton import Skeleton
                     }   
         });
         
+        //isbn autofill
         jQuery('#isbn').blur( function() {
             var isbnstring=jQuery(this).val();
             isbnstring=isbnstring.toLowerCase();
 
+            //scrub spaces & hyphens if isbn is candidate 'real isbn'
             if (isbnstring.length>11) {
                 isbnstring.replace('/[\s-]/g', '');
             }
-
+            
+            //use isdirty to avoid infinite loop
             if (isbnDirty == false) {
+                //check database for isbn
                 jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
+                    //if success, fill in all the other fields
                     data=data[0]
                     jQuery.each(data, function(key, value) {
                         if (key == 'publisher') {
@@ -71,6 +79,7 @@ from Skeleton import Skeleton
             return false;
         });
         
+        //jQuery validate using class 'required' in input fields
         jQuery('#add_to_inventory_form').validate({
             submitHandler: function(form) {
                 jQuery('#add_to_inventory_form').ajaxSubmit({
@@ -78,6 +87,11 @@ from Skeleton import Skeleton
                     clearForm:false, 
                     type:'post', 
                     success:function(){
+                        //add to inventory succeeeds
+                        //
+                        //clear all text fields except price & quantity
+                        //set prices & quantity to defaults
+                        //leave pulldown menus as they were
                         jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
                         jQuery("#quantity").val(1);
                         jQuery("#listprice").val('0.0');
@@ -90,6 +104,9 @@ from Skeleton import Skeleton
         });
         
         jQuery('#add_to_inventory_form').bind('reset', function(){
+                    //clear all text fields except price & quantity
+                    //set prices & quantity to defaults
+                    //leave pulldown menus as they were
                     jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
                     jQuery("#quantity").val(1);
                     jQuery("#listprice").val('0.0');

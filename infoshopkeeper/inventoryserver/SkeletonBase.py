@@ -1,3 +1,6 @@
+##mixin class to add some data needed for skeletontemplate
+##Pretty much gets report & menu data, both of which are dynamic data
+
 from config import configuration
 from inventoryserver.server import *
 import Cheetah

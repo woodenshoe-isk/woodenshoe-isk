@@ -1,3 +1,5 @@
+##framework for other templates
+
 #from SkeletonBase import SkeletonBase
 #extends SkeletonBase
 #implements respond
@@ -8,19 +10,6 @@
 <script src="/javascript/sorttable.js"></script>
 <script src="/javascript/functions.js"></script>
 
-
-  <!-- calendar stylesheet -->
-  <link rel="stylesheet" type="text/css" media="all" href="/style/calendar-win2k-cold-1.css" title="win2k-cold-1" />
-
-  <!-- main calendar program -->
-  <script type="text/javascript" src="/javascript/calendar.js"></script>
-
-  <!-- language for the calendar -->
-  <script type="text/javascript" src="/javascript/calendar-en.js"></script>
-
-  <!-- the following script defines the Calendar.setup helper function, which makes
-       adding a calendar a matter of 1 or 2 lines of code. -->
-  <script type="text/javascript" src="/javascript/calendar-setup.js"></script>
 <!--This adds jquery & jquery-ui -->
 
 <link type="text/css" href="/javascript/css/smoothness/jquery-ui-1.8.13.custom.css" rel="Stylesheet" />	
@@ -30,12 +19,18 @@
 <script type='text/javascript' src='/javascript/js/jquery-ui-1.8.13.custom.min.js'></script>
 
 <link href="/style/main.css" type="text/css" rel="stylesheet"/>
+
+##head scripts should go here.
 #block headscripts
 #end block
 
 #end block
 </head>
 <body>
+
+##define generate menu function. Requires an iterable
+##of triplets: [('MenuName', 'MenuURL', [ submenu of the same format if submenu ]), ]
+##can recursively do submenus
 #def generateMenu( $iterable )
 #for $i in $iterable
     <li><a href='$i[1]'>$i[0]</a>
@@ -50,6 +45,8 @@
 
 <div class="toolbar">
 <ul class="nav">
+##actually generate the menus using menudata.
+##Class works as outlined above in generateMenu function def
 $generateMenu( $menudata.getMenuData() )
 </ul>
 </div>

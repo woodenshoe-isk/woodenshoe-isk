@@ -1,3 +1,5 @@
+##Return books that are less than a month old we havent had before.
+
 from Report import Report
 
 from objects.kind import Kind
@@ -10,7 +12,7 @@ class NewItemReport(Report):
     def query(self,args):
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
-	SELECT title.id, title.booktitle, GROUP_CONCAT(DISTINCT author.author_name), kind.kind_name, book.listprice FROM book, title, author, kind WHERE book.title_id=title.id AND author.title_id=title.id AND kind.id=title.kind_id AND book.inventoried_when>DATE_ADD(CURDATE(), INTERVAL -30 DAY) AND kind.id=%s GROUP BY author.title_id ORDER BY book.inventoried_when DESC
+	SELECT title.id, title.booktitle, GROUP_CONCAT(DISTINCT author.author_name), kind.kind_name, book.listprice FROM book, title, author, kind WHERE book.title_id=title.id AND author.title_id=title.id AND kind.id=title.kind_id AND kind.id=%s GROUP BY author.title_id HAVING MAX(book.inventoried_when)>DATE_ADD(CURDATE(), INTERVAL -30 DAY) ORDER BY book.inventoried_when DESC
 	""",(args['kind']))
         results= self.cursor.fetchall()
         self.cursor.close()

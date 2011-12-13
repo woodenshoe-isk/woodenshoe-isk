@@ -1,4 +1,6 @@
 ## {{{ http://code.activestate.com/recipes/501154/ (r2)
+#made to operate as a regular queue 12/1/2011 Markos Kapes
+
 import os, sys, marshal, glob, thread
 from time import time as _time
 try:

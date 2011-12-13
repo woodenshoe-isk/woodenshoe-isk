@@ -4,8 +4,10 @@ if [[ $(pwd) =~ (.*/git_repos/infoshopkeeper)(.*) ]]; then cd ${BASH_REMATCH[1]}
 #cd ~mkapes/Documents/Developer/git_repos/infoshopkeeper/inventoryserver
 cheetah compile -R
 cd $WD1
-whereis apache2ctl >/dev/null
-if [ $? -eq 0 ]; then echo "apache2ctl"; sudo apache2ctl graceful; fi;
-
-whereis apachectl >/dev/null
-if [ $? -eq 0 ]; then echo "apachectl"; sudo apachectl graceful; fi;
+if [[ -n $(which apache2ctl) ]]; then 
+    sudo apache2ctl graceful
+else
+    if [[ -n $(which apachectl) ]]; then 
+        sudo apachectl graceful
+    fi
+fi

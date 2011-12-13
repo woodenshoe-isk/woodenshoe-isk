@@ -5,6 +5,8 @@
 # Copyright (C) 2007 Darren J Wilkinson
 # Free GPL code
 # Last updated: 14/8/2007
+# Updated 12/1/2011   Markos Kapes
+# Changed string exceptions to real ones for py2.6+ compatibility
 
 import sys,re
 

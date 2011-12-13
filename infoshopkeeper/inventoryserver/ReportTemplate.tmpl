@@ -1,3 +1,7 @@
+##Report Template for actuall laying out report form
+##and its results. The specifics of a report are laid
+##out by subclassing reports.report Report.
+
 #from Skeleton import Skeleton
 #extends Skeleton
 
@@ -34,6 +38,8 @@ $r
 #end for
 </tbody>
 </table>
+#if $report.do_total
 <b>Total: $total</b>
+#end if
 #end if
 #end def
