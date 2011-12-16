@@ -134,17 +134,17 @@ class Register:
     @cherrypy.expose
     def build_cart(self, **args):
         self._carttemplate.session_data=cherrypy.session.get('cart')
-        #print>>sys.stderr, "BuildCart: ", self._carttemplate.session_data
+        print>>sys.stderr, "BuildCart: ", self._carttemplate.session_data
         return self._carttemplate.respond()
     
     #actually add items to cart
     @cherrypy.expose
     def add_item_to_cart(self, **args):
         import sys
-        #print>>sys.stderr, "IN add_item_to_cart     ARGS ARE"
-        #print>>sys.stderr, args, repr(args)
+        print>>sys.stderr, "IN add_item_to_cart     ARGS ARE"
+        print>>sys.stderr, args, repr(args)
         cart={}
-        #print>>sys.stderr, "SESSION IS: ", cherrypy.session
+        print>>sys.stderr, "SESSION IS: ", cherrypy.session
         
         #check to see if there's a cart & get it
         if cherrypy.session.has_key('cart'):
@@ -152,24 +152,29 @@ class Register:
             cart = cherrypy.session.pop('cart')
         #or make a cart. id is hes uuid
         else:
-            #print>>sys.stderr, "MAKE CART" 
+            print>>sys.stderr, "MAKE CART" 
             cart['uuid']=uuid.uuid1().hex
         
         #if there's no list of items start one
         if not cart.has_key('items'):
-            #print>>sys.stderr, "MAKE ITEM ARRAY"
+            print>>sys.stderr, "MAKE ITEM ARRAY"
             cart['items']=[]
         
         #add item to item key list
         if args.has_key('item'):
-            #print>>sys.stderr, "in item block", args['item'], type(args['item'])
+            print>>sys.stderr, "in item block", args['item'], type(args['item'])
             cart['items'].append(json.loads(args['item']))
-        
-        cherrypy.session['cart']=cart
+        elif args.has_key('titleid'):
+            print>>sys.stderr, "in titleid block", args['titleid']
+            b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')[0]
+            print>>sys.stderr, 'book is', b
+            item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
+            cart['items'].append(item)
+            cherrypy.session['cart']=cart
         #have to save or it all gets forgot
         cherrypy.session.save()
-        #print>>sys.stderr, "CART NOW IS: ", cherrypy.session.get('cart');
-        #print>>sys.stderr, "SESSION NOW IS: ", cherrypy.session
+        print>>sys.stderr, "CART NOW IS: ", cherrypy.session.get('cart');
+        print>>sys.stderr, "SESSION NOW IS: ", cherrypy.session
     
     @cherrypy.expose
     def remove_item_from_cart(self, **args):

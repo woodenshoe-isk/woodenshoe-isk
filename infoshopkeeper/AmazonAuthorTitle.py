@@ -23,6 +23,7 @@ import pdb
 
 from persistentqueue import PersistentQueue
 import cPickle
+from nested_class import nested_pickle
 
 my_logger = logging.getLogger('MyLogger')
 my_logger.setLevel(logging.DEBUG)
@@ -53,7 +54,7 @@ def main():
     #Since we are using a persistent queue, we only need do this once,
     #otherwise it will keep adding the same items redundantly.
     if amazonQueue.qsize() == 0:
-        for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn, limit=50))):
+        for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn, limit=100))):
             amazonQueue.put({'isbn':x[0]})
     
     #We've finished all isbns & aren't just blocking for input
@@ -75,6 +76,13 @@ def main():
     
     keepRunning=True
     amazonQueue.join()
+    
+    def stop_program():
+        amazonThread.stop()
+        addExtraInfoThread.stop()
+        comparisonThread.stop()
+        keepRunning=False
+        
     #gui loop for dealing with corrections
     while keepRunning:
         try:
@@ -99,7 +107,7 @@ def main():
                 #accepts the number of the right title
                 #also lets you use the readline history to page & edit yourself
                 if inputline=='q':
-                    keepRunning=False
+                    stop_program()
                     break
                 else:
                     try:
@@ -137,7 +145,7 @@ def main():
                 result=[]
                 #quit if choice is q
                 if inputline=='q':
-                    keepRunning=False
+                    stop_program()
                     break
                 #if input is number, add the array we already had.
                 #if input is string, reconstitute the array from the tabbed author list
@@ -182,7 +190,7 @@ def main():
 
     guiQueue.join()
    
-
+@nested_pickle
 class Title(SQLObject):
     class sqlmeta:
         fromDatabase = True
@@ -193,7 +201,7 @@ class Title(SQLObject):
     kind = ForeignKey('Kind')
     listTheseKeys=('kind')
     
-
+@nested_pickle
 class Author(SQLObject):
     class sqlmeta:
         fromDatabase = True
@@ -201,7 +209,7 @@ class Author(SQLObject):
     authorName=UnicodeCol(default=None)
     title = RelatedJoin('Title', intermediateTable='author_title',createRelatedTable=True)
 
-
+@nested_pickle
 class Category(SQLObjectWithFormGlue):
     class sqlmeta:
         fromDatabase = True
@@ -284,6 +292,10 @@ class AmazonThread(Thread):
             #we're only allowed one request per second for free
             time.sleep(1)
 
+    def stop(self):
+        self.keepRunning=False
+
+
 
 class AddExtraInfoThread(Thread):
     def __init__(self, addExtraInfoQueue):
@@ -355,6 +367,9 @@ class AddExtraInfoThread(Thread):
                 if self.addExtraInfoQueue.isDoneWaiting():
                     self.keepRunning=False
                 time.sleep(0)
+                
+    def stop(self):
+        self.keepRunning=False
 
 
 class ComparisonThread(Thread):
@@ -469,6 +484,10 @@ class ComparisonThread(Thread):
                     self.keepRunning=False
                     self.guiQueue.setDoneWaiting(True)
             time.sleep(0)
+
+    def stop(self):
+        self.keepRunning=False
+
 
 
 if __name__ == '__main__':
