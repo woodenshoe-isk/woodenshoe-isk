@@ -53,7 +53,7 @@ def main():
     #Since we are using a persistent queue, we only need do this once,
     #otherwise it will keep adding the same items redundantly.
     if amazonQueue.qsize() == 0:
-        for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn, limit=500))):
+        for x in connection.queryAll(connection.sqlrepr(sqlbuilder.Select(Title.q.isbn, where=(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]{1}$') & (Title.q.kindID==1)), groupBy=Title.q.isbn))):
             amazonQueue.put({'isbn':x[0]})
     
     #We've finished all isbns & aren't just blocking for input

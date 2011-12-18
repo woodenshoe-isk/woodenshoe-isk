@@ -80,8 +80,8 @@ class InventoryPopup(wxDialog):
         self.number=wxTextCtrl(id=-1,name="merchandise_id", parent=self, style=wxTE_PROCESS_ENTER)
         EVT_TEXT(self,self.number.GetId(), self.OnText)
         EVT_TEXT_ENTER(self,self.number.GetId(), self.OnTextEnter)
-        if ON_LINUX:
-            EVT_CHAR(self.number, self.OnKeyDown)
+        #if ON_LINUX:
+        EVT_CHAR(self.number, self.OnKeyDown)
 
         self.toprow_col1.Add(self.static0,0,wxEXPAND|wxALL,1)
         self.toprow_col1.Add(self.number,0,wxEXPAND|wxALL,1)
@@ -174,7 +174,7 @@ class InventoryPopup(wxDialog):
         query=Select( Title.q.type, groupBy=Title.q.type)
         results=conn.queryAll( conn.sqlrepr(query))
         typelist=[t[0] for t in results] 
-        #print "TypeList: ", typelist
+        print "TypeList: ", typelist
         
 	self.static10=wxStaticText(self, -1, "Format:")
         self.types=wxChoice(id=-1,name="merchandise_type", parent=self,choices=typelist, style=0)
@@ -223,8 +223,9 @@ class InventoryPopup(wxDialog):
 
     def OnKeyDown(self,event):
         keycode = event.GetKeyCode()
-        if event.AltDown() == 1:
-            #print keycode
+        print keycode
+	if event.AltDown() == 1:
+            print keycode
             self.keybuffer= "%s%s" % (self.keybuffer,keycode-48)
             if len(self.keybuffer) == 3:
                 keybuffer_as_int= int(self.keybuffer) - 48
@@ -236,15 +237,15 @@ class InventoryPopup(wxDialog):
 
 
     def OnTextEnter(self,event):
-	#print "IN OnTextEnter"
-	#print "isbn " + self.number.GetValue()
+	print "IN OnTextEnter"
+	print "isbn " + self.number.GetValue()
 	if self.isbn_dirty==False:
 		self.known_title=False
 		id=self.number.GetValue()
 		
 		if (len(id) == 10 or len(id) == 13 or len(id)==17):
 		    item=self.parent.inventory.lookup_by_isbn(id)
-		    #print item
+		    print item
 		else:
 		    item=self.parent.inventory.lookup_by_upc(id)
 	      
@@ -267,12 +268,12 @@ class InventoryPopup(wxDialog):
 			 self.types.SetSelection(self.types.GetCount()-1)
 			 
 		    if self.number.GetValue()!=item['isbn']:
-			    self.number.SetValue(item['isbn'])
-		    event.Skip()
-		    #self.isbn_dirty=True
+			self.number.SetValue(item['isbn'])
+		event.Skip()
+		self.isbn_dirty=True
 
 	else:
-		#print "SHOWING DIALOG"
+		print "SHOWING DIALOG"
 		dlg=wxMessageDialog(parent=self, message="You haven't added the last isbn to inventory. Press \"ADD\" or \"Cancel\"", caption="Alert!",  style=wx.OK|wx.ICON_EXCLAMATION)
 		dlg.ShowModal()
 		dlg.EndModal(wx.ID_OK)
@@ -280,16 +281,18 @@ class InventoryPopup(wxDialog):
 
     def OnText(self,event):
         id=self.number.GetValue()
-        if len(id) == 13:
-		self.OnTextEnter(event)
-                
+	print "in onText:", id, self.isbn_dirty
+        if len(id) == 13 and self.isbn_dirty == False:
+		event.Skip()#self.OnTextEnter(event)
+        else:
+		pass        
 
     def OnCancel(self,event):
 	self.isbn_dirty=False
         self.EndModal(1)
 
     def OnAdd(self,event):
-	#print "ON ADD"
+	print "ON ADD"
 	self.isbn_dirty=False
         description=self.description.GetValue() 
         try: 
@@ -297,7 +300,7 @@ class InventoryPopup(wxDialog):
             price_corrected=string.replace(price_raw,"$","")
             price = float(price_corrected)
         except Exception,e:
-            #print str(e)
+            print str(e)
             price=0
             
         if len(description) > 0 and price > 0:
@@ -327,7 +330,7 @@ class InventoryPopup(wxDialog):
                 mprice_raw=(self.prices.pages[m[0]]).price_ctrl.GetValue()
                 mprice_corrected=string.replace(mprice_raw,"$","")
                 mprice = float(mprice_corrected)
-                #print "mprice was %s" % mprice
+                print "mprice was %s" % mprice
                 extra_prices[m[0]]=mprice
 
             self.parent.inventory.addToInventory(title=description,status=writtenStatus,authors=authors,publisher=publisher,listprice=price,ourprice=price,isbn=isbn,categories=categories,distributor=distributor,location=location,quantity=quantity,known_title=self.known_title,types=type_name,kind_name=kind,extra_prices=extra_prices,owner=owner,notes=notes)
@@ -346,6 +349,7 @@ class InventoryPopup(wxDialog):
             self.number.SetEditable(True)
         else:
             self.statusBar.SetStatusText("Fill in (at least) title and price!")
+
 
 
 

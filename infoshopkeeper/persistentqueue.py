@@ -201,7 +201,7 @@ class PersistentQueue:
             self.unfinished_tasks = unfinished
         finally:
             self._sync()
-            print self.unfinished_tasks, self.qsize() 
+            #print self.unfinished_tasks, self.qsize() 
             self.all_tasks_done.release()
 
     def join(self):
@@ -215,7 +215,7 @@ class PersistentQueue:
         """
         self.all_tasks_done.acquire()
         try:
-            print "qsize: ", self.qsize(), " unfinished_tasks: ", self.unfinished_tasks
+            #print "qsize: ", self.qsize(), " unfinished_tasks: ", self.unfinished_tasks
             while self.unfinished_tasks:
                 self.all_tasks_done.wait()
         finally:
