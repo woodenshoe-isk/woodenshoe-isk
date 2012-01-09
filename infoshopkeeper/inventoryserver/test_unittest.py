@@ -163,7 +163,7 @@ class Test_Register(unittest.TestCase ):
 
     def test_get_item_by_isbn_out_of_stock(self):
         query_string='''
-            SELECT * FROM (SELECT b1.title_id FROM book b1 GROUP BY b1.title_id HAVING COUNT(CASE WHEN b1.status='STOCK' THEN 1 END) = 0) AS subq1 JOIN title t1 ON t1.id =subq1.title_id JOIN book b2 ON b2.title_id=t1.id
+            SELECT * FROM book JOIN title ON book.title_id=title.id GROUP BY title.isbn HAVING COUNT(CASE WHEN book.status='STOCK' THEN 1 END) = 0
         '''
         results= run_sql_select( query_string )
         random_item= random.sample( results, 1 )[0]
