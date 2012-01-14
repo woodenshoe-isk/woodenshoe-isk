@@ -149,7 +149,7 @@ class Register:
         #check to see if there's a cart & get it
         if cherrypy.session.has_key('cart'):
             #print>>sys.stderr, "CART EXISTS"         
-            cart = cherrypy.session.pop('cart')
+            cart = cherrypy.session.get('cart')
         #or make a cart. id is hes uuid
         else:
             print>>sys.stderr, "MAKE CART" 
@@ -162,15 +162,15 @@ class Register:
         
         #add item to item key list
         if args.has_key('item'):
-            print>>sys.stderr, "in item block", args['item'], type(args['item'])
+            print>>sys.stderr, "in item block", args['item'], json.loads(args['item']), type(args['item'])
             cart['items'].append(json.loads(args['item']))
         elif args.has_key('titleid'):
             print>>sys.stderr, "in titleid block", args['titleid']
             b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')[0]
             print>>sys.stderr, 'book is', b
-            item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
+            item={'bookID':b.id, 'titleID':b.titleID, 'isbn':b.title.isbn, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
             cart['items'].append(item)
-            cherrypy.session['cart']=cart
+        cherrypy.session['cart']=cart
         #have to save or it all gets forgot
         cherrypy.session.save()
         print>>sys.stderr, "CART NOW IS: ", cherrypy.session.get('cart');
@@ -371,7 +371,7 @@ class Admin:
         #notice trac is on here but it's run out of its own wsgi script
         MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
-                                                   ('Bug Reports/Issues', 'localhost:8050/trac', []),
+                                                   ('Bug Reports/Issues', 'javascript:document.location.href="http://"+document.location.hostname +":8050/trac"', []),
                                                  ])})
     
     #hook for kind edit template
