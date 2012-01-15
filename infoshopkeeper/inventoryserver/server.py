@@ -162,7 +162,7 @@ class Register:
         
         #add item to item key list
         if args.has_key('item'):
-            print>>sys.stderr, "in item block", args['item'], type(args['item'])
+            print>>sys.stderr, "in item block", args['item'], json.loads(args['item']), type(args['item'])
             cart['items'].append(json.loads(args['item']))
             cherrypy.session['cart']=cart
             print>>sys.stderr, cart
@@ -170,9 +170,9 @@ class Register:
             print>>sys.stderr, "in titleid block", args['titleid']
             b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')[0]
             print>>sys.stderr, 'book is', b
-            item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
+            item={'bookID':b.id, 'titleID':b.titleID, 'isbn':b.title.isbn, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
             cart['items'].append(item)
-            cherrypy.session['cart']=cart
+        cherrypy.session['cart']=cart
         #have to save or it all gets forgot
         print>>sys.stderr, cart, cherrypy.session['cart']
         cherrypy.session.save()

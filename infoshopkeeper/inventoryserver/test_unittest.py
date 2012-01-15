@@ -103,8 +103,10 @@ class Test_Register(unittest.TestCase ):
         random_item=random.sample(list(Book.selectBy(status='STOCK')), 1)[0]
         item={"department":"Book","isInventoried":"True","isTaxable":"True","booktitle":random_item.title.booktitle,"isbn":random_item.title.isbn,"bookID":random_item.id,"titleID":random_item.titleID,"ourprice":random_item.ourprice}
         result=self._my_app.post('/register/add_item_to_cart', {'item':json.dumps(item)})
-        confirm=self._my_app.get('/register/get_cart').json[0]['items'][0]
-        #print "test_add_inventoried", result, confirm
+        confirm=self._my_app.get('/register/get_cart')
+        print "confirm is", confirm
+        print "test_add_inventoried", confirm.json[0]['items'][0]
+        confirm=confirm.json[0]['items'][0]
         self.assertEqual(item, confirm, '/register/add_item_to_cart returned error in function test')
 
     def test_remove_item_from_cart_functional(self):
@@ -163,8 +165,7 @@ class Test_Register(unittest.TestCase ):
 
     def test_get_item_by_isbn_out_of_stock(self):
         query_string='''
-            SELECT * FROM book JOIN title ON book.title_id=title.id GROUP BY title.isbn HAVING COUNT(CASE WHEN book.status='STOCK' THEN 1 END) = 0
-        '''
+            SELECT * FROM title t2 JOIN book b2 ON b2.title_id=t2.id JOIN (SELECT t1.isbn FROM title t1  JOIN book b1 ON t1.id=b1.title_id GROUP BY t1.isbn HAVING COUNT(CASE WHEN b1.status='STOCK' THEN 1 END) = 0 ORDER BY t1.booktitle) as subq1 ON t2.isbn=subq1.isbn'''
         results= run_sql_select( query_string )
         random_item= random.sample( results, 1 )[0]
         self.assertFalse(self._my_class.get_item_by_isbn(**{'isbn':random_item['isbn']}), "/register/get_item_by_isbn returns item when it shouldn't")
