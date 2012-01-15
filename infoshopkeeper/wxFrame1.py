@@ -113,6 +113,7 @@ class wxFrame1(wxFrame):
         #print "Setting selection to %s at %s " % (orderbox_name,self.orderbox.list_position)
         for k in self.orderboxes.keys():
                 #print "%s %s" %(k,self.orderboxes[k].list_position)
+            pass   
 
     def deleteOrderBox(self,orderbox_name):
         #print "deleting orderbox %s" % orderbox_name

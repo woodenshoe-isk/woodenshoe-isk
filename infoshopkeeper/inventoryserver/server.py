@@ -134,7 +134,6 @@ class Register:
     @cherrypy.expose
     def build_cart(self, **args):
         self._carttemplate.session_data=cherrypy.session.get('cart')
-        print>>sys.stderr, "BuildCart: ", self._carttemplate.session_data
         return self._carttemplate.respond()
     
     #actually add items to cart
@@ -149,12 +148,12 @@ class Register:
         #check to see if there's a cart & get it
         if cherrypy.session.has_key('cart'):
             #print>>sys.stderr, "CART EXISTS"         
-            cart = cherrypy.session.get('cart')
+            cart = cherrypy.session.pop('cart')
         #or make a cart. id is hes uuid
         else:
             print>>sys.stderr, "MAKE CART" 
             cart['uuid']=uuid.uuid1().hex
-        
+        print>>sys.stderr, "CART IS ", cart
         #if there's no list of items start one
         if not cart.has_key('items'):
             print>>sys.stderr, "MAKE ITEM ARRAY"
@@ -168,8 +167,9 @@ class Register:
             print>>sys.stderr, "in titleid block", args['titleid']
             b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')[0]
             print>>sys.stderr, 'book is', b
-            item={'bookID':b.id, 'titleID':b.titleID, 'isbn':b.title.isbn, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
+            item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
             cart['items'].append(item)
+        print>>sys.stderr, "CART IS NOW ", cart
         cherrypy.session['cart']=cart
         #have to save or it all gets forgot
         cherrypy.session.save()
@@ -371,7 +371,7 @@ class Admin:
         #notice trac is on here but it's run out of its own wsgi script
         MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
-                                                   ('Bug Reports/Issues', 'javascript:document.location.href="http://"+document.location.hostname +":8050/trac"', []),
+                                                   ('Bug Reports/Issues', 'http://localhost:8050/trac', []),
                                                  ])})
     
     #hook for kind edit template
