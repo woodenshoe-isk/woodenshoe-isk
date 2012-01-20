@@ -39,21 +39,21 @@ class inventory:
             if len(the_titles) > 0:
                 #print "in titles"
                 self.known_title= the_titles[0]
-                ProductName = the_titles[0].booktitle.decode("unicode_escape")
+                ProductName = the_titles[0].booktitle.format()
                 if len(the_titles[0].author) > 0:
-                    authors = [x.authorName.decode("unicode_escape") for x in the_titles[0].author]
+                    authors = [x.authorName.format() for x in the_titles[0].author]
                 authors_as_string = string.join(authors,',')
                 if len(the_titles[0].categorys) > 0:
                     #print len(the_titles[0].categorys)
                     #print the_titles[0].categorys
-                    categories = [x.categoryName.decode("unicode_escape") for x in the_titles[0].categorys]
+                    categories = [x.categoryName.format() for x in the_titles[0].categorys]
                 categories_as_string = string.join(categories,',')
                 if len(the_titles[0].books) > 0:
                     ListPrice = the_titles[0].books[0].listprice
                 else:
                     ListPrice = 0
-                Manufacturer = the_titles[0].publisher.decode("unicode_escape")
-                Format=the_titles[0].type.decode("unicode_escape")
+                Manufacturer = the_titles[0].publisher.format()
+                Format=the_titles[0].type.format()
                 Kind=the_titles[0].kind.kindName
  
             else: #we don't have it yet
@@ -360,18 +360,18 @@ class inventory:
             categoryString,
             b.title.type if b.title.type is not None else '')
         #~ for b in books:
-            #~ theTitle=b.title.booktitle.decode("unicode_escape")
-            #~ authorString=string.join([a.authorName.decode("unicode_escape") for a in b.title.author],",")
-            #~ categoryString=string.join([c.categoryName.decode("unicode_escape") for c in b.title.categorys],",")
+            #~ theTitle=b.title.booktitle.format()
+            #~ authorString=string.join([a.authorName.format() for a in b.title.author],",")
+            #~ categoryString=string.join([c.categoryName.format() for c in b.title.categorys],",")
             #~ results[i]=(string.capitalize(theTitle),
                         #~ authorString, 
                         #~ b.listprice  if b.listprice is not None else '',
-                        #~ b.title.publisher.decode("unicode_escape") if b.title.publisher is not None else '',
-                        #~ b.status.decode("unicode_escape") if b.status is not None else'',
+                        #~ b.title.publisher.format() if b.title.publisher is not None else '',
+                        #~ b.status.format() if b.status is not None else'',
                         #~ b.title.isbn,
-                        #~ b.distributor.decode("unicode_escape") if b.distributor is not None else '',
-            #~ b.location.locationName.decode("unicode_escape") if b.location is not None else '',
-                        #~ b.notes.decode("unicode_escape") if b.notes is not None else '',
+                        #~ b.distributor.format() if b.distributor is not None else '',
+            #~ b.location.locationName.format() if b.location is not None else '',
+                        #~ b.notes.format() if b.notes is not None else '',
                         #~ b.id,
                         #~ b.title.kind and b.title.kind.kindName if b.title.kind is not None else '',
             #~ categoryString,
