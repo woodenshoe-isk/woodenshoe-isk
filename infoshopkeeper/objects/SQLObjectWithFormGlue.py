@@ -34,6 +34,8 @@ class SQLObjectWithFormGlue(SQLObject):
                         value=float(value)
                     if type(col) == SOForeignKey or type(col) == SOIntCol:
                         value=int(value)
+                    if type(col) == SOEnumCol:
+                        
                     setattr(obj,col.name,value)
             except KeyError:
                 pass
@@ -55,7 +57,7 @@ class SQLObjectWithFormGlue(SQLObject):
                 toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
     
             
-            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
+            form_fragment="<label class='textbox'>%s</label><SELECT name='%s'class='textbox'>" %(colName,colName)
             for o in toObjects:
                 equals_fragment=""
                 try:
