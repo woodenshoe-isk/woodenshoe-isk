@@ -34,8 +34,6 @@ class SQLObjectWithFormGlue(SQLObject):
                         value=float(value)
                     if type(col) == SOForeignKey or type(col) == SOIntCol:
                         value=int(value)
-                    if type(col) == SOEnumCol:
-                        
                     setattr(obj,col.name,value)
             except KeyError:
                 pass

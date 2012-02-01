@@ -1,6 +1,7 @@
 *.pyc
 *~
 *.bak
+*.config
 *.log
 *.log.*
 __init__.py
