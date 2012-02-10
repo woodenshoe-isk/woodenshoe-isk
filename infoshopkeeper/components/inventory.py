@@ -131,7 +131,7 @@ class inventory:
 
                     ListPrice=""
                     if hasattr(b,'ListPrice'):
-                        ListPrice=b.ListPrice.FormattedPrice
+                        ListPrice=b.ListPrice.FormattedPrice.replace("$",'')
 
                     Format=''
                     if hasattr(b, "Binding"):
