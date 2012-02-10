@@ -1,7 +1,7 @@
 from sqlobject import *
 from formencode import htmlfill
 from datetime import date
-
+import sys
 import operator
 
 
@@ -21,7 +21,6 @@ class SQLObjectWithFormGlue(SQLObject):
                 cols=obj.__class__.__getattribute__(obj, '_columns')
             except:
                 raise NameError("Class has neither meta.columns nor _columns attribute")
-        
         for col in cols.values():
             try:
                 value=formdata[col.name]
@@ -35,7 +34,7 @@ class SQLObjectWithFormGlue(SQLObject):
                     if type(col) == SOForeignKey or type(col) == SOIntCol:
                         value=int(value)
                     setattr(obj,col.name,value)
-            except KeyError:
+            except KeyError as e:
                 pass
     
         return obj
@@ -70,7 +69,7 @@ class SQLObjectWithFormGlue(SQLObject):
             return form_fragment
 
         def handleEnum(col):
-            form_fragment = "<label class='textbox' for='id_%s'>%s</label><select name='%sID' class='textbox'>" % (col.name, col.name, col.name)
+            form_fragment = "<label class='textbox' for='id_%s'>%s</label><select name='%s' class='textbox'>" % (col.name, col.name, col.name)
             value=getattr(self, col.name)
             for enumval in col.enumValues:
                 selected_fragment=''

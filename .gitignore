@@ -3,10 +3,12 @@
 *.bak
 *.log
 *.log.*
+*.js
 __init__.py
 etc.py
 test.py
 config.py
+infoshopkeeper/inventoryserver/sessions/*
 infoshopkeeper/inventoryserver/*Template.py
 infoshopkeeper/inventoryserver/*Template2.py
 infoshopkeeper/inventoryserver/Skeleton.py
