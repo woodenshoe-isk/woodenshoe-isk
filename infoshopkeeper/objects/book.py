@@ -17,8 +17,8 @@ class Book(SQLObjectWithFormGlue):
     _connection = db.conn() 
     listprice=FloatCol()
     ourprice=FloatCol()
-    inventoried_when=DateTimeCol(default=now)
-    sold_when=DateTimeCol(default=now)  # we ignore this until the status gets set to "SOLD"  
+    inventoried_when=DateCol(default=now)
+    sold_when=DateCol(default=now)  # we ignore this until the status gets set to "SOLD"  
     status = EnumCol(enumValues=(u'STOCK', u'SOLD', u'DELETED'), default=u"STOCK")
     consignmentStatus = StringCol()            
     distributor =StringCol()

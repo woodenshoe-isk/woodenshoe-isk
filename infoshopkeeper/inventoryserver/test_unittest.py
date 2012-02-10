@@ -168,7 +168,6 @@ class Test_Register(unittest.TestCase ):
             SELECT * FROM title t2 JOIN book b2 ON b2.title_id=t2.id JOIN (SELECT t1.isbn FROM title t1  JOIN book b1 ON t1.id=b1.title_id GROUP BY t1.isbn HAVING COUNT(CASE WHEN b1.status='STOCK' THEN 1 END) = 0 ORDER BY t1.booktitle) as subq1 ON t2.isbn=subq1.isbn'''
         results= run_sql_select( query_string )
         random_item= random.sample( results, 1 )[0]
-        print random_item
         self.assertFalse(self._my_class.get_item_by_isbn(**{'isbn':random_item['isbn']}), "/register/get_item_by_isbn returns item when it shouldn't")
 
 #class Admin:

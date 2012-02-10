@@ -163,6 +163,8 @@ class Register:
         if args.has_key('item'):
             print>>sys.stderr, "in item block", args['item'], json.loads(args['item']), type(args['item'])
             cart['items'].append(json.loads(args['item']))
+            cherrypy.session['cart']=cart
+            print>>sys.stderr, cart
         elif args.has_key('titleid'):
             print>>sys.stderr, "in titleid block", args['titleid']
             b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')[0]
@@ -172,8 +174,9 @@ class Register:
         print>>sys.stderr, "CART IS NOW ", cart
         cherrypy.session['cart']=cart
         #have to save or it all gets forgot
+        print>>sys.stderr, cart, cherrypy.session['cart']
         cherrypy.session.save()
-        print>>sys.stderr, "CART NOW IS: ", cherrypy.session.get('cart');
+        print>>sys.stderr, "CART NOW IS: ", cherrypy.session['cart']
         print>>sys.stderr, "SESSION NOW IS: ", cherrypy.session
     
     @cherrypy.expose
@@ -711,7 +714,7 @@ class InventoryServer:
     
     #search by attribute
     @cherrypy.expose
-    def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", begin_date="",end_date="", tag="",kind="",location="", formatType=""):
+    def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", sold_begin_date="",sold_end_date="",inv_begin_date='',inv_end_date='', tag="",kind="",location="", formatType=""):
         cherrypy.session['lastsearch']=False
         self.common()
         cherrypy.session['lastsearch']=cherrypy.url()
@@ -729,8 +732,10 @@ class InventoryServer:
         self._searchtemplate.stock_less_than=stock_less_than
         self._searchtemplate.stock_more_than=stock_more_than
         self._searchtemplate.sold_more_than=sold_more_than
-        self._searchtemplate.begin_date=begin_date
-        self._searchtemplate.end_date=end_date
+        self._searchtemplate.inv_begin_date=inv_begin_date
+        self._searchtemplate.inv_end_date=inv_end_date
+        self._searchtemplate.sold_begin_date=sold_begin_date
+        self._searchtemplate.sold_end_date=sold_end_date
         self._searchtemplate.tag=tag
         #find locations for dropdown
         self._searchtemplate.locations=list(Location.select(orderBy="location_name"))
@@ -758,7 +763,7 @@ class InventoryServer:
         #find out if fields are used or if we are filtering on
         #in stock
         titles=[]
-        fields=[title,author,category,distributor,owner,isbn,publisher,stock_less_than,stock_more_than,sold_more_than,begin_date,end_date,tag,kind]
+        fields=[title,author,category,distributor,owner,isbn,publisher,stock_less_than,stock_more_than,sold_more_than,inv_begin_date,inv_end_date,sold_begin_date,sold_end_date,tag,kind]
         fields_used = [f for f in fields if f != ""]
         
         #start building the filter list
@@ -783,10 +788,14 @@ class InventoryServer:
             where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
         if distributor:
             where_clause_list.append("book.distributor RLIKE '%s'" % escape_string(distributor.strip()))
-        if begin_date:
-            where_clause_list.append("book.sold_when >= '%s'" % escape_string(begin_date))
-        if end_date:
-            where_clause_list.append("book.sold_when < '%s'" % escape_string(end_date))
+        if inv_begin_date:
+            where_clause_list.append("book.inventoried_when >= '%s'" % escape_string(inv_begin_date))
+        if inv_end_date:
+            where_clause_list.append("book.inventoried_when < '%s'" % escape_string(inv_end_date))
+        if sold_begin_date:
+            where_clause_list.append("book.sold_when >= '%s'" % escape_string(sold_begin_date))
+        if sold_end_date:
+            where_clause_list.append("book.sold_when < '%s'" % escape_string(sold_end_date))
         if author:
             where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
         if category:
