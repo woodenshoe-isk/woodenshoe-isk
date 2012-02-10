@@ -19,3 +19,7 @@ screenlog.0
 tmp.py
 
 infoshopkeeper-trac/
+*~
+*.bak
+*.log
+*.log.*
