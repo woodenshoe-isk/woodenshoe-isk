@@ -1,6 +1,13 @@
 #!/bin/bash
 WD1=$PWD
-cd ~woodenshoe/infoshopkeeper/inventoryserver
+if [[ $(pwd) =~ (.*/git_repos/infoshopkeeper)(.*) ]]; then cd ${BASH_REMATCH[1]};  fi
+#cd ~mkapes/Documents/Developer/git_repos/infoshopkeeper/inventoryserver
 cheetah compile -R
 cd $WD1
-sudo apache2ctl graceful
+if [[ -n $(which apache2ctl) ]]; then 
+    sudo apache2ctl graceful
+else
+    if [[ -n $(which apachectl) ]]; then 
+        sudo apachectl graceful
+    fi
+fi
