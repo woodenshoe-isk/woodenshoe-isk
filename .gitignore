@@ -1,11 +1,11 @@
 *.pyc
 *.pyo
 *~
-*.html
 *.bak
 *.log
 *.log.*
 *.js
+*.html
 __init__.py
 etc.py
 test.py
