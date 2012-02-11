@@ -124,7 +124,11 @@ class inventory:
 
                     ListPrice=""
                     if hasattr(b,'ListPrice'):
+<<<<<<< HEAD
                         ListPrice=b.ListPrice.FormattedPrice.replace("$",'').replace("$",'')
+=======
+                        ListPrice=b.ListPrice.FormattedPrice.replace("$",'')
+>>>>>>> b4ab0c1880ae25e2a1082807bf274bae5914298a
 
                     Format=''
                     if hasattr(b, "Binding"):
