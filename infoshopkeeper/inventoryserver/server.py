@@ -1,8 +1,11 @@
 #!/usr/bin/python
 # coding: UTF-8
 import cherrypy
-import uuid
+import os
+import string
 import sys
+import subprocess
+import uuid
 
 from mx.DateTime import now
 
@@ -86,6 +89,11 @@ def jsonify_tool_callback(*args, **kwargs):
     cherrypy.response.headers['Content-length']=len(body)
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
+
+#flag for when admin loads.
+#use it to turn on & off printing depending on whether
+#we are local or not. I hate this. Better way?
+admin_loaded = False
 
 #Noteboard app
 class Noteboard:
@@ -370,6 +378,10 @@ class Admin:
     
         self.inventory=inventory.inventory()
         
+        #set flag to true. 
+        #currently, we use this to enable printing.
+        admin_loaded = True
+        
         MenuData.setMenuData({'3': ('Add to Inventory', '/admin/add_to_inventory', [])})
         #notice trac is on here but it's run out of its own wsgi script
         MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
@@ -444,6 +456,16 @@ class Admin:
         self._add_to_inventory_template.format=type
         self._add_to_inventory_template.known_title=known_title
         return self._add_to_inventory_template.respond()
+        
+    #prints label for item. needs printer info to be set up in etc.
+    @cherrypy.expose
+    def print_label(self, isbn='', booktitle='', ourprice='0.00', num_copies=1):
+        #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
+        print_command_string = string.Template("export TMPDIR=/tmp/gs; export GS_LIB=/usr/local/share/ghostscript/lib; export GS_FONTPATH='/usr/X11/lib/X11/fonts/Type1:/usr/X11/lib/X11/fonts/TTF:/usr/local/share/ghostscript/fonts'; /usr/local/bin/gs -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+        if isbn and booktitle and ourprice:
+            subprocess.call( print_command_string.substitute(
+                {'booktitle': booktitle, 'isbn':isbn, 'ourprice':ourprice, 
+                    'num_copies':num_copies, 'printer':etc.label_printer_name}), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
     
     #wrapper to inventory.addToInventory to be added
     #after a few minor manipulations. Ditches dollar sign, makes 

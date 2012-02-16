@@ -15,6 +15,13 @@ from Skeleton import Skeleton
           
         }});
         
+        jQuery('#num_copies').attr('disabled', 'disabled');
+        
+        jQuery('#print_label').bind('click', function() {
+            jQuery('#num_copies').attr('enabled', function () {
+                ! jQuery(this).attr('enabled');
+            });
+        });
         //give isbn text box cursor focus 
         jQuery('#isbn').focus();
         
@@ -87,7 +94,14 @@ from Skeleton import Skeleton
                     clearForm:false, 
                     type:'post', 
                     success:function(){
-                        //add to inventory succeeeds
+                        //add to inventory succeeds
+                        
+                        //print label if we need to
+                        if (jQuery('#printlabel').is(':checked')) {
+                            jQuery.get( '/admin/print_label', 'isbn=' + jQuery('#isbn').val()
+                                + '&booktitle=' + jQuery('#booktitle').val() + '&ourprice=' + jQuery('#ourprice')
+                                + '&num_copies=' + jQuery('#num_copies').val();
+                        };
                         //
                         //clear all text fields except price & quantity
                         //set prices & quantity to defaults
@@ -129,6 +143,14 @@ Add item to  inventory
 
 <label class="textbox" for="isbn">Item ID (UPC or ISBN)</label> 
 <input class="textbox required" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" /><br />
+
+<label class="textbox" for "printlabel"> </label>
+<input type="checkbox" id="printlabel" name="printlabel" value="1" />Print 
+<select class="inline" id="num_copies" name="num_copies">
+#for $i in [1, 2, 3, 4]
+<option value='$i'>$i</option>
+#end for
+</select> barcode label for this title<br />
 
 <label class="textbox" for "quantity">Quantity</label>
 <input class="textbox required" type="text" id="quantity", name="quantity", value="$quantity"/><br />
@@ -207,6 +229,7 @@ selected="true"
 <input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
 
 <input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
+<br />
 <input class='reset' type='reset' value='Cancel'>
 <br />
 </form>
