@@ -5,6 +5,7 @@ import os
 import string
 import sys
 import subprocess
+import tempfile
 import uuid
 
 from mx.DateTime import now
@@ -424,7 +425,7 @@ class Admin:
     
     #hook for add to inventory template
     @cherrypy.expose
-    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
+    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False, num_copies=1):
         self._add_to_inventory_template.isbn=isbn
         self._add_to_inventory_template.quantity=quantity
         self._add_to_inventory_template.title=title
@@ -448,6 +449,7 @@ class Admin:
         self._add_to_inventory_template.kinds=list(Kind.select())
         self._add_to_inventory_template.kind=kind
         
+        
         conn=Title._connection
         query=Select( Title.q.type, groupBy=Title.q.type)
         results=conn.queryAll( conn.sqlrepr(query))
@@ -461,11 +463,15 @@ class Admin:
     @cherrypy.expose
     def print_label(self, isbn='', booktitle='', ourprice='0.00', num_copies=1):
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
-        print_command_string = string.Template("export TMPDIR=/tmp/gs; export GS_LIB=/usr/local/share/ghostscript/lib; export GS_FONTPATH='/usr/X11/lib/X11/fonts/Type1:/usr/X11/lib/X11/fonts/TTF:/usr/local/share/ghostscript/fonts'; /usr/local/bin/gs -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+        #find out where gs lives on this system; chop off /n
+        p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        gs_location=out.strip()
+        print_command_string = string.Template("export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
         if isbn and booktitle and ourprice:
             subprocess.call( print_command_string.substitute(
-                {'booktitle': booktitle, 'isbn':isbn, 'ourprice':ourprice, 
-                    'num_copies':num_copies, 'printer':etc.label_printer_name}), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
+                {'gs_location':gs_location, 'booktitle': booktitle, 'isbn':isbn, 'ourprice':ourprice, 
+                    'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()}), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
     
     #wrapper to inventory.addToInventory to be added
     #after a few minor manipulations. Ditches dollar sign, makes 
