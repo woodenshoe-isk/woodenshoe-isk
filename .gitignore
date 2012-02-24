@@ -1,5 +1,7 @@
 *.pyc
+*.pyo
 *~
+*.html
 *.bak
 *.log
 *.log.*
@@ -19,3 +21,10 @@ screenlog.0
 tmp.py
 
 infoshopkeeper-trac/
+<<<<<<< HEAD
+=======
+*~
+*.bak
+*.log
+*.log.*
+>>>>>>> Development
