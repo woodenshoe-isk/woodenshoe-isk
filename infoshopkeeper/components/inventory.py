@@ -55,7 +55,16 @@ class inventory:
                 Manufacturer = the_titles[0].publisher.format()
                 Format=the_titles[0].type.format()
                 Kind=the_titles[0].kind.kindName
- 
+                return {"title":ProductName,
+                    "authors":authors,
+                    "authors_as_string":authors_as_string,
+                    "categories_as_string":categories_as_string,
+                    "list_price":ListPrice,
+                    "publisher":Manufacturer,
+                    "isbn":isbn,
+                    "format":Format,
+                    "kind":Kind,
+                    "known_title": self.known_title}
             else: #we don't have it yet
                 #print "in isbn"
                 sleep(1) # so amazon doesn't get huffy 
@@ -64,7 +73,11 @@ class inventory:
                 ecs.setAssociateTag(amazon_associate_tag)
                 
                 #print "about to search", isbn, isbn[0]
-                pythonBooks = ecs.ItemLookup(isbn,IdType="ISBN",SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
+                pythonBooks=[]
+                try:
+                    pythonBooks = ecs.ItemLookup(isbn,IdType="ISBN",SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
+                except ecs.InvalidParameterValue:
+                    pass
                 #print pythonBooks
                 if pythonBooks:
                     result={}
@@ -139,16 +152,19 @@ class inventory:
                     
                     Kind='books'
                     
-            return {"title":ProductName,
-                    "authors":authors,
-                    "authors_as_string":authors_as_string,
-                    "categories_as_string":categories_as_string,
-                    "list_price":ListPrice,
-                    "publisher":Manufacturer,
-                    "isbn":isbn,
-                    "format":Format,
-                    "kind":Kind,
-                    "known_title": self.known_title}
+                    return {"title":ProductName,
+                        "authors":authors,
+                        "authors_as_string":authors_as_string,
+                        "categories_as_string":categories_as_string,
+                        "list_price":ListPrice,
+                        "publisher":Manufacturer,
+                        "isbn":isbn,
+                        "format":Format,
+                        "kind":Kind,
+                        "known_title": self.known_title}
+                else:
+                    return []
+                
        
         
     def lookup_by_upc(self,upc):
@@ -237,17 +253,24 @@ class inventory:
                     "known_title": self.known_title}
 
 
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",extra_prices={}, tag=''):
-        #print "GOT to addToInventory"
-        #print known_title
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind='', extra_prices={}, tag='', num_copies=0):
+        print "GOT to addToInventory"
         if not(known_title):
-        #add a title
-            the_kinds=list(Kind.select(Kind.q.kindName==kind_name))
+            print "unknown title"
+            #add a title
+            the_kinds=list(Kind.select(Kind.q.kindName==kind))
             kind_id = None
             if the_kinds:
                 kind_id = the_kinds[0].id
-            known_title=Title(isbn=isbn, booktitle=title.encode("utf8", "backslashreplace"), publisher=publisher.encode("utf8", "backslashreplace"),tag=" ",type=types, kindID=kind_id)
-            #print known_title
+            print kind_id
+
+            #print title
+
+	    title=title
+            publisher=publisher
+            #print title, publisher
+            known_title=Title(isbn=isbn, booktitle=title, publisher=publisher,tag=" ",type=types, kindID=kind_id)
+            print known_title
             for rawAuthor in authors:
                 author = rawAuthor.encode("utf8", "backslashreplace")
             theAuthors = Author.selectBy(authorName=author)

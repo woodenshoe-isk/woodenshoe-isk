@@ -1,8 +1,12 @@
 #!/usr/bin/python
 # coding: UTF-8
 import cherrypy
-import uuid
+import os
+import string
 import sys
+import subprocess
+import tempfile
+import uuid
 
 from mx.DateTime import now
 
@@ -86,6 +90,11 @@ def jsonify_tool_callback(*args, **kwargs):
     cherrypy.response.headers['Content-length']=len(body)
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
+
+#flag for when admin loads.
+#use it to turn on & off printing depending on whether
+#we are local or not. I hate this. Better way?
+admin_loaded = False
 
 #Noteboard app
 class Noteboard:
@@ -224,11 +233,11 @@ class Register:
                     #and remove from cart
                     if item['bookID']:
                         try:
-                            Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now())
+                            Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
                             infostring = "'[] " + item['department']
                             if item.has_key('booktitle'):
                                 infostring=infostring + ": " +item['booktitle']
-                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
+                            Transaction(action='SALE', date=now().strftime("%Y-%m-%d"), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                             cart['items'].remove(item)
                         except Exception as err:
                             #print>>sys.stderr, "error in selling book", err
@@ -239,7 +248,7 @@ class Register:
                         infostring = "'[] " + item['department']
                         if item.haskey('booktitle'):
                             infostring=infostring + ": " +item['booktitle']
-                        Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
+                        Transaction(action='SALE', date=now().strftime("%Y-%m-%d"), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                         cart['items'].remove(item)
             #it should be zero but just in case
             #there was an error, items with error are still kept
@@ -332,12 +341,12 @@ class Register:
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def get_item_by_isbn(self, **kwargs):
-        #print>>sys.stderr, kwargs
+        print>>sys.stderr, kwargs
         isbn=kwargs.get('isbn', '')
         
         #strip spaces and quotes from isbn string
         isbn=isbn.strip('\'\"')
-        #print>>sys.stderr, isbn
+        print>>sys.stderr, isbn
         if (isbn.replace(' ','').__len__()==13):
             isbn=upc2isbn(isbn.replace(' ',''))
         
@@ -369,6 +378,10 @@ class Admin:
         self._add_to_inventory_template=AddToInventoryTemplate()
     
         self.inventory=inventory.inventory()
+        
+        #set flag to true. 
+        #currently, we use this to enable printing.
+        admin_loaded = True
         
         MenuData.setMenuData({'3': ('Add to Inventory', '/admin/add_to_inventory', [])})
         #notice trac is on here but it's run out of its own wsgi script
@@ -412,7 +425,7 @@ class Admin:
     
     #hook for add to inventory template
     @cherrypy.expose
-    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
+    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False, num_copies=1):
         self._add_to_inventory_template.isbn=isbn
         self._add_to_inventory_template.quantity=quantity
         self._add_to_inventory_template.title=title
@@ -436,6 +449,7 @@ class Admin:
         self._add_to_inventory_template.kinds=list(Kind.select())
         self._add_to_inventory_template.kind=kind
         
+        
         conn=Title._connection
         query=Select( Title.q.type, groupBy=Title.q.type)
         results=conn.queryAll( conn.sqlrepr(query))
@@ -444,23 +458,39 @@ class Admin:
         self._add_to_inventory_template.format=type
         self._add_to_inventory_template.known_title=known_title
         return self._add_to_inventory_template.respond()
+        
+    #prints label for item. needs printer info to be set up in etc.
+    @cherrypy.expose
+    def print_label(self, isbn='', booktitle='', ourprice='0.00', num_copies=1):
+        #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
+        #find out where gs lives on this system; chop off /n
+        p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        gs_location=out.strip()
+        print_command_string = string.Template("export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+        if isbn and booktitle and ourprice:
+            subprocess.call( print_command_string.substitute(
+                {'gs_location':gs_location, 'booktitle': booktitle, 'isbn':isbn, 'ourprice':ourprice, 
+                    'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()}), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
     
     #wrapper to inventory.addToInventory to be added
     #after a few minor manipulations. Ditches dollar sign, makes 
     #prices floats and turns categories & authors into lists
     @cherrypy.expose
     def add_item_to_inventory(self, **kwargs):
-        #print "kwargs are:" 
-        #print kwargs
+        print "kwargs are:" 
+        print kwargs
         kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
         kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
         kwargs['authors']=kwargs['authors'].split(',')
         kwargs['categories'] = kwargs['categories'].split(',')
-        if kwargs['known_title'] == 'false':
+        if (kwargs['known_title'] == 'False' or kwargs['known_title'] == 'false'):
             kwargs['known_title']=False
         else:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
-        #print kwargs
+        print kwargs
+        kwargs['kind_name']=kwargs['kind']
+	print kwargs
         self.inventory.addToInventory(**kwargs)
     
     #wrapper to inventory.search_inventory
@@ -470,6 +500,13 @@ class Admin:
     @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
         data=self.inventory.lookup_by_isbn(args['isbn'])
+        print data
+        if (data and data['known_title']):
+            most_freq_location = data['known_title']._connection.queryAll(
+            '''SELECT book.location_id FROM book WHERE book.title_id=%s AND book.location_id !=1 GROUP BY book.title_id, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].id
+            )
+	    if most_freq_location:            
+		data['most_freq_location'] = most_freq_location[0][0]
         return [data]
     add_to_inventory.search_isbn=search_isbn
 

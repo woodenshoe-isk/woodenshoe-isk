@@ -14,7 +14,7 @@ from Skeleton import Skeleton
                 alert(XMLHttpRequest.responseText);
           
         }});
-        
+                
         //give isbn text box cursor focus 
         jQuery('#isbn').focus();
         
@@ -38,43 +38,48 @@ from Skeleton import Skeleton
         //isbn autofill
         jQuery('#isbn').blur( function() {
             var isbnstring=jQuery(this).val();
-            isbnstring=isbnstring.toLowerCase();
-
-            //scrub spaces & hyphens if isbn is candidate 'real isbn'
-            if (isbnstring.length>11) {
-                isbnstring.replace('/[\s-]/g', '');
-            }
-            
-            //use isdirty to avoid infinite loop
-            if (isbnDirty == false) {
-                //check database for isbn
-                jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
-                    //if success, fill in all the other fields
-                    data=data[0]
-                    jQuery.each(data, function(key, value) {
-                        if (key == 'publisher') {
-                            jQuery('#publisher').val(value);
-                        } else if ( key == 'authors_as_string') {
-                            jQuery('#authors').val(value);
-                        } else if ( key == 'categories_as_string') {
-                            jQuery('#categories').val(value);
-                        } else if ( key == 'title') {
-                            jQuery('#title').val(value);
-                        } else if ( key == 'list_price') {
-                            jQuery('#listprice').val(value);
-                            jQuery('#ourprice').val(value);
-                        } else if (key == 'isbn') {
-                            jQuery('#isbn').val(value);
-                        } else if ( key == 'format') {
-                            jQuery('#types').val(value);
-                        } else if (key ==  'kind') {
-                            jQuery('#kind_name').val(value);
-                        } else if ( key == 'known_title') {
-                            jQuery('#known_title').val(value);
-                        }
+            if (isbnstring != null) {
+                isbnstring=isbnstring.toLowerCase();
+    
+                //scrub spaces & hyphens if isbn is candidate 'real isbn'
+                if (isbnstring.length>11) {
+                    isbnstring.replace('/[\s-]/g', '');
+                }
+                
+                //use isdirty to avoid infinite loop
+                if (isbnDirty == false) {
+                    //check database for isbn
+                    jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
+                        //if success, fill in all the other fields
+                        data=data[0]
+                        jQuery.each(data, function(key, value) {
+                            if (key == 'publisher') {
+                                jQuery('#publisher').val(value);
+                            } else if ( key == 'authors_as_string') {
+                                jQuery('#authors').val(value);
+                            } else if ( key == 'categories_as_string') {
+                                jQuery('#categories').val(value);
+                            } else if ( key == 'title') {
+                                jQuery('#title').val(value);
+                            } else if ( key == 'list_price') {
+                                jQuery('#listprice').val(value);
+                                jQuery('#ourprice').val(value);
+                            } else if (key == 'isbn') {
+                                jQuery('#isbn').val(value);
+                            } else if ( key == 'format') {
+                                jQuery('#types').val(value);
+                            } else if (key ==  'kind') {
+                                jQuery('#kind').val(value);
+                            } else if ( key == 'known_title') {
+                                jQuery('#known_title').val(value);
+                            } else if ( key == 'most_freq_location' ) {
+                                console.log(key, value)
+                                jQuery('#location').val( value );
+                            }
+                        });
                     });
-                });
-                isbnDirty = true;
+                    isbnDirty = true;
+                }
             }
             return false;
         });
@@ -87,7 +92,15 @@ from Skeleton import Skeleton
                     clearForm:false, 
                     type:'post', 
                     success:function(){
-                        //add to inventory succeeeds
+                        //add to inventory succeeds
+                        
+                        //print label if we need to
+                        if (jQuery('#printlabel').is(':checked')) {
+                            jQuery.get( '/admin/print_label', {'isbn':jQuery('#isbn').val(),
+                                'booktitle':jQuery('#booktitle').val(),'ourprice':jQuery('#ourprice'),
+                                'num_copies':jQuery('#num_copies').val()}
+                            );
+                        }                        
                         //
                         //clear all text fields except price & quantity
                         //set prices & quantity to defaults
@@ -113,8 +126,7 @@ from Skeleton import Skeleton
                     jQuery("#ourprice").val('0.0');
                     isbnDirty=false;
         });
-    }
-        );
+    });
 </script> 
 #end def
 
@@ -129,6 +141,14 @@ Add item to  inventory
 
 <label class="textbox" for="isbn">Item ID (UPC or ISBN)</label> 
 <input class="textbox required" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" /><br />
+
+<label class="textbox" for "printlabel"> </label>
+<input type="checkbox" id="printlabel" name="printlabel" value="1" />Print 
+<select class="inline" id="num_copies" name="num_copies">
+#for $i in [1, 2, 3, 4]
+<option value='$i'>$i</option>
+#end for
+</select> barcode label for this title<br />
 
 <label class="textbox" for "quantity">Quantity</label>
 <input class="textbox required" type="text" id="quantity", name="quantity", value="$quantity"/><br />
@@ -182,8 +202,8 @@ selected="true"
 <label class="textbox" for="tag">Tag</label> 
 <input class="textbox" type="text" id="tag" name="tag" value="$tag" /><br />
 
-<label class="textbox" for="kind_name">Kind</label> 
-<select class="textbox required" id="kind_name" name="kind_name">
+<label class="textbox" for="kind">Kind</label> 
+<select class="textbox required" id="kind" name="kind">
 #for $k in $kinds
 <option value='$k.kindName' 
 #if "%s" %($k.id)==$kind  
@@ -193,7 +213,7 @@ selected="true"
 #end for
 </select><br />
 
-<label class="textbox" for="types">Format</label> 
+<label class="textbox" for="type">Format</label> 
 <select class="textbox required" id="types" name="types">
 #for $f in $formats
 <option value='$f' 
@@ -207,6 +227,7 @@ selected="true"
 <input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
 
 <input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
+<br />
 <input class='reset' type='reset' value='Cancel'>
 <br />
 </form>

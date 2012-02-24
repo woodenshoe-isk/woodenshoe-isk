@@ -32,7 +32,8 @@ class Title(SQLObjectWithFormGlue):
     author = RelatedJoin('Author', intermediateTable='author_title',createRelatedTable=True)
     categorys = MultipleJoin('Category')
     kind = ForeignKey('Kind')
-    listTheseKeys=('kind')
+    listTheseKeys=['kindID','kind']
+    sortTheseKeys=[]
     
     
     #~ _connection = db.conn()
