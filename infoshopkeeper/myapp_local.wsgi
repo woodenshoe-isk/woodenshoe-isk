@@ -26,7 +26,7 @@ class Root(object):
 root=InventoryServer()
 root.admin=Admin()
 root.notes=Noteboard()
-#root.register=Register()
+root.register=Register()
 
 application = cherrypy.Application(root, script_name=None, config=cherrypy_local_config_file)
 
