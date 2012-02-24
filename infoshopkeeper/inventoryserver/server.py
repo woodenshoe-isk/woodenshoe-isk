@@ -484,11 +484,12 @@ class Admin:
         kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
         kwargs['authors']=kwargs['authors'].split(',')
         kwargs['categories'] = kwargs['categories'].split(',')
-        if kwargs['known_title'] == 'false':
+        if (kwargs['known_title'] == 'False' or kwargs['known_title'] == 'false'):
             kwargs['known_title']=False
         else:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
         #print kwargs
+        kwargs['kind_name']=kwargs['kind']
         self.inventory.addToInventory(**kwargs)
     
     #wrapper to inventory.search_inventory
@@ -498,6 +499,12 @@ class Admin:
     @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
         data=self.inventory.lookup_by_isbn(args['isbn'])
+        print data
+        if (data and data['known_title']):
+            most_freq_location = data['known_title']._connection.queryAll(
+            '''SELECT book.location_id FROM book WHERE book.title_id=%s AND book.location_id !=1 GROUP BY book.title_id, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].id
+            )
+            data['most_freq_location'] = most_freq_location[0][0]
         return [data]
     add_to_inventory.search_isbn=search_isbn
 
