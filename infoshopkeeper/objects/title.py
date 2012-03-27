@@ -20,6 +20,7 @@ sqlhub.processConnection = connection
 class dummybook:
     def __init__(self):
         self.sold_when="-"
+        self.inventoried_when="-"
         self.dummy=True
 
 class Title(SQLObjectWithFormGlue):
@@ -32,7 +33,8 @@ class Title(SQLObjectWithFormGlue):
     author = RelatedJoin('Author', intermediateTable='author_title',createRelatedTable=True)
     categorys = MultipleJoin('Category')
     kind = ForeignKey('Kind')
-    listTheseKeys=('kind')
+    listTheseKeys=['kindID','kind']
+    sortTheseKeys=[]
     
     
     #~ _connection = db.conn()
@@ -47,9 +49,12 @@ class Title(SQLObjectWithFormGlue):
         
     def copies_in_status(self,status):
         i=0
-        for b in self.books:
-            if b.status==status:
-                i=i+1
+        try:
+            for b in self.books:
+                if b.status==status:
+                    i=i+1
+        except:
+            pass 
         return i
 
     def authors_as_string(self):

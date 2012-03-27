@@ -1,6 +1,7 @@
 from sqlobject import *
 from formencode import htmlfill
 from datetime import date
+from importlib import import_module
 import sys
 import operator
 
@@ -44,17 +45,18 @@ class SQLObjectWithFormGlue(SQLObject):
     def object_to_form(self):
         def handleForeignKey(col):
             colName=col.joinName
-    
-            eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
+            # eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
+            #print "passed eval"
+            #colClass=eval(colName.capitalize())
             
-            colClass=eval(colName.capitalize())
+            colClass = getattr( import_module('objects.%s'%colName), colName.capitalize())
+            
             toObjects=list(colClass.select())
+            print toObjects
             if self.sortTheseKeys:
                 #pass
                 toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
-    
-            
-            form_fragment="<label class='textbox'>%s</label><SELECT name='%s'class='textbox'>" %(colName,colName)
+            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
             for o in toObjects:
                 equals_fragment=""
                 try:
@@ -133,7 +135,7 @@ class SQLObjectWithFormGlue(SQLObject):
             if type(c)==SOForeignKey:
                 try:
                     if c.joinName in self.listTheseKeys:
-                        formhtml = formhtml + self.handleForeignKey(c)
+                        formhtml = formhtml + handleForeignKey(c)
                 except:
                     pass
 

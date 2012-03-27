@@ -1,8 +1,12 @@
 #!/usr/bin/python
 # coding: UTF-8
 import cherrypy
-import uuid
+import os
+import string
 import sys
+import subprocess
+import tempfile
+import uuid
 
 from mx.DateTime import now
 
@@ -40,6 +44,7 @@ from objects.kind import Kind
 from objects.location import Location
 from objects.transaction import Transaction
 from objects.notes import Notes
+from tools.isbn import checkI13
 from IndexTemplate import IndexTemplate
 from SearchTemplate import SearchTemplate
 from BookEditTemplate import BookEditTemplate
@@ -47,6 +52,7 @@ from TitleEditTemplate import TitleEditTemplate
 from TitleListTemplate import TitleListTemplate
 from AuthorEditTemplate import AuthorEditTemplate
 from CategoryEditTemplate import CategoryEditTemplate
+from ChooseItemForISBNTemplate import ChooseItemForISBNTemplate
 from ChooseItemTemplate import ChooseItemTemplate
 from KindEditTemplate import KindEditTemplate
 from KindListTemplate import KindListTemplate
@@ -86,6 +92,11 @@ def jsonify_tool_callback(*args, **kwargs):
     cherrypy.response.headers['Content-length']=len(body)
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
+
+#flag for when admin loads.
+#use it to turn on & off printing depending on whether
+#we are local or not. I hate this. Better way?
+admin_loaded = False
 
 #Noteboard app
 class Noteboard:
@@ -224,11 +235,11 @@ class Register:
                     #and remove from cart
                     if item['bookID']:
                         try:
-                            Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now())
+                            Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
                             infostring = "'[] " + item['department']
                             if item.has_key('booktitle'):
                                 infostring=infostring + ": " +item['booktitle']
-                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
+                            Transaction(action='SALE', date=now().strftime("%Y-%m-%d"), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                             cart['items'].remove(item)
                         except Exception as err:
                             #print>>sys.stderr, "error in selling book", err
@@ -239,7 +250,7 @@ class Register:
                         infostring = "'[] " + item['department']
                         if item.haskey('booktitle'):
                             infostring=infostring + ": " +item['booktitle']
-                        Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
+                        Transaction(action='SALE', date=now().strftime("%Y-%m-%d"), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                         cart['items'].remove(item)
             #it should be zero but just in case
             #there was an error, items with error are still kept
@@ -332,12 +343,12 @@ class Register:
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def get_item_by_isbn(self, **kwargs):
-        #print>>sys.stderr, kwargs
+        print>>sys.stderr, kwargs
         isbn=kwargs.get('isbn', '')
         
         #strip spaces and quotes from isbn string
         isbn=isbn.strip('\'\"')
-        #print>>sys.stderr, isbn
+        print>>sys.stderr, isbn
         if (isbn.replace(' ','').__len__()==13):
             isbn=upc2isbn(isbn.replace(' ',''))
         
@@ -367,8 +378,13 @@ class Admin:
         self._locationedittemplate = LocationEditTemplate()
         self._locationlisttemplate = LocationListTemplate()
         self._add_to_inventory_template=AddToInventoryTemplate()
+        self._chooseitemforisbntemplate=ChooseItemForISBNTemplate()
     
         self.inventory=inventory.inventory()
+        
+        #set flag to true. 
+        #currently, we use this to enable printing.
+        admin_loaded = True
         
         MenuData.setMenuData({'3': ('Add to Inventory', '/admin/add_to_inventory', [])})
         #notice trac is on here but it's run out of its own wsgi script
@@ -412,7 +428,7 @@ class Admin:
     
     #hook for add to inventory template
     @cherrypy.expose
-    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False):
+    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False, printlabel=False, num_copies=1):
         self._add_to_inventory_template.isbn=isbn
         self._add_to_inventory_template.quantity=quantity
         self._add_to_inventory_template.title=title
@@ -435,6 +451,7 @@ class Admin:
         self._add_to_inventory_template.tag=tag
         self._add_to_inventory_template.kinds=list(Kind.select())
         self._add_to_inventory_template.kind=kind
+        self._add_to_inventory_template.printlabel=printlabel
         
         conn=Title._connection
         query=Select( Title.q.type, groupBy=Title.q.type)
@@ -444,23 +461,51 @@ class Admin:
         self._add_to_inventory_template.format=type
         self._add_to_inventory_template.known_title=known_title
         return self._add_to_inventory_template.respond()
+        
+    #prints label for item. needs printer info to be set up in etc.
+    @cherrypy.expose
+    def print_label(self, isbn='', booktitle='', ourprice='0.00', num_copies=1):
+        #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
+        #find out where gs lives on this system; chop off /n
+        p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        gs_location=out.strip()
+        print_command_string = string.Template("export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+        if isbn and booktitle and ourprice:
+            subprocess.call( print_command_string.substitute(
+                {'gs_location':gs_location, 'booktitle': booktitle, 'isbn':isbn, 'ourprice':ourprice, 
+                    'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()}), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
+    
+    #get next isbn in series that we are using for in-house labels
+    #I've gone through great lengths to make sure there's no collision, but there's still a
+    #bit of a fiat clause to the EAN organization.
+    @cherrypy.expose
+    def get_next_unused_local_isbn(self):
+        try:
+            result=Title.select("title.isbn RLIKE \'^199\'").max(Title.q.isbn)
+            result= result[:-1] + checkI13(result[:13])
+        except:
+            result= '199' + '0'*9 + checkI13(('199'+'0'*9))
+        return result
     
     #wrapper to inventory.addToInventory to be added
     #after a few minor manipulations. Ditches dollar sign, makes 
     #prices floats and turns categories & authors into lists
     @cherrypy.expose
     def add_item_to_inventory(self, **kwargs):
-        #print "kwargs are:" 
-        #print kwargs
+        print "kwargs are:" 
+        print kwargs
         kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
         kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
         kwargs['authors']=kwargs['authors'].split(',')
         kwargs['categories'] = kwargs['categories'].split(',')
-        if kwargs['known_title'] == 'false':
+        if (kwargs['known_title'] == 'False' or kwargs['known_title'] == 'false'):
             kwargs['known_title']=False
         else:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
-        #print kwargs
+        print kwargs
+        kwargs['kind_name']=kwargs['kind']
+        print kwargs
         self.inventory.addToInventory(**kwargs)
     
     #wrapper to inventory.search_inventory
@@ -470,9 +515,117 @@ class Admin:
     @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
         data=self.inventory.lookup_by_isbn(args['isbn'])
+        print data
+        most_freq_location=''
+        if (data and data['known_title']):
+            most_freq_location = data['known_title']._connection.queryAll(
+            '''SELECT book.location_id FROM book WHERE book.title_id=%s AND book.location_id !=1 GROUP BY book.title_id, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].id
+            )
+            if most_freq_location:            
+                data['most_freq_location'] = most_freq_location[0][0]
+            max_price=list(data['known_title']._connection.queryAll(
+            '''SELECT MAX(book.listprice) FROM book WHERE book.title_id=%s GROUP BY book.title_id''' % data['known_title'].id
+            ))
+            if max_price:
+                max_price='{0:.2f}'.format(max_price[0][0])
+            else:
+                max_price='0.00'
+            data['listprice'] = data['ourprice'] = max_price
         return [data]
     add_to_inventory.search_isbn=search_isbn
 
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def search_id(self, titleid):
+        print>>sys.stderr
+        title=Title.get(titleid)
+        if title:
+            #queryAll returns lists of lists for results
+            most_freq_location=title._connection.queryAll(
+            '''SELECT book.location_id FROM book WHERE book.title_id=%s AND book.location_id !=1 GROUP BY book.title_id, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % title.id
+            )
+            if most_freq_location:
+                most_freq_location=most_freq_location[0][0]
+            else:
+                most_freq_location=''
+            max_price=list(title._connection.queryAll(
+            '''SELECT MAX(book.listprice) FROM book WHERE book.title_id=%s GROUP BY book.title_id''' % title.id
+            ))
+            if max_price:
+                max_price='{0:.2f}'.format(max_price[0][0])
+            else:
+                max_price='0.00'
+        print>>sys.stderr,  most_freq_location, max_price, title
+        #return [{'isbn':title.isbn, 'title': title.booktitle, 'location':most_freq_location,'listprice':max_price, 'ourprice':max_price, 'known_title':True}]
+        return [{'isbn':title.isbn, 'title':title.booktitle, 'listprice':max_price, 'ourprice':max_price, 'authors':title.authors_as_string(), 'publisher':title.publisher, 'categories':title.categories_as_string(), 'location':most_freq_location, 'kind':title.kindID, 'type':title.type, 'known_title':True}]
+
+    #search for in stock items by attribute
+    @cherrypy.expose
+    def select_item_for_isbn_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
+        self._chooseitemforisbntemplate.empty=True
+        self._chooseitemforisbntemplate.title=title
+        self._chooseitemforisbntemplate.isbn=isbn
+        self._chooseitemforisbntemplate.author=author
+        self._chooseitemforisbntemplate.category=category
+        self._chooseitemforisbntemplate.distributor=distributor
+        self._chooseitemforisbntemplate.owner=owner
+        self._chooseitemforisbntemplate.publisher=publisher 
+        self._chooseitemforisbntemplate.tag=tag
+        self._chooseitemforisbntemplate.locations=list(Location.select(orderBy="location_name"))
+        self._chooseitemforisbntemplate.location=location
+        the_location=location
+        if type(the_location)==type([]):
+            the_location=the_location[0]
+        self._chooseitemforisbntemplate.kinds=list(Kind.select())
+        self._chooseitemforisbntemplate.kind=kind
+        the_kind=kind
+        if type(the_kind) == type([]):
+            the_kind=the_kind[0]
+        self._chooseitemforisbntemplate.table_is_form=True
+        
+        titles=[]
+        
+        #used to check that any filtering is done
+        fields=[title,author,category,distributor,owner,isbn,publisher,tag,kind]
+        fields_used = [f for f in fields if f != ""]
+        
+        #start out with the join clauses in the where clause list
+        where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
+        
+        #add filter clauses if they are called for
+        if the_kind:
+            where_clause_list .append("title.kind_id = '%s'" % escape_string(the_kind))
+        if the_location and len(the_location)>1:
+            where_clause_list .append("book.location_id = '%s'" % escape_string(the_location))
+        if title:
+            where_clause_list.append("title.booktitle RLIKE '%s'" % escape_string(title.strip()))
+        if publisher:
+            where_clause_list.append("title.publisher RLIKE '%s'" % escape_string(publisher.strip()))
+        if tag:
+            where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
+        if isbn:
+            converted_isbn=upc2isbn(isbn)
+            where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(converted_isbn))
+        if owner:
+            where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
+        if distributor:
+            where_clause_list.append("book.distributor RLIKE '%s'" % escape_string(distributor.strip()))
+        if author:
+            where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
+        if category:
+            where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
+        
+        #AND all where clauses together
+        where_clause=' AND '.join(where_clause_list)
+        titles=[]
+        
+        #do search. 
+        if len(fields_used)>0:
+            titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
+                
+        self._chooseitemforisbntemplate.titles=titles
+        return self._chooseitemforisbntemplate.respond()
+        
 #Mostly does searching and generating reports            
 class InventoryServer:
     def __init__(self):
@@ -714,7 +867,7 @@ class InventoryServer:
     
     #search by attribute
     @cherrypy.expose
-    def search(self,title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", sold_begin_date="",sold_end_date="",inv_begin_date='',inv_end_date='', tag="",kind="",location="", formatType=""):
+    def search(self,id='', title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", sold_begin_date="",sold_end_date="",inv_begin_date='',inv_end_date='', tag="",kind="",location="", formatType=""):
         cherrypy.session['lastsearch']=False
         self.common()
         cherrypy.session['lastsearch']=cherrypy.url()
@@ -763,7 +916,7 @@ class InventoryServer:
         #find out if fields are used or if we are filtering on
         #in stock
         titles=[]
-        fields=[title,author,category,distributor,owner,isbn,publisher,stock_less_than,stock_more_than,sold_more_than,inv_begin_date,inv_end_date,sold_begin_date,sold_end_date,tag,kind]
+        fields=[id,title,author,category,distributor,owner,isbn,publisher,stock_less_than,stock_more_than,sold_more_than,inv_begin_date,inv_end_date,sold_begin_date,sold_end_date,tag,kind]
         fields_used = [f for f in fields if f != ""]
         
         #start building the filter list
@@ -800,14 +953,16 @@ class InventoryServer:
             where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
         if category:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
+        if id:
+            where_clause_list.append("title.id=%s" % escape_string(id))
         where_clause=' AND '.join(where_clause_list)
-        #print>>sys.stderr, where_clause
+        print>>sys.stderr, where_clause
         
         #do search first. Note it currently doesnt let you search for every book in database
         titles=[]
         if len(fields_used)>0 or out_of_stock=="yes":
             titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
-        
+                
         #filter for stock status
         if out_of_stock == 'yes':
                     titles = [t for t in titles if t.copies_in_status("STOCK") == 0]

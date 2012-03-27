@@ -4,9 +4,11 @@
 *.html
 *.bak
 *.config
+*.conf
 *.log
 *.log.*
 *.js
+*.html
 __init__.py
 etc.py
 test.py
@@ -18,7 +20,13 @@ infoshopkeeper/inventoryserver/Skeleton.py
 
 .DS_Store
 infoshopkeeper/reports/untitled text
-screenlog.0
 tmp.py
 
 infoshopkeeper-trac/
+
+*~
+*.bak
+*.log
+*.log.*
+
+infoshopkeeper/cherrypy_local.conf
