@@ -387,7 +387,7 @@ class Admin:
         #notice trac is on here but it's run out of its own wsgi script
         MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
-                                                   ('Bug Reports/Issues', 'http://localhost:8050/trac', []),
+                                                   ('Bug Reports/Issues', 'http://localhost:8050/trac/newticket', []),
                                                  ])})
     
     #hook for kind edit template
@@ -464,6 +464,7 @@ class Admin:
     def print_label(self, isbn='', booktitle='', ourprice='0.00', num_copies=1):
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
         #find out where gs lives on this system; chop off /n
+        print>>sys.stderr, "in print_label   ", isbn, booktitle, ourprice, num_copies
         p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
         out, err = p.communicate()
         gs_location=out.strip()
@@ -490,7 +491,7 @@ class Admin:
             kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
         print kwargs
         kwargs['kind_name']=kwargs['kind']
-	print kwargs
+        print kwargs
         self.inventory.addToInventory(**kwargs)
     
     #wrapper to inventory.search_inventory

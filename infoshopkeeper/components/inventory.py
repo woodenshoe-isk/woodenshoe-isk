@@ -30,7 +30,7 @@ class inventory:
         else:
             isbn=number
         #print "NUMBER was " +number+ ",ISBN was "+isbn
-        if len(isbn)>0:
+        if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
             #first we check our database
             titles =  Title.select(Title.q.isbn==isbn)
             #print titles #debug
@@ -40,13 +40,15 @@ class inventory:
                 #print "in titles"
                 self.known_title= the_titles[0]
                 ProductName = the_titles[0].booktitle.format()
+                authors=[]
                 if len(the_titles[0].author) > 0:
                     authors = [x.authorName.format() for x in the_titles[0].author]
                 authors_as_string = string.join(authors,',')
+                categories=[]
                 if len(the_titles[0].categorys) > 0:
                     #print len(the_titles[0].categorys)
                     #print the_titles[0].categorys
-                    categories = [x.categoryName.format() for x in the_titles[0].categorys]
+                    categories = [x.categoryName.format() for x in the_titles[0].categorys] 
                 categories_as_string = string.join(categories,',')
                 if len(the_titles[0].books) > 0:
                     ListPrice = the_titles[0].books[0].listprice
@@ -166,6 +168,8 @@ class inventory:
                     return []
                 
        
+        else:
+            return []
         
     def lookup_by_upc(self,upc):
 
@@ -253,7 +257,7 @@ class inventory:
                     "known_title": self.known_title}
 
 
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind='', extra_prices={}, tag='', num_copies=0):
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind='', extra_prices={}, tag='', num_copies=0, printlabel=False):
         print "GOT to addToInventory"
         if not(known_title):
             print "unknown title"
@@ -265,8 +269,8 @@ class inventory:
             print kind_id
 
             #print title
-
-	    title=title
+            
+            title=title
             publisher=publisher
             #print title, publisher
             known_title=Title(isbn=isbn, booktitle=title, publisher=publisher,tag=" ",type=types, kindID=kind_id)
@@ -285,7 +289,6 @@ class inventory:
                 print "mmm... looks like you have multiple author of the sama name in your database..."
             for category in categories:
                 Category(categoryName=category.encode("utf8", "backslashreplace"),title=known_title)
-    
         the_locations=list(Location.select(Location.q.locationName==location))
         location_id=1
         if the_locations:
@@ -296,7 +299,7 @@ class inventory:
             #print "book loop"
             b=Book(title=known_title,status=status.encode("utf8", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("utf8", "backslashreplace"),notes=notes.encode("utf8", "backslashreplace"),consignmentStatus="")
 #               b.extracolumns()
-#               for mp in extra_prices.keys():
+#~ #               for mp in extra_prices.keys():
 #                   setattr(b,string.replace(mp," ",""),extra_prices[mp])
 
 

@@ -9,17 +9,15 @@ from Skeleton import Skeleton
     jQuery(document).ready(function() {
         //Ajax setup for error handling
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-                alert(textStatus);
-                alert(errorThrown);
-                alert(XMLHttpRequest.responseText);
-          
+                alert(textStatus, errorThrown, XMLHttpRequest.responseText);
+                location.reload();
         }});
                 
         //give isbn text box cursor focus 
         jQuery('#isbn').focus();
         
         //make return go to next text box instead of submit
-        jQuery('.textbox').bind('keypress', function(evt) {
+        jQuery('.textbox').live('keypress', function(evt) {
                     if (evt.keyCode == 13||evt.chatCode == 13) {
                             /* FOCUS ELEMENT */
                             var inputs = jQuery(this).parents("form").eq(0).find(":input");
@@ -96,22 +94,23 @@ from Skeleton import Skeleton
                         
                         //print label if we need to
                         if (jQuery('#printlabel').is(':checked')) {
-                            jQuery.get( '/admin/print_label', {'isbn':jQuery('#isbn').val(),
-                                'booktitle':jQuery('#booktitle').val(),'ourprice':jQuery('#ourprice'),
-                                'num_copies':jQuery('#num_copies').val()}
-                            );
+                            total_copies = jQuery('#quantity').val() * jQuery('#num_copies').val()
+                            jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
                         }                        
                         //
                         //clear all text fields except price & quantity
                         //set prices & quantity to defaults
                         //leave pulldown menus as they were
-                        jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                        jQuery('#add_to_inventory_form input.textbox').not('#distributor, #known_title, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                        jQuery('#printlabel').removeAttr('checked');
                         jQuery("#quantity").val(1);
                         jQuery("#listprice").val('0.0');
                         jQuery("#ourprice").val('0.0');
+                        jQuery("#known_title").val('False');
                         isbnDirty=false;
                     }
                 });
+                jQuery('#isbn').focus();
                 return false;
             }                 
         });
@@ -121,9 +120,11 @@ from Skeleton import Skeleton
                     //set prices & quantity to defaults
                     //leave pulldown menus as they were
                     jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                    jQuery('#printlabel').removeAttr('checked');
                     jQuery("#quantity").val(1);
                     jQuery("#listprice").val('0.0');
                     jQuery("#ourprice").val('0.0');
+                    jQuery('#isbn').focus()
                     isbnDirty=false;
         });
     });
@@ -148,7 +149,7 @@ Add item to  inventory
 #for $i in [1, 2, 3, 4]
 <option value='$i'>$i</option>
 #end for
-</select> barcode label for this title<br />
+</select> barcode label for each copy of this title<br />
 
 <label class="textbox" for "quantity">Quantity</label>
 <input class="textbox required" type="text" id="quantity", name="quantity", value="$quantity"/><br />
