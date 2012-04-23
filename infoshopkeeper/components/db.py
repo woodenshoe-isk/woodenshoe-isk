@@ -19,7 +19,7 @@ if dbtype in ('mysql', 'postgres'):
 
 
     def conn():
-        return '%s://%s:%s@%s/%s?debug=1&logger=MyLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype,dbuser,dbpass,dbhost,dbname)
+        return u'%s://%s:%s@%s/%s?debug=1&logger=MyLogger&loglevel=debug&use_unicode=1&charset=utf-8&sqlobject_encoding=utf-8' % (dbtype,dbuser,dbpass,dbhost,dbname)
 
 elif dbtype is 'sqlite':
     import os, time, re
