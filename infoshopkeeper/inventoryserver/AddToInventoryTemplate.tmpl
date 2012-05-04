@@ -9,8 +9,9 @@ from Skeleton import Skeleton
     jQuery(document).ready(function() {
         //Ajax setup for error handling
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-                alert(textStatus, errorThrown, XMLHttpRequest.responseText);
-                location.reload();
+                alert(textStatus + '\r\r' + errorThrown 
+                    + '\r\r' + XMLHttpRequest.responseText);
+          
         }});
                 
         //give isbn text box cursor focus 
@@ -82,8 +83,43 @@ from Skeleton import Skeleton
             return false;
         });
         
+        //jQuery to make select isbn button clickable link
+        jQuery('#select_isbn_button').click( function(){
+            window.open('/admin/select_item_for_isbn_search', '_self');
+        });
+        
         //jQuery validate using class 'required' in input fields
         jQuery('#add_to_inventory_form').validate({
+            //onfocusout: false,
+            //onblur: false,
+            rules: {
+                isbn: {
+                    required: function(){
+                        //if there is no isbn, ask whether to generate one
+                        //async must be false or it goes on asynchronously
+                        //(remember the a in ajax). If you don't want an isbn,
+                        //it still sets it to 'N/A' so displays don't choke.
+                        if (jQuery( '#isbn' ).val() == '') {
+                            var gen_isbn = confirm( "Do you want Infoshopkeeper to generate an ISBN?")
+                            if (gen_isbn) {
+                                jQuery.ajax({url: '/admin/get_next_unused_local_isbn', 
+                                    success: function(data){
+                                        jQuery('#isbn').val(data);
+                                        jQuery('#printlabel').attr('checked', true);
+                                    },
+                                    async: false,
+                                })
+                                return true;
+                            } else {
+                                jQuery('#isbn').val( 'N/A' );
+                                return true;
+                            }
+                        } else {
+                            return true;
+                        }
+                    }
+                }
+            },
             submitHandler: function(form) {
                 jQuery('#add_to_inventory_form').ajaxSubmit({
                     url:'/admin/add_item_to_inventory', 
@@ -138,10 +174,11 @@ Add item to  inventory
 #def body
 <h1>Add to Inventory</h1>
 <br />
-<form id="add_to_inventory_form" method="post" //~style="visibility:hidden; display:none">
+<form class="outerform" id="add_to_inventory_form" method="post" //~style="visibility:hidden; display:none">
 
 <label class="textbox" for="isbn">Item ID (UPC or ISBN)</label> 
-<input class="textbox required" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" /><br />
+<input class="textbox" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" />
+<input type="button" id='select_isbn_button' value='Search for ISBN'><br />
 
 <label class="textbox" for "printlabel"> </label>
 <input type="checkbox" id="printlabel" name="printlabel" value="1" />Print 

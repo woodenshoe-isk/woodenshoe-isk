@@ -14,7 +14,8 @@ Search the inventory
     jQuery(document).ready( function(){
         jQuery('#sold_begin_date,#sold_end_date,#inv_begin_date,#inv_end_date').datepicker({dateFormat:'yy-mm-dd'});
         jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
-                                                'sPaginationType':'full_numbers'});
+                                                'sPaginationType':'full_numbers',
+                                                "iDisplayLength": 50});
         //.showHideSearchForm hidden 
         jQuery(".showHideSearchForm").hide();
         
