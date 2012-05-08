@@ -9,9 +9,8 @@ from Skeleton import Skeleton
     jQuery(document).ready(function() {
         //Ajax setup for error handling
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-                alert(textStatus);
-                alert(errorThrown);
-                alert(XMLHttpRequest.responseText);
+                alert(textStatus + '\r\r' + errorThrown 
+                    + '\r\r' + XMLHttpRequest.responseText);
           
         }});
                 
@@ -19,7 +18,7 @@ from Skeleton import Skeleton
         jQuery('#isbn').focus();
         
         //make return go to next text box instead of submit
-        jQuery('.textbox').bind('keypress', function(evt) {
+        jQuery('.textbox').live('keypress', function(evt) {
                     if (evt.keyCode == 13||evt.chatCode == 13) {
                             /* FOCUS ELEMENT */
                             var inputs = jQuery(this).parents("form").eq(0).find(":input");
@@ -84,8 +83,43 @@ from Skeleton import Skeleton
             return false;
         });
         
+        //jQuery to make select isbn button clickable link
+        jQuery('#select_isbn_button').click( function(){
+            window.open('/admin/select_item_for_isbn_search', '_self');
+        });
+        
         //jQuery validate using class 'required' in input fields
         jQuery('#add_to_inventory_form').validate({
+            //onfocusout: false,
+            //onblur: false,
+            rules: {
+                isbn: {
+                    required: function(){
+                        //if there is no isbn, ask whether to generate one
+                        //async must be false or it goes on asynchronously
+                        //(remember the a in ajax). If you don't want an isbn,
+                        //it still sets it to 'N/A' so displays don't choke.
+                        if (jQuery( '#isbn' ).val() == '') {
+                            var gen_isbn = confirm( "Do you want Infoshopkeeper to generate an ISBN?")
+                            if (gen_isbn) {
+                                jQuery.ajax({url: '/admin/get_next_unused_local_isbn', 
+                                    success: function(data){
+                                        jQuery('#isbn').val(data);
+                                        jQuery('#printlabel').attr('checked', true);
+                                    },
+                                    async: false,
+                                })
+                                return true;
+                            } else {
+                                jQuery('#isbn').val( 'N/A' );
+                                return true;
+                            }
+                        } else {
+                            return true;
+                        }
+                    }
+                }
+            },
             submitHandler: function(form) {
                 jQuery('#add_to_inventory_form').ajaxSubmit({
                     url:'/admin/add_item_to_inventory', 
@@ -96,22 +130,23 @@ from Skeleton import Skeleton
                         
                         //print label if we need to
                         if (jQuery('#printlabel').is(':checked')) {
-                            jQuery.get( '/admin/print_label', {'isbn':jQuery('#isbn').val(),
-                                'booktitle':jQuery('#booktitle').val(),'ourprice':jQuery('#ourprice'),
-                                'num_copies':jQuery('#num_copies').val()}
-                            );
+                            total_copies = jQuery('#quantity').val() * jQuery('#num_copies').val()
+                            jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
                         }                        
                         //
                         //clear all text fields except price & quantity
                         //set prices & quantity to defaults
                         //leave pulldown menus as they were
-                        jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                        jQuery('#add_to_inventory_form input.textbox').not('#distributor, #known_title, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                        jQuery('#printlabel').removeAttr('checked');
                         jQuery("#quantity").val(1);
                         jQuery("#listprice").val('0.0');
                         jQuery("#ourprice").val('0.0');
+                        jQuery("#known_title").val('False');
                         isbnDirty=false;
                     }
                 });
+                jQuery('#isbn').focus();
                 return false;
             }                 
         });
@@ -121,9 +156,11 @@ from Skeleton import Skeleton
                     //set prices & quantity to defaults
                     //leave pulldown menus as they were
                     jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                    jQuery('#printlabel').removeAttr('checked');
                     jQuery("#quantity").val(1);
                     jQuery("#listprice").val('0.0');
                     jQuery("#ourprice").val('0.0');
+                    jQuery('#isbn').focus()
                     isbnDirty=false;
         });
     });
@@ -137,10 +174,11 @@ Add item to  inventory
 #def body
 <h1>Add to Inventory</h1>
 <br />
-<form id="add_to_inventory_form" method="post" //~style="visibility:hidden; display:none">
+<form class="outerform" id="add_to_inventory_form" method="post" //~style="visibility:hidden; display:none">
 
 <label class="textbox" for="isbn">Item ID (UPC or ISBN)</label> 
-<input class="textbox required" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" /><br />
+<input class="textbox" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" />
+<input type="button" id='select_isbn_button' value='Search for ISBN'><br />
 
 <label class="textbox" for "printlabel"> </label>
 <input type="checkbox" id="printlabel" name="printlabel" value="1" />Print 
@@ -148,7 +186,7 @@ Add item to  inventory
 #for $i in [1, 2, 3, 4]
 <option value='$i'>$i</option>
 #end for
-</select> barcode label for this title<br />
+</select> barcode label for each copy of this title<br />
 
 <label class="textbox" for "quantity">Quantity</label>
 <input class="textbox required" type="text" id="quantity", name="quantity", value="$quantity"/><br />
@@ -214,7 +252,7 @@ selected="true"
 </select><br />
 
 <label class="textbox" for="type">Format</label> 
-<select class="textbox required" id="type" name="type">
+<select class="textbox required" id="types" name="types">
 #for $f in $formats
 <option value='$f' 
 #if "%s" %($f)==$format

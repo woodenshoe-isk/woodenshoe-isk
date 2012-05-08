@@ -1,11 +1,11 @@
 *.pyc
 *.pyo
 *~
-*.html
 *.bak
 *.log
 *.log.*
 *.js
+*.html
 __init__.py
 etc.py
 test.py
@@ -17,10 +17,11 @@ infoshopkeeper/inventoryserver/Skeleton.py
 
 .DS_Store
 infoshopkeeper/reports/untitled text
-screenlog.0
 tmp.py
 
 infoshopkeeper-trac/
+<<<<<<< HEAD
+=======
 <<<<<<< HEAD
 =======
 *~
@@ -28,3 +29,4 @@ infoshopkeeper-trac/
 *.log
 *.log.*
 >>>>>>> Development
+>>>>>>> b4ab0c1880ae25e2a1082807bf274bae5914298a

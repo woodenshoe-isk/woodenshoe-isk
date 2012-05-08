@@ -20,6 +20,7 @@ sqlhub.processConnection = connection
 class dummybook:
     def __init__(self):
         self.sold_when="-"
+        self.inventoried_when='-'
         self.dummy=True
 
 class Title(SQLObjectWithFormGlue):
@@ -48,9 +49,12 @@ class Title(SQLObjectWithFormGlue):
         
     def copies_in_status(self,status):
         i=0
-        for b in self.books:
-            if b.status==status:
-                i=i+1
+        try:
+            for b in self.books:
+                if b.status==status:
+                    i=i+1
+        except:
+            pass
         return i
 
     def authors_as_string(self):
@@ -61,8 +65,11 @@ class Title(SQLObjectWithFormGlue):
         except:
             return ""
     def categories_as_string(self):
-        return string.join ([c.categoryName for c in self.categorys],",")
-
+        try:
+            return string.join ([c.categoryName for c in self.categorys],",")
+        except:
+            return ''
+            
     def distributors(self):
         return list(sets.Set([b.distributor for b in self.books]))
 
@@ -76,26 +83,32 @@ class Title(SQLObjectWithFormGlue):
     
     def last_book_inventoried(self):
         last_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if last_book.dummy==False:
-                if b.inventoried_when > last_book.inventoried_when:
-                    last_book=b
-            else:
-                last_book=b
+        try:
+            for b in self.books:
+                b.dummy=False
+                if last_book.dummy==False:
+                    if b.inventoried_when > last_book.inventoried_when:
+                        last_book=b
+                else:
+                    last_book=b        
+        except:
+            pass
         return last_book
     
 
     
     def first_book_inventoried(self):
         first_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if first_book.dummy==False:
-                if b.inventoried_when < first_book.inventoried_when:
+        try:
+            for b in self.books:
+                b.dummy=False
+                if first_book.dummy==False:
+                    if b.inventoried_when < first_book.inventoried_when:
+                        first_book=b
+                else:
                     first_book=b
-            else:
-                first_book=b
+        except:
+            pass
         return first_book
 
     def highest_price_book(self):
@@ -114,26 +127,32 @@ class Title(SQLObjectWithFormGlue):
         
     def last_book_sold(self):
         last_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if b.status=="SOLD":
-                if last_book.dummy==False:
-                    if b.sold_when > last_book.sold_when:
+        try:
+            for b in self.books:
+                b.dummy=False
+                if b.status=="SOLD":
+                    if last_book.dummy==False:
+                        if b.sold_when > last_book.sold_when:
+                            last_book=b
+                    else:
                         last_book=b
-                else:
-                    last_book=b
+        except:
+            pass
         return last_book
 
     def first_book_sold(self):
         first_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if b.status=="SOLD":
-                if first_book.dummy==False:
-                    if b.sold_when < first_book.sold_when:
+        try:
+            for b in self.books:
+                b.dummy=False
+                if b.status=="SOLD":
+                    if first_book.dummy==False:
+                        if b.sold_when < first_book.sold_when:
+                            first_book=b
+                    else:
                         first_book=b
-                else:
-                    first_book=b
+        except:
+            pass
         return first_book
 
 

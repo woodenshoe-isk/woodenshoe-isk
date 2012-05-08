@@ -35,7 +35,8 @@ Search the inventory
         
         jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
         jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
-                                                'sPaginationType':'full_numbers'});
+                                                'sPaginationType':'full_numbers',
+						"iDisplayLength": 50});
         
 	});
 </script>

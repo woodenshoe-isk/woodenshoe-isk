@@ -1,11 +1,11 @@
 .toolbar {
-float:left
+float:left;
 position:relative;
 padding:0;
 }
 .toolbar.nav {
 list-style:none;
-width:100%
+width:100%;
 float:left;
 position:relative;
 margin:0;
@@ -93,7 +93,7 @@ border-width:2px;
 border-color:#000;
 border-style:solid;
 background-color:white;
-table-layout:auto
+table-layout:auto;
 width:100%;
 }
 table.sortable th {
@@ -112,7 +112,7 @@ float:left;
 background-color:cccccc;
 padding: 10px;
 color: #c44;
-margin:0px
+margin:0px;
 border-width:2px;
 border-color:#000;
 border-style:solid;
@@ -308,7 +308,7 @@ border-width:2px;
 border-color:#000;
 border-style:solid;
 padding:10px;
-float:left
+float:left;
 position:relative;
 }
 div.main{
