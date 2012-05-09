@@ -7,6 +7,7 @@ from etc import *
 
 from sqlobject import *
 from components import db
+from objects.kind import Kind
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
  #Set up db connection
@@ -80,64 +81,79 @@ class Title(SQLObjectWithFormGlue):
     
     def last_book_inventoried(self):
         last_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if last_book.dummy==False:
-                if b.inventoried_when > last_book.inventoried_when:
+        try:
+            for b in self.books:
+                b.dummy=False
+                if last_book.dummy==False:
+                    if b.inventoried_when > last_book.inventoried_when:
+                        last_book=b
+                else:
                     last_book=b
-            else:
-                last_book=b
+        except:
+            pass
         return last_book
     
 
     
     def first_book_inventoried(self):
         first_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if first_book.dummy==False:
-                if b.inventoried_when < first_book.inventoried_when:
+        try:
+            for b in self.books:
+                b.dummy=False
+                if first_book.dummy==False:
+                    if b.inventoried_when < first_book.inventoried_when:
+                        first_book=b
+                else:
                     first_book=b
-            else:
-                first_book=b
+        except:
+            pass
         return first_book
 
     def highest_price_book(self):
         high_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            
-            if high_book.dummy==False:
-                if b.listprice > high_book.listprice:
+        try:
+            for b in self.books:
+                b.dummy=False
+                
+                if high_book.dummy==False:
+                    if b.listprice > high_book.listprice:
+                        high_book=b
+                else:
                     high_book=b
-            else:
-                high_book=b
+        except:
+            pass
         return high_book
 
 
         
     def last_book_sold(self):
         last_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if b.status=="SOLD":
-                if last_book.dummy==False:
-                    if b.sold_when > last_book.sold_when:
+        try:
+            for b in self.books:
+                b.dummy=False
+                if b.status=="SOLD":
+                    if last_book.dummy==False:
+                        if b.sold_when > last_book.sold_when:
+                            last_book=b
+                    else:
                         last_book=b
-                else:
-                    last_book=b
+        except:
+            pass
         return last_book
 
     def first_book_sold(self):
         first_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            if b.status=="SOLD":
-                if first_book.dummy==False:
-                    if b.sold_when < first_book.sold_when:
+        try:
+            for b in self.books:
+                b.dummy=False
+                if b.status=="SOLD":
+                    if first_book.dummy==False:
+                        if b.sold_when < first_book.sold_when:
+                            first_book=b
+                    else:
                         first_book=b
-                else:
-                    first_book=b
+        except:
+            pass
         return first_book
 
 

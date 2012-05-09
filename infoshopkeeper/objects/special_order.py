@@ -1,5 +1,6 @@
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from sqlobject import *
+from objects.title import Title
 from mx.DateTime import now
 
 from components import db
