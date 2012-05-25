@@ -53,7 +53,8 @@ for t in titles:
             t.isbn13 = amazonResults.EAN
     except SystemExit:
         sys.exit(0)
-    except:
-        pass
+    except Exception as e:
+        print e
+	pass
     time.sleep(1)
 

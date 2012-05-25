@@ -1,5 +1,6 @@
+import sys
+
 from sqlobject.sqlbuilder import RLIKE
-from objects.title import Title
 
 import lxml
 from lxml import html, cssselect
@@ -7,13 +8,24 @@ from lxml import html, cssselect
 import webtest
 from wsgiapp_local import application
 
+from etc import *
+from ecs import *
+from objects.title import Title
+from objects.author import Author
+from objects.category import Category
 
+setLicenseKey(amazon_license_key)
+setSecretAccessKey(amazon_secret_key)
+setAssociateTag(amazon_associate_tag)
+
+#make sure we're in production database
+dbname='infoshopkeeper'
 try:
     theapp=webtest.TestApp(application)
 except:
     pass
 
-titles=Title.select(RLIKE(Title.q.isbn, '^[0-9]{9}[0-9xX]$'))
+titles=Title.select(RLIKE(Title.q.isbn, '^[0-9]{10}[0-9xX]$|^[0-9]{13}$'))
 titles_that_display, titles_that_dont_display, titles_that_dont_even_fetch=(0,[],[])
 
 for title in titles:
@@ -44,15 +56,16 @@ for t in titles_that_dont_display:
         book_list.append(t)
         diagnostic_dict['book']=book_list
         rm_dirty=True
-    if not list(t_rec.author):
-        author_list=diagnostic_dict.get('author', [])
+    if (hasattr(t_rec, 'author') and not t_rec.authors_as_string()):
+        author_list=diagnostic_dict.get('authors_as_string', [])
         author_list.append(t)
-        diagnostic_dict['author']=author_list
+        diagnostic_dict['authors_as_string']=author_list
         rm_dirty=True
     if not list(t_rec.categorys):
         result_list=diagnostic_dict.get('category', [])
         result_list.append(t)
         diagnostic_dict['category']=result_list
+        rm_dirty=True
     try:
         t_rec.safe('booktitle')
     except:
@@ -60,13 +73,15 @@ for t in titles_that_dont_display:
         result_list.append(t)
         diagnostic_dict['safe_booktitle']=result_list
         rm_dirty=True
-    if not t_rec.authors_as_string():
-        result_list=diagnostic_dict.get('authors_as_string', [])
+    if not hasattr(t_rec, 'author'):
+        result_list=diagnostic_dict.get('author', [])
         if not diagnostic_dict.get('author', []).count(t):
             result_list.append(t)
-            diagnostic_dict['authors_as_string']=result_list
+            diagnostic_dict['author']=result_list
             rm_dirty=True
-    if not t_rec.type:
+    try:
+        t_rec.type
+    except:
         result_list=diagnostic_dict.get('type', [])
         result_list.append(t)
         diagnostic_dict['type']=result_list
@@ -81,8 +96,14 @@ for t in titles_that_dont_display:
         result_list=diagnostic_dict.get('publisher', [])
         result_list.append(t)
         diagnostic_dict['publisher']=result_list
-        rm_dirty=True
-                
+        rm_dirty=True            
+    try:
+        t_rec.kind
+    except:
+        result_list=diagnostic_dict.get('kind', [])
+        result_list.append(t)
+        diagnostic_dict['kind']=result_list
+        rm_dirty=true
     if rm_dirty:
         titles_that_dont_display.remove(t)
         
@@ -102,8 +123,72 @@ if diagnostic_dict.get('distributors_as_string'):
     print "Titles without distributors as string are: ", diagnostic_dict['distributors_as_string']
 if diagnostic_dict.get('publisher'):
     print "Titles without publisher are: ", diagnostic_dict['publisher']
+if diagnostic_dict.get('kind'):
+    print 'Titles without kind are: ', diagnostic_dict['kind']
 if titles_that_dont_display:
     print "The remainder of problem tiles are: ", titles_that_dont_display
    
-    
+sys.exit(0) 
 
+def get_authors_from_amazon(auth_missing=[]):
+    for t in auth_missing:
+        t1=Title.get(t)
+        try:
+            amazonIter=ItemLookup(t1.isbn, ResponseGroup="ItemAttributes")
+            amazonResults=amazonIter.next()
+            if type( getattr(amazonResults, 'Author', False)) == type(u''):
+                auth= [ getattr(amazonResuts, 'Author', None) ]
+            else:
+                auth=getattr( amazonResults, 'Author', [])
+            print auth
+            if type( getattr(amazonResults,'Creator', False)) == type(u''):
+                auth.extend([ getattr(amazonResuts, 'Creator', None) ])
+            else:
+                auth.extend(getattr( amazonResults, 'Creator', []))
+            au_rec=''                
+            for au in auth:
+                try:
+                    Author(authorName=au)           
+                except Exception: 
+                    pass
+                au_rec=Author.selectBy(authorName=au)[0]
+                print au_rec
+                t1.addAuthor(au_rec)
+                print t1.author
+        except Exception as e:
+            print e
+             
+def get_categories_from_amazon( category_missing=[]):
+    for t in auth_missing:
+        t1=Title.get(t)
+        try:
+            amazonIter=ItemLookup(t1.isbn, ResponseGroup="ItemAttributes, BrowseNodes")
+            amazonResults=amazonIter.next()
+            def parseBrowseNodes(bNodes):
+                def parseBrowseNodesInner(item):
+                    bn=set()
+                    if hasattr(item, 'Name'):
+                        bn.add(item.Name)
+                    if hasattr(item, 'Ancestors'):
+                        #print "hasansc"   
+                        for i in item.Ancestors:
+                            bn.update(parseBrowseNodesInner(i))
+                    if hasattr(item, 'Children'):
+                        for i in item.Children:
+                            bn.update(parseBrowseNodesInner(i))
+                            #print "bn ", bn
+                    if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
+                        if hasattr(item, 'Name'):
+                            return set([item.Name])
+                        else:
+                            return set()
+                    return bn
+                nodeslist=[parseBrowseNodesInner(i) for i in bNodes ]
+                nodes=set()
+                for n in nodeslist:
+                    nodes = nodes.union(n)
+                return nodes
+            
+            categories=parseBrowseNodes(b.BrowseNodes)
+        except Exception as e:
+            print e

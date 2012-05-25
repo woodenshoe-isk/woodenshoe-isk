@@ -54,7 +54,7 @@ $title.object_to_form
 <td>
 <ul style='list-style-type:none;'>
 <li><a class="listinglink" href="/bookedit?id=$b.id">edit</a></li>
-<li><a class="listinglink print_link" href='/admin/print_label?booktitle=$b.title.booktitle&isbn=$b.title.isbn&ourprice=$b.ourprice'>Print label</li>
+<li><a class="listinglink print_link" href='/admin/print_label?booktitle=$b.title.booktitle.replace("'", " ")&isbn=$b.title.isbn&authorstring=$b.title.authors_as_string.replace("'", " ")&ourprice=$b.ourprice'>Print label</li>
 </ul>
 </td>
 <td>

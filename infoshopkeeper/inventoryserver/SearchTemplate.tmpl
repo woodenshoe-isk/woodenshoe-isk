@@ -175,26 +175,38 @@ selected="true"
 </thead>
 <tbody>
 #for $t in $titles
-  <tr ondblclick="document.location.href='/titleedit?id=$t.id';">
-    <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
-               event.stopPropagation();
-           }
-           else if(window.event){
-              window.event.cancelBubble=true;
-           }'/></td>
-    <td>$t.safe('booktitle')</td>
-    <td>$t.authors_as_string</td>
-    <td>${t.type}</td>
-    <td>${t.copies_in_status("STOCK")}</td>
-    <td>${t.copies_in_status("SOLD")}</td>
-    <td>${t.distributors_as_string()}</td>
-    <td>${t.safe('publisher')}</td>
-    <td>${t.first_book_inventoried.inventoried_when}</td>
-    <td>${t.last_book_inventoried.inventoried_when}</td>
-    <td>${t.first_book_sold.sold_when}</td>
-    <td>${t.last_book_sold.sold_when}</td>
-    ##<td>$t.categories_as_string</td>
-</tr>
+    #try
+      <tr ondblclick="document.location.href='/titleedit?id=$t.id';">
+        <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
+                   event.stopPropagation();
+               }
+               else if(window.event){
+                  window.event.cancelBubble=true;
+               }'/></td>
+        <td>${t.safe('booktitle')}</td>
+        <td>${t.authors_as_string()}</td>
+        <td>${t.type}</td>
+        <td>${t.copies_in_status("STOCK")}</td>
+        <td>${t.copies_in_status("SOLD")}</td>
+        <td>${t.distributors_as_string()}</td>
+        <td>${t.safe('publisher')}</td>
+        <td>${t.first_book_inventoried.inventoried_when}</td>
+        <td>${t.last_book_inventoried.inventoried_when}</td>
+        <td>${t.first_book_sold.sold_when}</td>
+        <td>${t.last_book_sold.sold_when}</td>
+        ##<td>$t.categories_as_string</td>
+      </tr>
+    #except
+      <tr ondblclick="document.location.href='/titleedit?id=$t.id';">
+            <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
+                       event.stopPropagation();
+                   }
+                   else if(window.event){
+                      window.event.cancelBubble=true;
+                   }'/></td>
+ 
+        </tr>
+    #end try
 #end for
 </tbody>
 </table>

@@ -2,14 +2,16 @@ from time import time,asctime,localtime,sleep
 import types,string
 
 import ecs
-from etc import amazon_license_key,amazon_secret_key, amazon_associate_tag
+from etc import amazon_license_key,amazon_secret_key, amazon_associate_tag, default_kind
 from objects.title import Title
 from objects.book import Book
 from objects.author import Author
 from objects.category import Category
 from objects.kind import Kind
 from objects.location import Location
+import tools.isbn as isbnlib
 from upc import upc2isbn
+
 import re
 from sqlobject.sqlbuilder import Field, RLIKE, AND
 
@@ -25,8 +27,9 @@ class inventory:
         if len(number)>=9:
             number=re.sub("[-\s]", '', number)
         #print "number is now: ", number
-        if len(number)==13 or len(number)==18:
-            isbn=upc2isbn(number)
+        if len(number)==10 and isbnlib.isValid(number):
+            isbn=isbnlib.convert(number)
+
         else:
             isbn=number
         #print "NUMBER was " +number+ ",ISBN was "+isbn
@@ -257,7 +260,7 @@ class inventory:
                     "known_title": self.known_title}
 
 
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind='', extra_prices={}, tag='', num_copies=0, printlabel=False):
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False):
         print "GOT to addToInventory"
         if not(known_title):
             print "unknown title"
@@ -266,7 +269,7 @@ class inventory:
             kind_id = None
             if the_kinds:
                 kind_id = the_kinds[0].id
-            print kind_id
+            print 'kind id is', kind_id
 
             #print title
             

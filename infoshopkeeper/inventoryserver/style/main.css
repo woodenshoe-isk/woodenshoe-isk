@@ -193,6 +193,9 @@ border-width:2px;
 border-color:#000;
 border-style:solid;
 }
+form .isbn_search_button {
+position: relative;
+}
 label,input.textbox,textarea.textarea {
 display: block;
 float: left;

@@ -49,6 +49,7 @@ Search the inventory
                 console.log(data);
                 autofill_dict=data[0];
                 console.log(autofill_dict);
+                autofill_dict['printlabel']=true;
                 params=jQuery.param(autofill_dict);
                 console.log(params);
                 doc_url="http://" + document.location.host + '/admin/add_to_inventory?' + params;
