@@ -157,7 +157,11 @@ from Skeleton import Skeleton
                         //print label if we need to
                         if (jQuery('#printlabel').is(':checked')) {
                             total_copies = jQuery('#quantity').val() * jQuery('#num_copies').val()
+<<<<<<< HEAD
                             jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
+=======
+                            jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
                         }                        
                         //
                         //clear all text fields except price & quantity
@@ -169,7 +173,10 @@ from Skeleton import Skeleton
                         jQuery("#listprice").val('0.0');
                         jQuery("#ourprice").val('0.0');
                         jQuery("#known_title").val('False');
+<<<<<<< HEAD
                         jQuery('#isbn').focus();
+=======
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
                         isbnDirty=false;
                     }
                 });

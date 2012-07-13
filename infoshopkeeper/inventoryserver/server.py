@@ -482,7 +482,8 @@ class Admin:
             subprocess.call( print_command_string.substitute(
                 {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " "), 'authorstring': authorstring.replace("'", " "), 'isbn':isbn, 'ourprice':ourprice, 
                     'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()}), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
-     
+
+
     #get next isbn in series that we are using for in-house labels
     #I've gone through great lengths to make sure there's no collision, but there's still a
     #bit of a fiat clause to the EAN organization.
@@ -494,7 +495,7 @@ class Admin:
         except:
             result= '199' + '0'*9 + checkI13(('199'+'0'*9))
         return result
-     
+
     #wrapper to inventory.addToInventory to be added
     #after a few minor manipulations. Ditches dollar sign, makes 
     #prices floats and turns categories & authors into lists
@@ -524,6 +525,7 @@ class Admin:
         print>>sys.stderr, 'search_isbn args ', args
         data=self.inventory.lookup_by_isbn(args['isbn'])
         print>>sys.stderr, 'data', data
+
         most_freq_location=''
         if (data and data['known_title']):
             most_freq_location = data['known_title']._connection.queryAll(
@@ -542,7 +544,6 @@ class Admin:
             print>>sys.stderr, 'data modified. new data are ', data
         return [data]
     add_to_inventory.search_isbn=search_isbn
- 
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def search_id(self, titleid):
@@ -567,7 +568,11 @@ class Admin:
         print>>sys.stderr,  most_freq_location, max_price, title
         #return [{'isbn':title.isbn, 'title': title.booktitle, 'location':most_freq_location,'listprice':max_price, 'ourprice':max_price, 'known_title':True}]
         return [{'isbn':title.isbn, 'title':title.booktitle, 'listprice':max_price, 'ourprice':max_price, 'authors':title.authors_as_string(), 'publisher':title.publisher, 'categories':title.categories_as_string(), 'location':most_freq_location, 'kind':title.kindID, 'type':title.type, 'known_title':True}]
+<<<<<<< HEAD
  
+=======
+
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
     #search for in stock items by attribute
     @cherrypy.expose
     def select_item_for_isbn_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
@@ -591,6 +596,7 @@ class Admin:
         if type(the_kind) == type([]):
             the_kind=the_kind[0]
         self._chooseitemforisbntemplate.table_is_form=True
+<<<<<<< HEAD
          
         titles=[]
          
@@ -601,6 +607,18 @@ class Admin:
         #start out with the join clauses in the where clause list
         where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
          
+=======
+        
+        titles=[]
+        
+        #used to check that any filtering is done
+        fields=[title,author,category,distributor,owner,isbn,publisher,tag,kind]
+        fields_used = [f for f in fields if f != ""]
+        
+        #start out with the join clauses in the where clause list
+        where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
+        
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
         #add filter clauses if they are called for
         if the_kind:
             where_clause_list .append("title.kind_id = '%s'" % escape_string(the_kind))
@@ -613,7 +631,12 @@ class Admin:
         if tag:
             where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
         if isbn:
+<<<<<<< HEAD
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
+=======
+            converted_isbn=upc2isbn(isbn)
+            where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(converted_isbn))
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
         if owner:
             where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
         if distributor:
@@ -622,6 +645,7 @@ class Admin:
             where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
         if category:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
+<<<<<<< HEAD
          
         #AND all where clauses together
         where_clause=' AND '.join(where_clause_list)
@@ -634,6 +658,20 @@ class Admin:
         self._chooseitemforisbntemplate.titles=titles
         return self._chooseitemforisbntemplate.respond()
          
+=======
+        
+        #AND all where clauses together
+        where_clause=' AND '.join(where_clause_list)
+        titles=[]
+        
+        #do search. 
+        if len(fields_used)>0:
+            titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
+                
+        self._chooseitemforisbntemplate.titles=titles
+        return self._chooseitemforisbntemplate.respond()
+        
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
 #Mostly does searching and generating reports            
 class InventoryServer:
     def __init__(self):
@@ -972,6 +1010,7 @@ class InventoryServer:
             where_clause_list.append("title.id=%s" % escape_string(id))
         where_clause=' AND '.join(where_clause_list)
         print>>sys.stderr, where_clause
+<<<<<<< HEAD
          
         #do search first. Note it currently doesnt let you search for every book in database
         titles=[]
@@ -979,6 +1018,14 @@ class InventoryServer:
             titles=Title.select( where_clause,join=join_list, orderBy=sortby,clauseTables=clause_tables,distinct=True)
         
         print>>sys.stderr, "titles ", list(titles)
+=======
+        
+        #do search first. Note it currently doesnt let you search for every book in database
+        titles=[]
+        if len(fields_used)>0 or out_of_stock=="yes":
+            titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
+                
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
         #filter for stock status
         if out_of_stock == 'yes':
                     titles = [t for t in titles if t.copies_in_status("STOCK") == 0]

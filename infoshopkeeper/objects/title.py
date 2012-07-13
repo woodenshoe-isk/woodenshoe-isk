@@ -21,7 +21,11 @@ sqlhub.processConnection = connection
 class dummybook:
     def __init__(self):
         self.sold_when="-"
+<<<<<<< HEAD
         self.inventoried_when='-'
+=======
+        self.inventoried_when="-"
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
         self.dummy=True
 
 class Title(SQLObjectWithFormGlue):
@@ -55,7 +59,11 @@ class Title(SQLObjectWithFormGlue):
                 if b.status==status:
                     i=i+1
         except:
+<<<<<<< HEAD
             pass
+=======
+            pass 
+>>>>>>> b8556d12cb5b886a3aca9a57b9d3d00f0d6ed7ee
         return i
 
     def authors_as_string(self):
