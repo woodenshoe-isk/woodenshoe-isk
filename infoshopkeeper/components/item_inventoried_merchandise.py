@@ -107,7 +107,8 @@ class inventoried_merchandise:
         date = NOW(),
         info = %s,
         schedule = %s,
-        owner = %s
+        owner = %s,
+        cart_id=''
         """,(self.price,cashier,"[%s] %s" % (self.getDistributor(),self.getName()),self.price_schedule,owner))
 
         try:

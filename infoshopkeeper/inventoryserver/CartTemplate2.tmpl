@@ -130,7 +130,7 @@
             //if there's an isbn and the category is an inventoried item (book, music, film)
             //search database for it.
             if (isbnstring.length>0 && category_data.is_inventoried_item == 'True') {
-                jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':JSON.stringify(isbnstring)}, function(inventory_data1){
+                jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':isbnstring}, function(inventory_data1){
                     inventory_data1=inventory_data1[0];
                     //add category data to inventory data that was found... keeping one dict is easier.
                     jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried_item, 'isTaxable':category_data.is_taxable});
@@ -191,7 +191,7 @@
             <button id='$dep['name']' class='department_button' value=$dep>$dep['label']</button>
             <div id='my-form-$dep['name']' class='my-forms' title='Enter ISBN or Price' data-name=$dep['name'] data-label=$dep['label'] data-is_inventoried_item=$dep['isInventoriedItem'] data-is_taxable=$dep['isTaxable']>
                 <form action='' method='get'>
-                    <input id='isbn' class='isbnfield' type='text' name='isbn' />#slurp
+                    <input class='isbnfield' type='text' name='isbn' />#slurp
                     #if $dep['isInventoriedItem']
                         <input type="button" value="Search" onclick="window.open('/register/select_item_search', '_self');" /><br>
                     #end if

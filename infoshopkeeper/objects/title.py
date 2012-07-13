@@ -7,6 +7,7 @@ from etc import *
 
 from sqlobject import *
 from components import db
+from objects.kind import Kind
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
  #Set up db connection
@@ -90,7 +91,7 @@ class Title(SQLObjectWithFormGlue):
                     if b.inventoried_when > last_book.inventoried_when:
                         last_book=b
                 else:
-                    last_book=b        
+                    last_book=b
         except:
             pass
         return last_book
@@ -113,14 +114,17 @@ class Title(SQLObjectWithFormGlue):
 
     def highest_price_book(self):
         high_book=dummybook()
-        for b in self.books:
-            b.dummy=False
-            
-            if high_book.dummy==False:
-                if b.listprice > high_book.listprice:
+        try:
+            for b in self.books:
+                b.dummy=False
+                
+                if high_book.dummy==False:
+                    if b.listprice > high_book.listprice:
+                        high_book=b
+                else:
                     high_book=b
-            else:
-                high_book=b
+        except:
+            pass
         return high_book
 
 

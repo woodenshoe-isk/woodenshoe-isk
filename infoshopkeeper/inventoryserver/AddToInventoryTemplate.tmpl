@@ -13,10 +13,44 @@ from Skeleton import Skeleton
                     + '\r\r' + XMLHttpRequest.responseText);
           
         }});
-                
+
+        var dlg=jQuery('#isbndialog').dialog({
+            autoOpen: false, 
+            modal: true,
+            open: function(){
+                //set default button on open
+                jQuery('.ui-dialog-buttonset > button').blur();
+                jQuery('.ui-dialog-buttonset > button:last').focus();
+            },
+            buttons: {
+                'Not Use ISBN': function(){
+                    jQuery('#isbn').val( 'N/A' ).blur();
+                    dlg.dialog('close');
+                    jQuery('#printlabel').attr('checked', true);
+                    return false;
+                },
+                'Generate ISBN': function(){
+                    jQuery.ajax({url: '/admin/get_next_unused_local_isbn', 
+                                        success: function(data){
+                                            jQuery('#isbn').val(data).blur();
+                                        },
+                                        async: false,
+                                    });                
+                    dlg.dialog('close');
+                    jQuery('#printlabel').attr('checked', true);
+                    return false;
+                },
+                'Search for ISBN': function(){
+                    window.open('/admin/select_item_for_isbn_search', '_self');
+                    dlg.dialog('close');
+                    return false;
+                },
+            }
+        });
+
         //give isbn text box cursor focus 
         jQuery('#isbn').focus();
-        
+
         //make return go to next text box instead of submit
         jQuery('.textbox').live('keypress', function(evt) {
                     if (evt.keyCode == 13||evt.chatCode == 13) {
@@ -90,8 +124,8 @@ from Skeleton import Skeleton
         
         //jQuery validate using class 'required' in input fields
         jQuery('#add_to_inventory_form').validate({
-            //onfocusout: false,
-            //onblur: false,
+            onfocusout: true,
+            onblur: true,
             rules: {
                 isbn: {
                     required: function(){
@@ -100,22 +134,14 @@ from Skeleton import Skeleton
                         //(remember the a in ajax). If you don't want an isbn,
                         //it still sets it to 'N/A' so displays don't choke.
                         if (jQuery( '#isbn' ).val() == '') {
-                            var gen_isbn = confirm( "Do you want Infoshopkeeper to generate an ISBN?")
-                            if (gen_isbn) {
-                                jQuery.ajax({url: '/admin/get_next_unused_local_isbn', 
-                                    success: function(data){
-                                        jQuery('#isbn').val(data);
-                                        jQuery('#printlabel').attr('checked', true);
-                                    },
-                                    async: false,
-                                })
-                                return true;
+                            //dlg.dialog('open');
+                            if (dlg.dialog('open')) {
+                                return false;
                             } else {
-                                jQuery('#isbn').val( 'N/A' );
                                 return true;
                             }
                         } else {
-                            return true;
+                            return false;
                         }
                     }
                 }
@@ -131,7 +157,7 @@ from Skeleton import Skeleton
                         //print label if we need to
                         if (jQuery('#printlabel').is(':checked')) {
                             total_copies = jQuery('#quantity').val() * jQuery('#num_copies').val()
-                            jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
+                            jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
                         }                        
                         //
                         //clear all text fields except price & quantity
@@ -143,6 +169,7 @@ from Skeleton import Skeleton
                         jQuery("#listprice").val('0.0');
                         jQuery("#ourprice").val('0.0');
                         jQuery("#known_title").val('False');
+                        jQuery('#isbn').focus();
                         isbnDirty=false;
                     }
                 });
@@ -181,7 +208,11 @@ Add item to  inventory
 <input type="button" id='select_isbn_button' value='Search for ISBN'><br />
 
 <label class="textbox" for "printlabel"> </label>
-<input type="checkbox" id="printlabel" name="printlabel" value="1" />Print 
+<input type="checkbox" id="printlabel" name="printlabel" 
+#if $printlabel
+checked=true 
+#end if
+value="1" />Print 
 <select class="inline" id="num_copies" name="num_copies">
 #for $i in [1, 2, 3, 4]
 <option value='$i'>$i</option>
@@ -269,4 +300,9 @@ selected="true"
 <input class='reset' type='reset' value='Cancel'>
 <br />
 </form>
+<div id='isbndialog' class='isbndialog' title='Alert!'>
+You did not enter an ISBN. If you don't see an ISBN, check inside the book, it may still have one.<br /><br />
+If the book really doesn't have an ISBN, the system can generate one for you (You really checked first though, right?).<br /> <br />
+What would you like to do?
+</div>
 #end def

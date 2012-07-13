@@ -6099,11 +6099,11 @@
             } forall pop
     } bind def
 
-/lastspace {  %get position of last space
-    0 exch ( ) 
-        {search 
+/lastoccur {  %get position of last occurence of string 
+    0 3 1 roll 
+        {search
             {4 -1 roll exch length add 1 add exch 3 2 roll exch } {pop exit} ifelse 
-        }loop 
+        }loop
     } bind def 
     
 
@@ -6120,22 +6120,39 @@ isbnstring length 10 eq {
 /isbnstring isbnstring dup length 1 sub 0 exch getinterval def
 isbnstring  dup length 1 sub 1 getinterval (-) eq { /isbnstring isbnstring dup length 1 sub 0 exch getinterval def } if
 
-/Helvetica findfont 8 scalefont setfont    
-pstack
+/Helvetica findfont 8 scalefont setfont
+    
 15 15 moveto isbnstring (includetext) isbn barcode
--11 90 rmoveto
-booktitle stringwidth pop 140 div dup 1 gt 
-    { booktitle length exch div cvi booktitle exch 0 exch getinterval dup lastspace 0 exch 1 sub getinterval} 
-    {pop booktitle} ifelse
+-11 100 rmoveto
 
+currentpoint currentpoint
+booktitle stringwidth pop 140 div dup 1 gt 
+    { booktitle length exch div cvi booktitle exch 0 exch getinterval dup ( ) lastoccur 0 exch 1 sub getinterval} 
+    {pop booktitle} ifelse
 show
 
-%stringwidth 20 add 0 rmoveto
-currentpoint exch pop
-price stringwidth pop 165 exch sub exch moveto
-price ($) anchorsearch not { [($) price ] concatstringarray show} {price show} ifelse
-pop
+price (.) search {   
+        3 -1 roll dup length 0 eq {pop (00)} 
+        if dup length 1 eq {  (0) 2 array astore concatstringarray } 
+        if dup length 2 gt  { 0 2 getinterval }  
+        if  3 -1 roll exch
+    } { 
+        (.) (00) 
+    } ifelse
+3 array astore concatstringarray
+($) anchorsearch {exch 2 array astore concatstringarray} { ($) exch 2 array astore concatstringarray } ifelse
+dup stringwidth pop 165 exch sub 4 2 roll exch pop moveto
+
+show
+moveto
+0 -10 rmoveto
+authorstring stringwidth pop 140 div dup 1 gt 
+    { authorstring length exch div cvi authorstring exch 0 exch getinterval dup (,) lastoccur 0 exch 1 sub getinterval} 
+    {pop authorstring} ifelse
+show
+
 showpage
 quit
 % --END LABEL--
+ 
  
