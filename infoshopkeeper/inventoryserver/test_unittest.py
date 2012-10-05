@@ -240,7 +240,7 @@ class Test_Admin(unittest.TestCase ):
         
     def test_add_item_to_inventory_that_we_have_already_returns_object(self):
         random_item=random.sample(list(Book.selectBy(status='STOCK')), 1)[0]
-        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind_name=random_item.title.kind.kindName)
+        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
         today=mx.DateTime.now().strftime('%Y-%m-%d')
         confirm=Book.selectBy(titleID=random_item.titleID).filter('inventoried_when=%s' % today)
@@ -248,7 +248,7 @@ class Test_Admin(unittest.TestCase ):
     
     def test_add_item_to_inventory_that_we_have_already_records_transaction(self):
         random_item=random.sample(list(Book.select()), 1)[0]
-        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind_name=random_item.title.kind.kindName)
+        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
         nowish=mx.DateTime.now().strftime('%Y-%m-%d %H:%M:%S')
         confirm=Transaction.select('date > %s' % nowish).filter('info RLIKE %s' % random_item.title.booktitle)
@@ -256,7 +256,7 @@ class Test_Admin(unittest.TestCase ):
         
     def test_add_item_to_inventory_that_we_dont_have_returns_object(self):
         random_item=random.sample(list(Book.selectBy(status='STOCK')), 1)[0]
-        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind_name=random_item.title.kind.kindName)
+        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
         today=mx.DateTime.now().strftime('%Y-%m-%d')
         confirm=Book.selectBy(titleID=random_item.titleID).filter('inventoried_when=%s' % today)
@@ -264,7 +264,7 @@ class Test_Admin(unittest.TestCase ):
     
     def test_add_item_to_inventory_that_we_dont_have_records_transaction(self):
         random_item=random.sample(list(Book.select()), 1)[0]
-        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind_name=random_item.title.kind.kindName)
+        fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
         nowish=mx.DateTime.now().strftime('%Y-%m-%d %H:%M:%S')
         confirm=Transaction.select('date > %s' % nowish).filter('info RLIKE %s' % random_item.title.booktitle)

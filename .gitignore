@@ -1,7 +1,10 @@
 *.pyc
 *.pyo
 *~
+*.html
 *.bak
+*.config
+*.conf
 *.log
 *.log.*
 *.js
@@ -20,13 +23,10 @@ infoshopkeeper/reports/untitled text
 tmp.py
 
 infoshopkeeper-trac/
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
+
 *~
 *.bak
 *.log
 *.log.*
->>>>>>> Development
->>>>>>> b4ab0c1880ae25e2a1082807bf274bae5914298a
+
+infoshopkeeper/cherrypy_local.conf

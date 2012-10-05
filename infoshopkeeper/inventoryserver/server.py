@@ -253,6 +253,7 @@ class Register:
                     #if it's a noninventoried item just 
                     #record transaction and remove from cart
                     else:
+                        
                         infostring = "'[] " + item['department']
                         if item.haskey('booktitle'):
                             infostring=infostring + ": " +item['booktitle']
@@ -353,7 +354,7 @@ class Register:
         print>>sys.stderr, isbn
         #strip spaces and quotes from isbn string
         isbn=isbn.replace('\"', '')
-        if re.match('^[0-9]{9}[0-9xX]$', isbn): 
+        if ( len(isbn)==10 and isbnlib.isValid(isbn)): 
             isbn=isbnlib.convert(isbn)
         print>>sys.stderr, isbn
         #search for isbn
@@ -474,16 +475,19 @@ class Admin:
         p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
         out, err = p.communicate()
         gs_location=out.strip()
-        print_command_string = string.Template("export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+        print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
         if isbn and booktitle and ourprice:
-            print>>sys.stderr,  print_command_string.substitute(
+            #print>>sys.stderr, authorstring
+            #print>>sys.stderr,  print_command_string.substitute(
+            #    {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " ").encode('utf8', 'backslashreplace'), 'authorstring': authorstring.replace("'", " ").encode('utf8', 'backslashreplace'), 'isbn':isbn, 'ourprice':ourprice, 
+           #         'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
+            pcs_sub=print_command_string.substitute(
                 {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " "), 'authorstring': authorstring.replace("'", " "), 'isbn':isbn, 'ourprice':ourprice, 
                     'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
-            subprocess.call( print_command_string.substitute(
-                {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " "), 'authorstring': authorstring.replace("'", " "), 'isbn':isbn, 'ourprice':ourprice, 
-                    'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()}), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
-     
-    #get next isbn in series that we are using for in-house labels
+            subprocess.call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
+
+
+    #get next isbn in series that we are using for in-house labels`
     #I've gone through great lengths to make sure there's no collision, but there's still a
     #bit of a fiat clause to the EAN organization.
     @cherrypy.expose
@@ -494,7 +498,7 @@ class Admin:
         except:
             result= '199' + '0'*9 + checkI13(('199'+'0'*9))
         return result
-     
+
     #wrapper to inventory.addToInventory to be added
     #after a few minor manipulations. Ditches dollar sign, makes 
     #prices floats and turns categories & authors into lists
@@ -509,8 +513,11 @@ class Admin:
         if (kwargs['known_title'] == 'False' or kwargs['known_title'] == 'false'):
             kwargs['known_title']=False
         else:
-            kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
-        print kwargs
+            try:
+                kwargs['known_title'] = list(Title.selectBy(isbn=kwargs['isbn']).orderBy("id").limit(1))[0]
+            except:
+                kwargs['known_title']=False
+        print "kwargs are now", kwargs
         kwargs['kind_name']=kwargs['kind']
         print kwargs
         self.inventory.addToInventory(**kwargs)
@@ -524,6 +531,7 @@ class Admin:
         print>>sys.stderr, 'search_isbn args ', args
         data=self.inventory.lookup_by_isbn(args['isbn'])
         print>>sys.stderr, 'data', data
+
         most_freq_location=''
         if (data and data['known_title']):
             most_freq_location = data['known_title']._connection.queryAll(
@@ -542,7 +550,6 @@ class Admin:
             print>>sys.stderr, 'data modified. new data are ', data
         return [data]
     add_to_inventory.search_isbn=search_isbn
- 
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def search_id(self, titleid):
@@ -567,7 +574,7 @@ class Admin:
         print>>sys.stderr,  most_freq_location, max_price, title
         #return [{'isbn':title.isbn, 'title': title.booktitle, 'location':most_freq_location,'listprice':max_price, 'ourprice':max_price, 'known_title':True}]
         return [{'isbn':title.isbn, 'title':title.booktitle, 'listprice':max_price, 'ourprice':max_price, 'authors':title.authors_as_string(), 'publisher':title.publisher, 'categories':title.categories_as_string(), 'location':most_freq_location, 'kind':title.kindID, 'type':title.type, 'known_title':True}]
- 
+
     #search for in stock items by attribute
     @cherrypy.expose
     def select_item_for_isbn_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
@@ -633,8 +640,6 @@ class Admin:
                  
         self._chooseitemforisbntemplate.titles=titles
         return self._chooseitemforisbntemplate.respond()
-         
-#Mostly does searching and generating reports            
 class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -944,7 +949,7 @@ class InventoryServer:
         if isbn:
             print>>sys.stderr, 'getting ready to convert'
             print>>sys.stderr, 'stripped'
-            if len(isbn)==10:
+            if ( len(isbn)==10 and isbnlib.isValid(isbn)): 
                 isbn=isbnlib.convert(isbn)
             print>>sys.stderr, 'isbn is ', isbn
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))

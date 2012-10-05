@@ -65,8 +65,9 @@ class TransactionReport(Report, PdfReport):
 
      
     def _queryForm(self):
-        return """<label class='textbox' for='what'>What</label> <input type='text' class='textbox' name='what' id='what' value='%s'/><br>
-        <label class='textbox' for='action'>Action</label> <input type='text' class='textbox' name='action' id='action' value='%s'/><br>
+        actionList=','.join(["<option value='%s'>%s</option>" % (x[0], x[0]) for x in Transaction._connection.queryAll("SELECT DISTINCT t.action FROM transactionLog t ORDER BY t.action")])
+        return ("""<label class='textbox' for='what'>What</label> <input type='text' class='textbox' name='what' id='what' value='%s'/><br>
+        <label class='textbox' for='action'>Action</label> <select class='textbox' id='action' name='action'>""" + actionList + """</select><br>
         <label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value='%s'/><br>
         <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
         <script type="text/javascript">                                         
@@ -74,5 +75,5 @@ class TransactionReport(Report, PdfReport):
                 jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
             });
         </script>        
-        """ % (self.args.get("what",""),self.args.get("action", "SALE"),self.args.get("begin_date",""),self.args.get("end_date",""))
+        """) % (self.args.get("what",""),self.args.get("begin_date",""),self.args.get("end_date",""))
 

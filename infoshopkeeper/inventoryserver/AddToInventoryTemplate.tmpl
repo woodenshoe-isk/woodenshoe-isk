@@ -136,9 +136,9 @@ from Skeleton import Skeleton
                         if (jQuery( '#isbn' ).val() == '') {
                             //dlg.dialog('open');
                             if (dlg.dialog('open')) {
-                                return false;
-                            } else {
                                 return true;
+                            } else {
+                                return false;
                             }
                         } else {
                             return false;
@@ -147,34 +147,39 @@ from Skeleton import Skeleton
                 }
             },
             submitHandler: function(form) {
-                jQuery('#add_to_inventory_form').ajaxSubmit({
-                    url:'/admin/add_item_to_inventory', 
-                    clearForm:false, 
-                    type:'post', 
-                    success:function(){
-                        //add to inventory succeeds
-                        
-                        //print label if we need to
-                        if (jQuery('#printlabel').is(':checked')) {
-                            total_copies = jQuery('#quantity').val() * jQuery('#num_copies').val()
-                            jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
-                        }                        
-                        //
-                        //clear all text fields except price & quantity
-                        //set prices & quantity to defaults
-                        //leave pulldown menus as they were
-                        jQuery('#add_to_inventory_form input.textbox').not('#distributor, #known_title, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
-                        jQuery('#printlabel').removeAttr('checked');
-                        jQuery("#quantity").val(1);
-                        jQuery("#listprice").val('0.0');
-                        jQuery("#ourprice").val('0.0');
-                        jQuery("#known_title").val('False');
-                        jQuery('#isbn').focus();
-                        isbnDirty=false;
-                    }
-                });
-                jQuery('#isbn').focus();
-                return false;
+                try {
+                    
+                    jQuery('#add_to_inventory_form').ajaxSubmit({
+                        url:'/admin/add_item_to_inventory', 
+                        clearForm:false, 
+                        type:'post', 
+                        success:function(){
+                            //add to inventory succeeds
+                            
+                            //print label if we need to
+                            if (jQuery('#printlabel').is(':checked')) {
+                                total_copies = jQuery('#quantity').val() * jQuery('#num_copies').val()
+                                jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
+                            }                        
+                            //
+                            //clear all text fields except price & quantity
+                            //set prices & quantity to defaults
+                            //leave pulldown menus as they were
+                            jQuery('#add_to_inventory_form input.textbox').not('#distributor, #known_title, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                            jQuery('#printlabel').removeAttr('checked');
+                            jQuery("#quantity").val(1);
+                            jQuery("#listprice").val('0.0');
+                            jQuery("#ourprice").val('0.0');
+                            jQuery("#known_title").val('False');
+                            jQuery('#isbn').focus();
+                            isbnDirty=false;
+                        }
+                    });
+                } finally {
+                    jQuery('input[type=submit]', this).attr('enabled', 'enabled');
+                    jQuery('#isbn').focus();
+                    return false;
+                }
             }                 
         });
         

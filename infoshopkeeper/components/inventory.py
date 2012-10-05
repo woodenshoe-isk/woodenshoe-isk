@@ -12,6 +12,7 @@ from objects.location import Location
 import tools.isbn as isbnlib
 from upc import upc2isbn
 
+import sys
 import re
 from sqlobject.sqlbuilder import Field, RLIKE, AND
 
@@ -261,23 +262,25 @@ class inventory:
 
 
     def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False):
-        print "GOT to addToInventory"
-        if not(known_title):
-            print "unknown title"
+        print>>sys.stderr, "GOT to addToInventory"
+        if known_title:
+            print>>sys.stderr, "known_title ", known_title
+        elif not(known_title):
+            print>>sys.stderr, "unknown title"
             #add a title
             the_kinds=list(Kind.select(Kind.q.kindName==kind))
             kind_id = None
             if the_kinds:
                 kind_id = the_kinds[0].id
-            print 'kind id is', kind_id
+            print>>sys.stderr, 'kind id is', kind_id
 
-            #print title
+            #print>>sys.stderr, title
             
             title=title
             publisher=publisher
-            #print title, publisher
+            print>>sys.stderr, title, publisher
             known_title=Title(isbn=isbn, booktitle=title, publisher=publisher,tag=" ",type=types, kindID=kind_id)
-            print known_title
+            print>>sys.stderr, known_title
             for rawAuthor in authors:
                 author = rawAuthor.encode("utf8", "backslashreplace")
             theAuthors = Author.selectBy(authorName=author)
@@ -289,7 +292,7 @@ class inventory:
                 known_title.addAuthor(a)
             else:
                 # We should SQLDataCoherenceLost here
-                print "mmm... looks like you have multiple author of the sama name in your database..."
+                print>>sys.stderr, "mmm... looks like you have multiple author of the sama name in your database..."
             for category in categories:
                 Category(categoryName=category.encode("utf8", "backslashreplace"),title=known_title)
         the_locations=list(Location.select(Location.q.locationName==location))
@@ -298,8 +301,9 @@ class inventory:
             location_id = the_locations[0].id
         if not ourprice:
             ourprice=listprice
+        print>>sys.stderr, "about to enter book loop"
         for i in range(int(quantity)): 
-            #print "book loop"
+            print>>sys.stderr, "book loop"
             b=Book(title=known_title,status=status.encode("utf8", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("utf8", "backslashreplace"),notes=notes.encode("utf8", "backslashreplace"),consignmentStatus="")
 #               b.extracolumns()
 #~ #               for mp in extra_prices.keys():
