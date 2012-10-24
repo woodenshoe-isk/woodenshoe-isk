@@ -9,6 +9,7 @@ import cherrypy
 from etc import cherrypy_global_config_file, cherrypy_nonlocal_config_file, cherrypy_local_config_file, cherrypy_config_file
 from inventoryserver.server import InventoryServer
 from inventoryserver.server import Register
+from inventoryserver.server import Staffing
 from inventoryserver.server import Admin
 from inventoryserver.server import Noteboard
 
@@ -25,6 +26,7 @@ class Root(object):
 
 root=InventoryServer()
 root.admin=Admin()
+root.staffing=Staffing()
 root.notes=Noteboard()
 root.register=Register()
 

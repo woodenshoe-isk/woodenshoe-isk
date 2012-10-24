@@ -43,16 +43,27 @@ Search the inventory
                                                 'sPaginationType':'full_numbers',
                                                 "iDisplayLength": 50});
         
-        //doubleclick adds item to cart
-        jQuery('#results_table tr').dblclick(function(event) {
-            event.preventDefault();
-            titleID=jQuery(this).children().last()[0].innerHTML
-            jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
-                document.location.href= "http://" + document.location.host + '/register/build_cart';
+        //doubleclick adds item to cart, except for iOS/Android
+        //where we use a single click
+        if (navigator.userAgent.match(/ipad|iphone|ios|android/i) == null) {
+            jQuery('#results_table tr').dblclick(function(event) {
+                event.preventDefault();
+                titleID=jQuery(this).children().last()[0].innerHTML
+                jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
+                    document.location.href= "http://" + document.location.host + '/register/build_cart';
+                });
+                return false;
             });
-            return false;
-        });
-        
+        } else {
+            jQuery('#results_table tr').click(function(event) {
+                event.preventDefault();
+                titleID=jQuery(this).children().last()[0].innerHTML
+                jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
+                    document.location.href= "http://" + document.location.host + '/register/build_cart';
+                });
+                return false;
+            });
+        }
 	});
 </script>
 #end def

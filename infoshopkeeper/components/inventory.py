@@ -265,6 +265,12 @@ class inventory:
         print>>sys.stderr, "GOT to addToInventory"
         if known_title:
             print>>sys.stderr, "known_title ", known_title
+            if not known_title.booktitle:
+                known_title.booktitle = title
+            if not known_title.publisher:
+                known_title.publisher = publisher
+            if not known_title.type:
+                known_title.type = types
         elif not(known_title):
             print>>sys.stderr, "unknown title"
             #add a title

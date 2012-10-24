@@ -13,6 +13,16 @@ from Skeleton import Skeleton
                     + '\r\r' + XMLHttpRequest.responseText);
           
         }});
+        
+        jQuery('#add_to_inventory_form').ajaxStart( function() {
+            console.log( 'ajax started');
+            jQuery('input[type=submit]', this).attr('disabled', 'disabled');
+        });
+        
+        jQuery('#add_to_inventory_form').ajaxComplete( function() {
+            console.log( 'ajax complete');
+            jQuery('input[type=submit]', this).removeAttr('disabled');
+        });
 
         var dlg=jQuery('#isbndialog').dialog({
             autoOpen: false, 
@@ -119,6 +129,7 @@ from Skeleton import Skeleton
         
         //jQuery to make select isbn button clickable link
         jQuery('#select_isbn_button').click( function(){
+            console.log('in click handler');
             window.open('/admin/select_item_for_isbn_search', '_self');
         });
         
@@ -176,7 +187,6 @@ from Skeleton import Skeleton
                         }
                     });
                 } finally {
-                    jQuery('input[type=submit]', this).attr('enabled', 'enabled');
                     jQuery('#isbn').focus();
                     return false;
                 }

@@ -36,6 +36,27 @@ Search the inventory
             return false
         });
 
+        //hide book id column 
+        jQuery('#results_table td:nth-child(13), #results_table th:nth-child(13)').hide();
+        
+        //open title edit. Desktops open on doubleclick.
+        //IOS & android use single click.
+        if (navigator.userAgent.match(/ipad|iphone|ios|android/i) == null) {
+            jQuery('#results_table tr').dblclick(function(event) {
+                    event.preventDefault();
+                    titleID=jQuery(this).children().last()[0].innerHTML;
+                    document.location.href= "http://" + document.location.host + '/titleedit?id=' + titleID;
+                    return false;
+            });
+        } else {
+            jQuery('#results_table tr').click(function(event) {
+                    event.preventDefault();
+                    titleID=jQuery(this).children().last()[0].innerHTML;
+                    document.location.href= "http://" + document.location.host + '/titleedit?id=' + titleID;
+                    return false;
+            });
+        }
+
     });
 </script>
 #end def
@@ -170,13 +191,13 @@ selected="true"
     <th>Latest Inventoried</th>
     <th>First Sold</th>
     <th>Last Sold</th>
-    ##<th>Keyword</th>
+    <th>ID</th>
   </tr>
 </thead>
 <tbody>
 #for $t in $titles
     #try
-      <tr ondblclick="document.location.href='/titleedit?id=$t.id';">
+      <tr>
         <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
                    event.stopPropagation();
                }
@@ -194,10 +215,10 @@ selected="true"
         <td>${t.last_book_inventoried.inventoried_when}</td>
         <td>${t.first_book_sold.sold_when}</td>
         <td>${t.last_book_sold.sold_when}</td>
-        ##<td>$t.categories_as_string</td>
+        <td>$t.id</td>
       </tr>
     #except
-      <tr ondblclick="document.location.href='/titleedit?id=$t.id';">
+      <tr>
             <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
                        event.stopPropagation();
                    }
