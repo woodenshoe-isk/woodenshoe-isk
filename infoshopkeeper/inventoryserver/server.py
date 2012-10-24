@@ -66,6 +66,7 @@ from TransactionsTemplate import TransactionsTemplate
 from CartTemplate import CartTemplate
 from CartTemplate2 import CartTemplate2
 from CheckoutTemplate import CheckoutTemplate
+from StaffingCalendarTemplate import StaffingCalendarTemplate
 from AddToInventoryTemplate import AddToInventoryTemplate
 from config import configuration
 from upc import upc2isbn
@@ -151,7 +152,6 @@ class Register:
     #actually add items to cart
     @cherrypy.expose
     def add_item_to_cart(self, **args):
-        import sys
         print>>sys.stderr, "IN add_item_to_cart     ARGS ARE"
         print>>sys.stderr, 'cart ', args, repr(args)
         cart={}
@@ -173,7 +173,7 @@ class Register:
         
         #add item to item key list
         if args.has_key('item'):
-            print>>sys.stderr, "add_item_to_cart: in item block", args['item'], json.loads(args['item']), type(args['item'])
+            print>>sys.stderr, "add_item_to_cart: in item block", json.loads(args['item'])
             cart['items'].append(json.loads(args['item']))
             cherrypy.session['cart']=cart
             print>>sys.stderr, cart
@@ -181,7 +181,7 @@ class Register:
             print>>sys.stderr, "add_item_to_cart: in titleid block", args['titleid']
             b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')[0]
             print>>sys.stderr, 'add_item_to_cart: book is', b
-            item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
+            item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'isbn':b.title.isbn, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
             cart['items'].append(item)
         print>>sys.stderr, "CART IS NOW ", cart
         cherrypy.session['cart']=cart
@@ -190,7 +190,8 @@ class Register:
         cherrypy.session.save()
         print>>sys.stderr, "CART NOW IS: ", cherrypy.session['cart']
         print>>sys.stderr, "CART SESSION NOW IS: ", cherrypy.session.id
-    
+        return None
+            
     @cherrypy.expose
     def remove_item_from_cart(self, **args):
         #print>>sys.stderr, "args are ", args
@@ -278,7 +279,7 @@ class Register:
     
     #search for in stock items by attribute
     @cherrypy.expose
-    def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
+    def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location="", authorOrTitle=""):
         self._chooseitemtemplate.empty=True
         self._chooseitemtemplate.title=title
         self._chooseitemtemplate.isbn=isbn
@@ -293,6 +294,7 @@ class Register:
         the_location=location
         if type(the_location)==type([]):
             the_location=the_location[0]
+        self._chooseitemtemplate.authorOrTitle=authorOrTitle
         self._chooseitemtemplate.kinds=list(Kind.select())
         self._chooseitemtemplate.kind=kind
         the_kind=kind
@@ -303,12 +305,16 @@ class Register:
         titles=[]
         
         #used to check that any filtering is done
-        fields=[title,author,category,distributor,owner,isbn,publisher,tag,kind]
+        fields=[title,author,category,distributor,owner,isbn,publisher,tag,kind,authorOrTitle]
         fields_used = [f for f in fields if f != ""]
         
         #start out with the join clauses in the where clause list
-        where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
-        
+        where_clause_list = []
+        #only search for in stock books
+        where_clause_list.append("book.status='STOCK'")
+        clause_tables=['book', 'author', 'author_title', 'category', 'location']
+        join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+
         #add filter clauses if they are called for
         if the_kind:
             where_clause_list .append("title.kind_id = '%s'" % escape_string(the_kind))
@@ -330,18 +336,19 @@ class Register:
             where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
         if category:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
-        
+        if authorOrTitle:
+            print>>sys.stderr, "in authorOrTitle ", authorOrTitle
+            where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (authorOrTitle, authorOrTitle))
         #AND all where clauses together
         where_clause=' AND '.join(where_clause_list)
+        print>>sys.stderr, 'where clause ', where_clause
         titles=[]
         
         #do search. 
         if len(fields_used)>0:
-            titles=Title.select( where_clause,orderBy=sortby,clauseTables=['book','author','author_title', 'category'],distinct=True)
-        
-        #filter only in stock copies
-        titles = [t for t in titles if t.copies_in_status("STOCK") >= 1]
-        
+            titles=Title.select( where_clause,join=join_list,clauseTables=clause_tables,orderBy=sortby,distinct=True)
+            print>>sys.stderr, titles.queryForSelect()
+        print>>sys.stderr, "titles ", list(titles)
         self._chooseitemtemplate.titles=titles
         return self._chooseitemtemplate.respond()
     
@@ -374,6 +381,19 @@ class Register:
         #if we don't have title
         else:
             return []
+ 
+#Use Google staffing calendar to fill schedule 
+class Staffing:
+    def __init__(self):
+        self._staffingcalendartemplate = StaffingCalendarTemplate()
+        self.menudata = MenuData
+
+    #hook for staffing calendar template
+    @cherrypy.expose
+    def calendar(self, **args):
+        print>>sys.stderr, "in calendar ", self._staffingcalendartemplate.respond() 
+        return self._staffingcalendartemplate.respond()
+
 
 #Administrative tasks
 class Admin:
@@ -640,6 +660,7 @@ class Admin:
                  
         self._chooseitemforisbntemplate.titles=titles
         return self._chooseitemforisbntemplate.respond()
+        
 class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -978,11 +999,12 @@ class InventoryServer:
         where_clause=' AND '.join(where_clause_list)
         print>>sys.stderr, where_clause
          
-        #do search first. Note it currently doesnt let you search for every book in database
+        #do search first. Note it currently doesnt let you search for every book in database, unless you use some sort of
+        #trick like '1=1' for the where clause string, as the where clause string may not be blank
         titles=[]
         if len(fields_used)>0 or out_of_stock=="yes":
             titles=Title.select( where_clause,join=join_list, orderBy=sortby,clauseTables=clause_tables,distinct=True)
-        
+            print>>sys.stderr, titles.queryForSelect()
         print>>sys.stderr, "titles ", list(titles)
         #filter for stock status
         if out_of_stock == 'yes':
