@@ -338,7 +338,7 @@ class Register:
             where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
         if authorOrTitle:
             print>>sys.stderr, "in authorOrTitle ", authorOrTitle
-            where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (authorOrTitle, authorOrTitle))
+            where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (escape_string(authorOrTitle.strip()), escape_string(authorOrTitle.strip())))
         #AND all where clauses together
         where_clause=' AND '.join(where_clause_list)
         print>>sys.stderr, 'where clause ', where_clause
@@ -513,10 +513,10 @@ class Admin:
     @cherrypy.expose
     def get_next_unused_local_isbn(self):
         try:
-            result=Title.select("title.isbn RLIKE \'^199\'").max(Title.q.isbn)
-            result= result[:-1] + checkI13(result[:13])
+            result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
-            result= '199' + '0'*9 + checkI13(('199'+'0'*9))
+            result= '199' + '0'*10
+        result= unicode(int(result[:-1])+1) + checkI13(result[:13])
         return result
 
     #wrapper to inventory.addToInventory to be added
