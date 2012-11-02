@@ -80,10 +80,17 @@ class inventory:
                 
                 #print "about to search", isbn, isbn[0]
                 pythonBooks=[]
+                
+                idType=''
+                if len(isbn)==12:
+                        idType='UPC'
+                elif len(isbn)==13:
+                        idType='EAN'
                 try:
-                    pythonBooks = ecs.ItemLookup(isbn,IdType="ISBN",SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
+                        pythonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
                 except ecs.InvalidParameterValue:
-                    pass
+                        pass
+
                 #print pythonBooks
                 if pythonBooks:
                     result={}
@@ -91,7 +98,7 @@ class inventory:
                     categories=[]
                     b=pythonBooks[0]
 
-                    for x in ['Author','Creator']:
+                    for x in ['Author','Creator', 'Artist', 'Director']:
                         if hasattr(b,x):
                             if type(getattr(b,x))==type([]):
                                 authors.extend(getattr(b,x))
@@ -156,7 +163,13 @@ class inventory:
                     if hasattr(b, "Binding"):
                         Format=b.Binding
                     
-                    Kind='books'
+                    Kind=''
+                    if b.ProductGroup=='Books':
+                        Kind='books'
+                    elif b.ProductGroup=='Music':
+                        Kind='music'
+                    elif b.ProductGroup in ('DVD', 'Video'):
+                        Kind='film'
                     
                     return {"title":ProductName,
                         "authors":authors,

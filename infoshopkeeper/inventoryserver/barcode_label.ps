@@ -6117,12 +6117,15 @@ isbnstring length 10 eq {
             isbnstring 4 5 getinterval (-) isbnstring 9 1 getinterval] concatstringarray def
     } if
 
+isbnstring pstack pop
 /isbnstring isbnstring dup length 1 sub 0 exch getinterval def
 isbnstring  dup length 1 sub 1 getinterval (-) eq { /isbnstring isbnstring dup length 1 sub 0 exch getinterval def } if
 
 /Helvetica findfont 8 scalefont setfont
-    
-15 15 moveto isbnstring (includetext) isbn barcode
+(here) isbnstring pstack
+isbnstring length 15 eq {15 15 moveto isbnstring (includetext) isbn barcode} if
+isbnstring length 11 eq {15 15 moveto isbnstring (includetext) upca barcode} if
+(here) pstack pop
 -11 100 rmoveto
 
 currentpoint currentpoint
