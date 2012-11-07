@@ -15,6 +15,7 @@ from simplejson import JSONEncoder
 import turbojson
 import json
 from sqlobject.sqlbuilder import *
+from sqlobject.mysql.mysqlconnection import DuplicateEntryError
 
 #Class that manages dictionary of menu items.
 #Format for adding a menu:
@@ -727,9 +728,41 @@ class InventoryServer:
     #hook to author edit template
     @cherrypy.expose
     def authoredit(self,**args):
+        print>>sys.stderr, "in  authoredit", args, args.get('id'), args.get('title_id')
         self.common()
-        self._authoredittemplate.author=Author.form_to_object(Author,args)
-        return self._authoredittemplate.respond()
+        self._authoredittemplate.author=None
+        self._authoredittemplate.new_author=False
+        self._authoredittemplate.title_id=args.get('title_id')
+        print>>sys.stderr, self._authoredittemplate.title_id
+        if args.has_key('id'):
+            if not args.get('delete'):
+                print>>sys.stderr, "in edit author", self._authoredittemplate.author
+                try:
+                    self._authoredittemplate.author=Author.form_to_object(Author,args)
+                except DuplicateEntryError as e:
+                    a=Author.selectBy(authorName=args['authorName'])[0]
+                    a.addTitle(Title.get(args['title_id']))
+                    self._authoredittemplate.author=a
+                return self._authoredittemplate.respond()        
+            else:
+                Author.delete(args.get('id'))
+                return self._indextemplate.respond()
+        elif args.get('new_author'):
+            self._authoredittemplate.new_author=True
+            self._authoredittemplate.title_id=args.get('title_id')
+
+#             if not self._authoredittemplate.author:
+#                 title=Title.get(args.get('title_id'))
+#                 try:
+#                     self._authoredittemplate.author=Author.form_to_object(Author,args)
+#                 except DuplicateEntryError as e:
+#                     a=Author.selectBy(authorName=args['authorName'])[0]
+#                     a.addTitle(Title.get(args['title_id']))
+#                     self._authoredittemplate.author=a
+#                 print>>sys.stderr, "in new_author", self._authoredittemplate.author
+#                 self._authoredittemplate.author.addTitle(title)
+#                 self._titleedittemplate.title=title
+            return self._authoredittemplate.respond()
      
     #hook to category edit template
     @cherrypy.expose
@@ -742,6 +775,10 @@ class InventoryServer:
     @cherrypy.expose
     def titleedit(self,**args):
         self.common()
+        print>>sys.stderr, args
+        if args.get('remove_author'):
+            title=Title.get(args.get('id'))
+            title.removeAuthor(args.get('author_id'))
         self._titleedittemplate.title=Title.form_to_object(Title,args)
         return self._titleedittemplate.respond()
      

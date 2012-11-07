@@ -38,10 +38,10 @@ $title.object_to_form
 
 ##show the author records with button to edit each author record
 <h2>Author(s):</h2>
-<!-- 11/10/2008 john fixed manually -->
 #for $a in $title.author
-<div><span>$a.authorName</span><a class="listinglink" href="/authoredit?id=$a.id">edit</a></div>
+<div><span>$a.authorName</span><a class="listinglink" href="/authoredit?id=$a.id&title_id=$title.id">edit</a><a class="listinglink" href="/titleedit?id=$title.id&author_id=$a.id&remove_author=True">remove</a></div>
 #end for
+<div><a class="listinglink" href="/authoredit?title_id=$title.id&new_author=True">new author</a></div>
 
 ##show records for each individual copy.
 ##each is editable in a book edit template
