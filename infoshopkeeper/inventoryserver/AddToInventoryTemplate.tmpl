@@ -15,10 +15,18 @@ from Skeleton import Skeleton
         }});
         
         jQuery('#add_to_inventory_form').ajaxStart( function() {
+<<<<<<< HEAD
+=======
+            console.log( 'ajax started');
+>>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
             jQuery('input[type=submit]', this).attr('disabled', 'disabled');
         });
         
         jQuery('#add_to_inventory_form').ajaxComplete( function() {
+<<<<<<< HEAD
+=======
+            console.log( 'ajax complete');
+>>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
             jQuery('input[type=submit]', this).removeAttr('disabled');
         });
 
@@ -128,6 +136,7 @@ from Skeleton import Skeleton
         
         //jQuery to make select isbn button clickable link
         jQuery('#select_isbn_button').click( function(){
+            console.log('in click handler');
             window.open('/admin/select_item_for_isbn_search', '_self');
         });
         

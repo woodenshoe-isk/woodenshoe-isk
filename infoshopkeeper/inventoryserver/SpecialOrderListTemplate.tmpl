@@ -115,17 +115,24 @@ selected="true"
         <td>$s.customerPhoneNumber</td>
         <td>$s.customerEmail</td>
         <td>
-                #try
-                <ul>
+            <table>
+                <tbody>
                     #for t in $s.titles
-                        <li>
-                            <pre>$t.isbn&#09;$t.booktitle&#09;$t.authors_as_string</pre>
-                        </li>
-                    #end for     
-                </ul>
-            #except
-                
-            #end try
+                        <tr><td>$t.isbn&</td><td>$t.booktitle</td><td>$t.authors_as_string</td></tr>
+                    #end for
+                </tbody>
+            </table>
+##              #try
+##                <ul>
+##                    #for t in $s.titles
+##                        <li>
+##                            <pre>$t.isbn&#09;$t.booktitle&#09;$t.authors_as_string</pre>
+##                        </li>
+##                    #end for     
+##                </ul>
+##            #except
+##                
+##            #end try
         </td>
         <td>$s.id</td>
     </tr>

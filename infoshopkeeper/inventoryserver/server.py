@@ -344,6 +344,7 @@ class Register:
         if authorOrTitle:
             print>>sys.stderr, "in authorOrTitle ", authorOrTitle
             where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (escape_string(authorOrTitle.strip()), escape_string(authorOrTitle.strip())))
+
         #AND all where clauses together
         where_clause=' AND '.join(where_clause_list)
         print>>sys.stderr, 'where clause ', where_clause
@@ -1099,7 +1100,7 @@ class InventoryServer:
         if tag:
             where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
         if isbn:
-           if ( len(isbn)==10 and isbnlib.isValid(isbn)): 
+            if ( len(isbn)==10 and isbnlib.isValid(isbn)): 
                 isbn=isbnlib.convert(isbn)
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
         if formatType:

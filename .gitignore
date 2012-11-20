@@ -30,3 +30,5 @@ infoshopkeeper-trac/
 *.log.*
 
 infoshopkeeper/cherrypy_local.conf
+
+/infoshopkeeper/install_superpack.sh
