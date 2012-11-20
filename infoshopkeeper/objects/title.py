@@ -32,6 +32,8 @@ class Title(SQLObjectWithFormGlue):
     booktitle=UnicodeCol(default=None)
     books = MultipleJoin('Book')
     author = RelatedJoin('Author', intermediateTable='author_title',createRelatedTable=True)
+    specialorders = RelatedJoin('SpecialOrder', intermediateTable='title_special_order', createRelatedTable=False)
+    specialorder_pivots = MultipleJoin('TitleSpecialOrder')
     categorys = MultipleJoin('Category')
     kind = ForeignKey('Kind')
     listTheseKeys=['kindID','kind']
@@ -60,15 +62,14 @@ class Title(SQLObjectWithFormGlue):
         return i
 
     def authors_as_string(self):
-#    11/10/2008 - john fixed this manually
-#       return string.join ([a.authorName for a in self.authors],",")
         try:
-            return string.join ([a.authorName for a in self.author],",")
+            return ', '.join ([a.authorName for a in self.author])
         except:
             return ""
+
     def categories_as_string(self):
         try:
-            return string.join ([c.categoryName for c in self.categorys],",")
+            return ', '.join ([c.categoryName for c in self.categorys])
         except:
             return ''
             

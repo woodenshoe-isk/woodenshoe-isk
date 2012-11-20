@@ -111,7 +111,7 @@ class SQLObjectWithFormGlue(SQLObject):
         def handleDateTime(col):
             return handleString(col)
 
-        formhtml = "<input type='hidden' name='id' value='%s' />" % (self.id)
+        formhtml = "<input type='hidden' id='sqlobject_id' name='id' value='%s' />" % (self.id)
         try:
             cols=self.__class__.__getattribute__(self, 'sqlmeta').columns
         except:

@@ -1,0 +1,192 @@
+##Edit Special Order information
+
+#from Skeleton import Skeleton
+#extends Skeleton
+
+#def pagetitle
+    #if $specialorder.customerName
+    Editing specialorder for  $specialorder.customerName
+    #else
+    Editing new special order
+    #end if
+#end def
+
+#def headscripts
+<script type="text/javascript" src="/javascript/jquery.validate.min.js"></script>
+<script type="text/javascript">
+    jQuery(document).ready( function(){
+        var inventory_data={};
+
+        //add required class to elements for validator
+        jQuery('#id_customerName, #id_customerEmail, #id_customerPhoneNumber, #id_customOrder').addClass('required')
+        
+        //add validator
+        jQuery('form').validate();
+
+        var dlg=jQuery('#new_special_order_dialog').dialog( {
+            autoOpen: false,
+            modal: true,
+            open: function(event, ui) {
+                console.log('opening dialog');
+            },
+            //void isbn field
+            //void list of attributes (title, price, etc)
+            //of transaction.
+            close: function() {
+                inventory_data={};
+                jQuery(this).find('.isbnfield').val('');
+                jQuery(this).find('.title_list').children().remove();
+            },
+            buttons: {
+                //close button
+                Cancel: function(){
+                    dlg.dialog('close');
+                },
+                //if you approve of the results from the isbn search,
+                //add them to the cart
+                'Special Order': function(){
+
+                    //add item to cart table
+                    //Should be ajax update
+                    //Only if there's really an item.
+                    if (Object.keys(inventory_data).length > 0 ) {
+                        console.log('in add_to_special_order')
+                        
+                        //add item to special order, and update page if it succeeds
+                        itemargs={'item':JSON.stringify(inventory_data), 'specialOrderID':jQuery('#sqlobject_id').val()};
+                        jQuery.post('/add_to_special_order', itemargs, function(){
+                            special_order_string='<pre>' + itemargs.item.isbn + '&#09;' + itemargs.item.booktitle+ + '&#09;' + itemargs.item.authors_as_string + '</pre>'
+                            dlg.dialog('close');
+                        });
+                    }
+                    return false;
+                }
+            }
+        });
+        
+        //jquery alert dialog for when isbn
+        //not found in database
+        jQuery( "#isbn_not_found_error" ).dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: {
+                Ok: function() {
+                    jQuery(this).dialog( 'close' );
+                    return false;
+                }
+            }
+        });        
+        
+        //add button to make new special order
+        jQuery('#new_special_order_item').button().click( function( event ) {
+            event.preventDefault();
+            dlg.dialog('open');
+            return false;
+         });
+         
+        //listener function to search database for isbn
+        //and return item info and info applicable to transaction
+        //i.e., if its taxable
+        isbn_listener = function(evt) {
+
+            var event_target=jQuery(evt.target)
+            var isbnstring=event_target.val();
+            var title_list=event_target.closest('div').find('.title_list')
+            //cache isbn_not_found dialog
+            var isbn_error_alert=event_target.closest('body').find('#isbn_not_found_error');
+            isbnstring=isbnstring.toLowerCase();
+            isbnstring=isbnstring.replace(/\s+/g, ' ');
+
+            //scrub isbn of spaces and hyphens if it is a potential 
+            //real isbn
+            if (isbnstring.length>11) {
+                isbnstring=isbnstring.replace(/[\s-]/g, '');
+            }
+            
+            //if there's an isbn, then search database for it.
+            if (isbnstring.length>0) {
+                if (isbnstring.match( /\d{13}|\d{12}|\d{9}[0-9xX]{1}/ )) {
+                    console.log('isbn will try to search');
+
+                    jQuery.getJSON( '/search_isbn', {'isbn':isbnstring}, function(inventory_data1){
+                        inventory_data1[0];
+                        inventory_data=inventory_data1[0];
+
+                        console.log(inventory_data1);
+                        
+                        //if item is an inventoried item and there's a real result
+                        //add all item info to dialog so user can approve add
+                        //to inventory or not. If no results, open isbn error alert.
+                        if ((inventory_data !== undefined) && (inventory_data.title !==undefined)) {
+                            title_list.empty();
+                            title_list.append('<li>'+inventory_data.title+'</li><li>'+ inventory_data.authors_as_string +'</li>');
+                        } else {
+                            isbn_error_alert.dialog('open');
+                        }
+                    });
+                } else {
+                    window.open('/select_special_order_search?authorOrTitle='+escape(isbnstring) + '&special_order=' + jQuery('#sqlobject_id').val(), '_self');
+                }  
+            } 
+
+            if ( event_target.val() != isbnstring) {
+                event_target.val(isbnstring);
+            }
+            
+            evt.preventDefault();
+            return false;
+        }
+        
+        //prevent return from triggering submit.
+        //we want to actually approve the data before we submit.
+        jQuery('.isbnfield').keypress( function(evt) {
+            if (evt.keyCode == 13) {
+                console.log('in key press traps return');
+                jQuery(this).closest('.ui-dialog').find('.ui-button')[1].focus();
+                isbn_listener(evt);
+                evt.preventDefault();
+            }
+        });
+    });
+</script
+#end def
+
+#def body
+#if $specialorder.customerName
+    <h1>Special Order record for ${specialorder.customerName}</h1>
+#else
+    <h1>New Special Order</h1>
+#end if
+
+<form method="get" action="/special_order_edit">
+$specialorder.object_to_form
+</form></br>
+
+#if $specialorder.titles
+    <h2>Inventoried items special ordered</h2>
+#end if
+<div id='new_special_order_group'>
+    <button id='new_special_order_item' class='new_special_order_item'>New Item</button></br>
+    <div id='new_special_order_dialog' class='new_special_order_dialog' title='Enter ISBN, Author/Title or Price'>
+        <form action='' method='get'>
+            <input class='isbnfield' type='text' name='isbn' />#slurp
+       </form>
+       <div id='title_list_panel' class='title_list_panel' name='title_list_panel'>
+            <ul id='title_list' class='title_list' name='title_list'></ul>
+       </div>  
+    </div>
+    <div id='isbn_not_found_error' class='error_dialog' title='Error: ISBN not found'>
+            Check the ISBN again or use the search button to search the inventory by attributes.
+    </div>
+</div>
+
+#if $specialorder.titles
+    <ul>
+        #for $t in $specialorder.titles
+        <li>
+            <pre>$t.isbn&#09;$t.booktitle&#09;$t.authors_as_string</pre>
+        </li>
+        #end for
+    </ul>
+#end if
+#end def
