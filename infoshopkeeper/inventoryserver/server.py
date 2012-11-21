@@ -240,7 +240,9 @@ class Register:
                     if item['bookID']:
                         try:
                             print>>sys.stderr, "preparing to sell book"
-                            b=Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
+                            print>>sys.stderr, "item is ", item
+                            b=Book.selectBy(id=item['bookID'])[0]
+                            b.set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
                             print>>sys.stderr, "book is ", b
                             infostring = "'[] " + item['department']
                             if item.has_key('booktitle'):
