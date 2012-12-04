@@ -15,6 +15,10 @@
                 alert(XMLHttpRequest.responseText);
           
         }});
+
+        jQuery('#id_booktitle').autocomplete({
+            source: 'title_autocomplete',
+        });   
         
         jQuery('.print_link').bind('click', function() {
             jQuery.get(jQuery(this)[0].href);

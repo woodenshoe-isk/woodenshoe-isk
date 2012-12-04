@@ -19,15 +19,9 @@
         //add remove this row button from every row
         jQuery('.remove_item').live('click', function(){
             table_row_index=jQuery(this).parent().parent().index();
-<<<<<<< HEAD
             jQuery.post('/register/remove_item_from_cart', {index:table_row_index}, function() {
                 jQuery('table tr:eq('+table_row_index+')').remove();
             });
-=======
-            console.log(table_row_index);
-            jQuery('table tr:eq('+table_row_index+')').remove();
-            jQuery.post('/register/remove_item_from_cart', {index:table_row_index})
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
             return false;
         });
         
@@ -82,6 +76,7 @@
                     inventory_data={};
                     jQuery(this).find('.isbnfield').val('');
                     jQuery(this).find('.title_list').children().remove();
+                    jQuery(this).find('input:checkbox').removeAttr('checked')
                     var so_div=jQuery(this).find('.special_order_div').css('display', 'none');
                     so_div.find('.special_order_data_div').css('display', 'none');
                     so_div.find('select').empty();
@@ -94,21 +89,14 @@
                     //if you approve of the results from the isbn search,
                     //add them to the cart
                     'Add to Order': function(){
-<<<<<<< HEAD
-
-=======
-                        //console.log(inventory_data);
-                        //console.log(Object.keys(inventory_data).length);
-                        //console.log(JSON.stringify(inventory_data));
-                        //console.log( this );
-                        //console.log((((typeof  inventory_data.department) != "undefined")?inventory_data.department:''))
-                        
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
+                       
                         //add item to cart table
                         //Should be ajax update
                         //Only if there's really an item.
                         if (Object.keys(inventory_data).length > 0 ) {
-<<<<<<< HEAD
+                        
+                            //if there is a special order chosen, add it to data to post to cart
+                            inventory_data['special_order_selected'] = jQuery(this).find('.special_order_data_select').val()
                             //add item to the cart
                             jQuery.post('/register/add_item_to_cart', {item:JSON.stringify(inventory_data)}, function(){
                                 jQuery('#cart_table > tbody').append('<tr><td>'+(((typeof  inventory_data.department) != "undefined")?inventory_data.department:'')
@@ -116,15 +104,7 @@
                                     + '</td><td>'+(((typeof  inventory_data.isbn) != "undefined")?inventory_data.isbn:'') 
                                     +'</td><td>'+(((typeof  inventory_data.ourprice) != "undefined")?inventory_data.ourprice:'')
                                     +'</td><td><input type="button" class="remove_item" value="Drop from Cart" /></td></tr>');
-=======
-                            jQuery('#cart_table > tbody').append('<tr><td>'+(((typeof  inventory_data.department) != "undefined")?inventory_data.department:'')
-                                +'</td><td>'+(((typeof inventory_data.booktitle) != 'undefined')?inventory_data.booktitle:'')
-                                + '</td><td>'+(((typeof  inventory_data.isbn) != "undefined")?inventory_data.isbn:'') 
-                                +'</td><td>'+(((typeof  inventory_data.ourprice) != "undefined")?inventory_data.ourprice:'')
-                                +'</td><td><input type="button" class="remove_item" value="Drop from Cart" /></td></tr>');
-                            //actually add item to the cart
-                            jQuery.post('/register/add_item_to_cart', {item:JSON.stringify(inventory_data)}, function(){
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
+
                                 dlg.dialog('close');
                             });
                         }
@@ -147,14 +127,11 @@
             var event_target=jQuery(evt.target)
             var category_data=event_target.parent().parent().data()
             var isbnstring=event_target.val();
-<<<<<<< HEAD
+
             var title_list=event_target.closest('div').find('.title_list');
             var outer_div=event_target.closest('div').find('.special_order_div');
             var selectbox = outer_div.find('select');
             
-=======
-            var title_list=event_target.closest('div').find('.title_list')
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
             //cache isbn_not_found dialog
             var isbn_error_alert=event_target.closest('body').find('#isbn_not_found_error');
             isbnstring=isbnstring.toLowerCase();
@@ -169,12 +146,10 @@
             //if there's an isbn and the category is an inventoried item (book, music, film)
             //search database for it.
             if (isbnstring.length>0 && category_data.is_inventoried_item == 'True') {
-<<<<<<< HEAD
+
                 if (isbnstring.match( /\d{13}|\d{12}|\d{9}[0-9xX]{1}/ )) {
-=======
-                if (isbnstring.match( /\d{13}/ )) {
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
-                    jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':isbnstring}, function(inventory_data1){
+
+                   jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':isbnstring}, function(inventory_data1){
                         inventory_data1=inventory_data1[0];
                         //add category data to inventory data that was found... keeping one dict is easier.
                         jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried_item, 'isTaxable':category_data.is_taxable});
@@ -187,7 +162,7 @@
                                 title_list.empty();
                                 title_list.append('<li>'+category_data.label+'</li><li>'+inventory_data1.booktitle+'</li><li>'+ inventory_data1.ourprice+'</li>');
                                 jQuery.extend(inventory_data, inventory_data1);
-<<<<<<< HEAD
+
                                 outer_div.css('display', 'none');
                                 if (inventory_data1.special_orders != undefined) {
                                     if (inventory_data1.special_orders.length > 0) {
@@ -199,8 +174,6 @@
                                           });
                                     }
                                 }
-=======
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
                             } else {
                                 isbn_error_alert.dialog('open');
                             }
@@ -236,13 +209,8 @@
             if (evt.keyCode == 13) {
                 console.log('in key press traps return');
                 jQuery(this).closest('.ui-dialog').find('.ui-button')[1].focus();
-<<<<<<< HEAD
+
                 isbn_listener(evt);
-=======
-                console.profile()
-                isbn_listener(evt);
-                console.profileEnd()
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
                 evt.preventDefault();
             }
         });
@@ -255,9 +223,6 @@
             }
         });
         
-        jQuery('.special_order_data_select').change( function() {
-            jQuery.extend(inventory_data, {'special_order_chosen':jQuery(this).find(":selected").val()});
-        });
     });
 </script>
 #end def
@@ -274,13 +239,11 @@
             <div id='my-form-$dep['name']' class='my-forms' title='Enter ISBN, Author/Title or Price' data-name=$dep['name'] data-label=$dep['label'] data-is_inventoried_item=$dep['isInventoriedItem'] data-is_taxable=$dep['isTaxable']>
                 <form action='' method='get'>
                     <input class='isbnfield' type='text' name='isbn' />#slurp
-<<<<<<< HEAD
                     <div class="special_order_div" style='display: none;'>
                         <input type='checkbox' class='is_special_order_checkbox' value='is_special_order'><span>This is a special order</span>
                         <div class='special_order_data_div' style='display:none'> for <select class='special_order_data_select'></select></div>
                     </div>
-=======
->>>>>>> 75717cbefc18a18db47e4e1bff26d89f8ccccff1
+
                     ##replaced by smarter textbox which checks if isbn & then either
                     ##does ajax or sends to select_item_search page.
                     ##if $dep['isInventoriedItem']

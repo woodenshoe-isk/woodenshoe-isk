@@ -32,3 +32,4 @@ infoshopkeeper-trac/
 infoshopkeeper/cherrypy_local.conf
 
 /infoshopkeeper/install_superpack.sh
+SpecialOrderItemEdit.py

@@ -3,6 +3,14 @@
 #from Skeleton import Skeleton
 #extends Skeleton
 
+#def headscripts
+<script type="text/javascript">
+    jQuery('#id_authorName').autocomplete({
+        source: 'author_autocomplete',
+    });   
+</script>
+#end def
+
 #def pagetitle
 Editing author $author.authorName
 #end def

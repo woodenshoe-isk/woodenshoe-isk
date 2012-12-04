@@ -9,6 +9,8 @@ import operator
 class SQLObjectWithFormGlue(SQLObject):
     _cacheValues=False
     _cols=None
+    _make_multiline_length=128
+    _multiline_rows=5
     
     def form_to_object(myClass,formdata):
         try:
@@ -16,13 +18,13 @@ class SQLObjectWithFormGlue(SQLObject):
         except:
             obj=myClass()
         try:
-            cols=obj.__class__.__getattribute__(obj, 'sqlmeta').columns
+            cols=obj.__class__.__getattribute__(obj, 'sqlmeta').columnList
         except:
             try: 
                 cols=obj.__class__.__getattribute__(obj, '_columns')
             except:
-                raise NameError("Class has neither meta.columns nor _columns attribute")
-        for col in cols.values():
+                raise NameError("Class has neither meta.columnList nor _columns attribute")
+        for col in cols:
             try:
                 value=formdata[col.name]
                 if type(col) == SODateTimeCol:
@@ -84,11 +86,19 @@ class SQLObjectWithFormGlue(SQLObject):
                                            
         def handleString(col):
             # look at http://formencode.org/docs/htmlfill.html
-            form_fragment = """<label class='textbox' for='id_%s'>
-                                 %s
-                               </label>
-                               <input class='textbox' type='text' name='%s' id='id_%s'/>
-                               """ % (col.name,col.name,col.name,col.name)
+            if getattr(col, 'length', 0) < 256:
+                form_fragment = """<label class='textbox' for='id_%s'>
+                                     %s
+                                   </label>
+                                   <input class='textbox' type='text' name='%s' id='id_%s'/>
+                                   """ % (col.name,col.name,col.name,col.name)
+            else:
+                form_fragment = """<label class='textbox' for='id_%s'>
+                                     %s
+                                   </label>
+                                   <textarea rows=%s class='textbox' type='text' name='%s' id='id_%s'/>
+                                   """ % (5, col.name,col.name,col.name,col.name)
+                
             value=getattr(self,col.name)
             if 'tostring' in dir(value):
                 value=value.tostring()
@@ -113,13 +123,13 @@ class SQLObjectWithFormGlue(SQLObject):
 
         formhtml = "<input type='hidden' id='sqlobject_id' name='id' value='%s' />" % (self.id)
         try:
-            cols=self.__class__.__getattribute__(self, 'sqlmeta').columns
+            cols=self.__class__.__getattribute__(self, 'sqlmeta').columnList
         except:
             try: 
                 cols=self.__class__.__getattribute__(self, '_columns')
             except:
                 raise NameError("Class has no attribute sqlmeta.columns or _colums")
-        for c in cols.values():
+        for c in cols:
             if type(c)==SOStringCol:
                 formhtml = formhtml + handleString(c)
             if type(c)==SOUnicodeCol:
@@ -201,13 +211,13 @@ class SQLObjectWithFormGlue(SQLObject):
 
         viewhtml = "<input type='hidden' name='id' value='%s' />" % (self.id)
         try:
-            cols=self.__class__.__getattribute__(self, 'sqlmeta').columns
+            cols=self.__class__.__getattribute__(self, 'sqlmeta').columnList
         except:
             try: 
                 cols=self.__class__.__getattribute__(self, '_columns')
             except:
                 raise NameError("Class has no attribute sqlmeta.columns or _colums")
-        for c in cols.values():
+        for c in cols:
             if type(c)==SOStringCol:
                 viewhtml = viewhtml + handleString(c)
             if type(c)==SOUnicodeCol:
