@@ -18,11 +18,14 @@ sqlhub.processConnection = connection
 
 #_connection = db.SQLObjconnect()
 
-class dummybook:
+class dummybook(object):
     def __init__(self):
         self.sold_when="-"
         self.inventoried_when="-"
+        self.ourprice='0.0'
+        self.listprice='0.0'
         self.dummy=True
+        
 
 class Title(SQLObjectWithFormGlue):
     class sqlmeta:

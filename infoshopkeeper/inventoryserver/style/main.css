@@ -136,29 +136,6 @@ table#results_table {
 width:100%;
 float: left;
 }
-table#results_table tbody td ul {
-float: left;
-line-height: normal;
-}
-table#results_table tbody td li {
-display: inline;
-margin: 10px;
-font-weight: bold;
-vertical-align: text-top;
-float: right;
-position: relative;
-text-align: right;
-}
-table#results_table tbody td li:first-child {
-float: left;
-text-align: left;
-}
-table#results_table tbody td li:last-child {
-clear: both;
-width: 100%;
-font-weight: normal;
-text-align: left;
-}
 table#message_table {
 width:100%;
 }
@@ -185,6 +162,19 @@ width: 100%;
 font-weight: normal;
 text-align: left;
 }
+ul.special_order_list{
+list-style-type:none;
+}
+ul.special_order_list li ul{
+display: inline;
+}
+ul.special_order_list li ul li{
+display:inline;
+font-weight: normal;
+list-style-type:none;
+margin: 10px;
+text-align:none;
+}
 form {
 background-color:cccccc;
 padding: 10px;
@@ -196,7 +186,7 @@ border-style:solid;
 form .isbn_search_button {
 position: relative;
 }
-label,input.textbox,textarea.textarea {
+label,input.textbox,textarea {
 display: block;
 float: left;
 margin-bottom: 10px;

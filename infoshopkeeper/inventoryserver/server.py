@@ -42,7 +42,7 @@ from objects.category import Category
 from objects.kind import Kind
 from objects.location import Location
 from objects.notes import Notes
-from objects.specialorder import SpecialOrder
+from objects.special_order import SpecialOrder
 from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 from objects.transaction import Transaction
@@ -71,6 +71,7 @@ from CheckoutTemplate import CheckoutTemplate
 from StaffingCalendarTemplate import StaffingCalendarTemplate
 from AddToInventoryTemplate import AddToInventoryTemplate
 from SpecialOrderEditTemplate import SpecialOrderEditTemplate
+from SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
 from SpecialOrderListTemplate import SpecialOrderListTemplate
 from SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
 from config import configuration
@@ -110,7 +111,7 @@ class Noteboard:
     def __init__(self):
         self._notestemplate = NotesTemplate()
         self.menudata=MenuData
-        MenuData.setMenuData({'5':('Notes', '/notes/noteboard', [])}) 
+        MenuData.setMenuData({'6':('Notes', '/notes/noteboard', [])}) 
    
     #handler for noteboard template call   
     @cherrypy.expose
@@ -228,7 +229,7 @@ class Register:
     
     #check out cart
     @cherrypy.expose
-    def check_out(self):
+    def check_out(self, **args):
         cart={}
         #is there a cart?
         if cherrypy.session.has_key('cart'):
@@ -236,16 +237,26 @@ class Register:
             #does it have items?
             if cart.has_key('items'):
                 shouldRaiseException=False
-                print>>sys.stderr, 'cart at outset is', cart 
-                for item in cart['items']:
+
+                #make a shallow copy of cart to iterate on
+                #for is a generator, so it gets confused
+                #if you iterate on a list you're removing items from.
+                cart_items_copy = cart['items'][:]
+                for item in cart_items_copy:
                     #if it is an inventoried item
                     #mark item sold, record transaction
                     #and remove from cart
                     print>>sys.stderr, "checkout: item is ", item
-                    if item['bookID']:
+                    if item.get('bookID'):
                         try:
                             print>>sys.stderr, "preparing to sell book"
                             b=Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
+                            if item.get('special_order_selected'):
+                                tso=TitleSpecialOrder.get(item['special_order_selected']) 
+                                tso.orderStatus='SOLD'
+                                print>>sys.stderr, tso
+                                print>>sys.stderr, 'special order marked sold'
+                           
                             print>>sys.stderr, "book is ", b
                             infostring = "'[] " + item['department']
                             if item.has_key('booktitle'):
@@ -256,16 +267,21 @@ class Register:
                             print>>sys.stderr, "Item removed from cart"
                         except Exception as err:
                             print>>sys.stderr, "error in selling book", err
+                            problemItems.append(item)
                             shouldRaiseException=True
                     #if it's a noninventoried item just 
                     #record transaction and remove from cart
                     else:
-                        
-                        infostring = "'[] " + item['department']
-                        if item.haskey('booktitle'):
-                            infostring=infostring + ": " +item['booktitle']
-                        Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
-                        cart['items'].remove(item)
+                        try:
+                            infostring = "'[] " + item['department']
+                            if item.has_key('booktitle'):
+                                infostring=infostring + ": " +item['booktitle']
+                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=float(item['ourprice']), cartID=cart.get('uuid', ''))
+                            cart['items'].remove(item)
+                        except Exception as err:
+                            print>>sys.stderr, "error in selling book", err
+                            problemItems.append(item)
+                            shouldRaiseException=True
             #it should be zero but just in case
             #there was an error, items with error are still kept
             print>>sys.stderr, 'cart length is now ', len(cart['items'])
@@ -364,7 +380,7 @@ class Register:
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def get_item_by_isbn(self,   **kwargs):
-        print>>sys.stderr, kwargs
+        print>>sys.stderr, 'kwargs are', kwargs
         isbn=kwargs.get('isbn', '')
         print>>sys.stderr, isbn
         #strip spaces and quotes from isbn string
@@ -378,8 +394,10 @@ class Register:
         #if we find it search for associated books in stock
         if titlelist:
             b=Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').orderBy(Book.q.inventoried_when)
-            so=[[tso.id, tso.specialOrder.customerName] for tso in b.throughTo.title.throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON HOLD SHELF')]
+            print>>sys.stderr, b
             if b:
+                so=[[tso.id, tso.specialOrder.customerName] for tso in b.throughTo.title.throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON HOLD SHELF')]
+                print>>sys.stderr, b, so
                 return [{'titleID':b[0].title.id, 'booktitle':b[0].title.booktitle, 'isbn':b[0].title.isbn, 'bookID':b[0].id, 'ourprice':b[0].ourprice, 'special_orders':so}]
             #if there's no in stock books 
             else:
@@ -419,7 +437,7 @@ class Admin:
          
         MenuData.setMenuData({'3': ('Add to Inventory', '/admin/add_to_inventory', [])})
         #notice trac is on here but it's run out of its own wsgi script
-        MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
+        MenuData.setMenuData({'7':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
                                                    ('Bug Reports/Issues', 'javascript:document.location=&#39http://&#39+document.location.hostname+&#39:8050&#39+&#39/trac/newticket&#39;', []),
                                                  ])})
@@ -689,13 +707,14 @@ class InventoryServer:
         self._transactionstemplate = TransactionsTemplate()
         self._special_order_edit_template = SpecialOrderEditTemplate()
         self._special_order_list_template = SpecialOrderListTemplate()
+        self._special_order_item_edit_template =  SpecialOrderItemEditTemplate()  
         self._select_special_order_template = SelectSpecialOrderTemplate()
-     
         self.inventory=inventory.inventory()
         self.conn=db.connect()
          
         MenuData.setMenuData({'2': ('Search the Inventory', '/search', [])})
-        MenuData.setMenuData({'4': ('Reports', '/reports',
+        MenuData.setMenuData({'4': ('Special Order', '/special_order_list', [])})
+        MenuData.setMenuData({'5': ('Reports', '/reports',
                                         [(i.metadata['name'], '/report?reportname=' + i.metadata['action'], []) for i in self.reportlist])})
      
     def loadUserByUsername(self, login):
@@ -733,13 +752,70 @@ class InventoryServer:
         self.common()
         self._bookedittemplate.book=Book.form_to_object(Book,args)
         return self._bookedittemplate.respond()
+    
+    #data source for jquery autocomplete widget for author field
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def author_autocomplete(self, **args):
+        term=args.get('term')
+        print>>sys.stderr, "term is", term
+        if term:
+            results=[ results.authorName for results in Author.select("author.author_name RLIKE '%s' LIMIT 20" % term)]
+            print>>sys.stderr, results
+            return results
+
+    #data source for jquery autocomplete widget for title field
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def title_autocomplete(self, **args):
+        term=args.get('term')
+        print>>sys.stderr, "term is", term
+        if term:
+            results=[ results.booktitle for results in Title.select("title.booktitle RLIKE '%s' LIMIT 20" % term)]
+            print>>sys.stderr, results
+            return results
      
     #hook to author edit template
     @cherrypy.expose
+    #hook to author edit template
+    @cherrypy.expose
     def authoredit(self,**args):
+        print>>sys.stderr, "in  authoredit", args, args.get('id'), args.get('title_id')
         self.common()
-        self._authoredittemplate.author=Author.form_to_object(Author,args)
-        return self._authoredittemplate.respond()
+        self._authoredittemplate.author=None
+        self._authoredittemplate.new_author=False
+        self._authoredittemplate.title_id=args.get('title_id')
+        print>>sys.stderr, self._authoredittemplate.title_id
+        if args.has_key('id'):
+            self._authoredittemplate.new_author=False
+            if not args.get('delete'):
+                print>>sys.stderr, "in edit author", self._authoredittemplate.author
+                try:
+                    self._authoredittemplate.author=Author.form_to_object(Author,args)
+                except DuplicateEntryError as e:
+                    a=Author.selectBy(authorName=args['authorName'])[0]
+                    a.addTitle(Title.get(args['title_id']))
+                    self._authoredittemplate.author=a
+                return self._authoredittemplate.respond()        
+            else:
+                Author.delete(args.get('id'))
+                return self._indextemplate.respond()
+        elif args.get('new_author'):
+            self._authoredittemplate.new_author=True
+            self._authoredittemplate.title_id=args.get('title_id')
+
+#             if not self._authoredittemplate.author:
+#                 title=Title.get(args.get('title_id'))
+#                 try:
+#                     self._authoredittemplate.author=Author.form_to_object(Author,args)
+#                 except DuplicateEntryError as e:
+#                     a=Author.selectBy(authorName=args['authorName'])[0]
+#                     a.addTitle(Title.get(args['title_id']))
+#                     self._authoredittemplate.author=a
+#                 print>>sys.stderr, "in new_author", self._authoredittemplate.author
+#                 self._authoredittemplate.author.addTitle(title)
+#                 self._titleedittemplate.title=title
+            return self._authoredittemplate.respond()
      
     #hook to category edit template
     @cherrypy.expose
@@ -752,9 +828,13 @@ class InventoryServer:
     @cherrypy.expose
     def titleedit(self,**args):
         self.common()
+        print>>sys.stderr, args
+        if args.get('remove_author'):
+            title=Title.get(args.get('id'))
+            title.removeAuthor(args.get('author_id'))
         self._titleedittemplate.title=Title.form_to_object(Title,args)
         return self._titleedittemplate.respond()
-     
+        
     #hook to title list template
     @cherrypy.expose
     def titlelist(self,**args):
@@ -851,6 +931,12 @@ class InventoryServer:
         self.common()
         self._special_order_edit_template.specialorder=SpecialOrder.form_to_object(SpecialOrder,args)
         return self._special_order_edit_template.respond()
+        
+    #hook to special order item edit template
+    @cherrypy.expose
+    def special_order_item_edit(self, **args):
+        self._special_order_item_edit_template.special_order_item=TitleSpecialOrder.form_to_object(TitleSpecialOrder, args)
+        return self._special_order_item_edit_template.respond()
     
     #hook to select_specialorder template
     #simple table of results for authorOrTitle search
@@ -870,7 +956,7 @@ class InventoryServer:
                 if not resultset.has_key( search_result['isbn'] ):
                     resultset[search_result['isbn']] = search_result
             except StopIteration:
-                pass
+                break
         return self._select_special_order_template.respond()
     
        
@@ -880,13 +966,19 @@ class InventoryServer:
     #then we add the book to the special order
     @cherrypy.expose
     def add_to_special_order(self, **args):
+        print>>sys.stderr, "in add to spec order", args
         if args.get('item'):
+            print>>sys.stderr,  args.get('item')
             item=json.loads(args.get('item'))
+            print>>sys.stderr,  "known_title is", item.get('known_title', '')
+            if item.get('known_title'):
+                print>>sys.stderr, 'know_titles id key is', item.get('known_title')['id']
+            print>>sys.stderr, 'known_title_id is', item.get('known_title_id', '')
             known_title=''
             if item.get('known_title_id'):
                 known_title= Title.get( int(item.get('known_title_id')))
             elif item.get('known_title'):
-                known_title=Title.get(int(known_title['id']))
+                known_title=Title.get(int(item.get('known_title')['id']))
             else:
                 self.inventory.addToInventory(title=item['booktitle'], authors=item['authors'], isbn=item['isbn'], categories=item['categories'], quantity=0, known_title=known_title, kind_name='kind', types=item['types'])
                 known_title=Title.selectBy(isbn=item['isbn'])
@@ -1208,3 +1300,14 @@ class InventoryServer:
             self._reporttemplate.do_query=False
              
         return  self._reporttemplate.respond()
+        
+    @cherrypy.expose
+    def test(self):
+        return '''
+                <link type="text/css" href="/javascript/css/smoothness/jquery-ui-1.8.13.custom.css" rel="Stylesheet" />	
+                <script type='text/javascript' src='/javascript/jquery-1.6.1.min.js'></script>
+                <script type='text/javascript' src='/javascript/jquery.dataTables.js'></script>
+                <script type='text/javascript' src='/javascript/FixedHeader.js'></script>
+                <script type='text/javascript' src='/javascript/jquery-ui-1.9.1.custom/js/jquery-ui-1.9.1.custom.js'></script>
+
+                <body><table class="sortable dataTable" id="message_table" aria-describedby="message_table_info"><thead><tr role="row"><th class="sorting" role="columnheader" tabindex="0" aria-controls="message_table" rowspan="1" colspan="1" style="width: 1004px; " aria-label="Notes&amp;nbsp;&amp;nbsp;&amp;nbsp;: activate to sort column ascending"><a href="#" class="sortheader" onclick="ts_resortTable(this);return false;">Notes<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th></tr></thead><tbody role="alert" aria-live="polite" aria-relevant="all"><tr class="odd"><td class=""><ul><li>Lou</li><li>2012-10-03 12:14:56</li><li>Start at 5469</li></ul></td></tr><tr class="even"><td class=""><ul><li>Lou</li><li>2012-08-12 18:23:29</li><li>Start at 5468</li></ul></td></tr><tr class="odd"><td class=""><ul><li>Zen</li><li>2012-08-07 16:59:43</li><li>Fugazi - Repeater was purchased, marked "REG 5456" on sleeve, in inventory marked "REG 4472"</li></ul></td></tr><tr class="even"><td class=""><ul><li>Zen</li><li>2012-08-05 18:31:55</li><li>Sold a copy of "Soccer vs. the State," which is not listed in ISK --Zen, 8/5/12</li></ul></td></tr><tr class="odd"><td class=""><ul><li>Lou</li><li>2012-07-28 17:09:25</li><li>Start at 5461</li></ul></td></tr><tr class="even"><td class=""><ul><li>test</li><li>2012-07-20 13:57:18</li><li>test</li></ul></td></tr><tr class="odd"><td class=""><ul><li>test</li><li>2012-07-20 13:06:53</li><li>test</li></ul></td></tr><tr class="even"><td class=""><ul><li>Lou</li><li>2012-06-13 17:56:27</li><li>Start at 5360</li></ul></td></tr><tr class="odd"><td class=""><ul><li>Lou</li><li>2012-06-07 15:05:19</li><li>Start at 5348</li></ul></td></tr><tr class="even"><td class=""><ul><li>Lou</li><li>2012-06-07 14:15:19</li><li>CORRECTION:  Start at 5346</li></ul></td></tr></tbody></table></body>'''
