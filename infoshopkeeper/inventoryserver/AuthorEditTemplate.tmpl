@@ -1,15 +1,44 @@
 ##Edit Author information
-
+ 
 #from Skeleton import Skeleton
+#from objects.author import Author
 #extends Skeleton
 
-#def pagetitle
-Editing author $author.authorName
+#def headscripts
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+        jQuery('#id_authorName').autocomplete({
+            source: 'author_autocomplete',
+        });
+    });
+</script>  
 #end def
 
+#def pagetitle
+#if not $new_author
+Editing author $author.authorName
+#else
+New author...
+#end if
+#end def
+ 
 #def body
+#try
+    #assert $author
+    #set author_defined = True
+#except AssertionError
+    #set $author_defined = False
+#end try
+#if not $new_author
 <h1>Author record for ${author.authorName}</h1>
+#else
+<h1>New author record</h1>
+#end if
 <form method="get" action="/authoredit">
-$author.object_to_form
+#if not $new_author
+$author.object_to_form(**{'title_id':$title_id})
+#else
+$Author.class_to_form(**{'title_id':$title_id})
+#end if
 </form>
 #end def
