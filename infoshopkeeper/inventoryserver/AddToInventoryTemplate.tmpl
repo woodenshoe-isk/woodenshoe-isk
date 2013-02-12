@@ -7,20 +7,30 @@ from Skeleton import Skeleton
 <script type="text/javascript">                                         
     var isbnDirty = false;
     jQuery(document).ready(function() {
+        //temporarily use an alert to remind people to check
+        //the special order box
+        alert("Please remember to check the special order box");
+        
         //Ajax setup for error handling
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
                 alert(textStatus + '\r\r' + errorThrown 
                     + '\r\r' + XMLHttpRequest.responseText);
           
         }});
+
+        jQuery('#title').autocomplete({
+            source: 'title_autocomplete',
+        });   
+
+        jQuery('#authors').autocomplete({
+            source: 'author_autocomplete',
+        });   
         
         jQuery('#add_to_inventory_form').ajaxStart( function() {
-            console.log( 'ajax started');
             jQuery('input[type=submit]', this).attr('disabled', 'disabled');
         });
         
         jQuery('#add_to_inventory_form').ajaxComplete( function() {
-            console.log( 'ajax complete');
             jQuery('input[type=submit]', this).removeAttr('disabled');
         });
 

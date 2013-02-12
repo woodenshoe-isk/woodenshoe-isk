@@ -132,7 +132,7 @@
 
             //scrub isbn of spaces and hyphens if it is a potential 
             //real isbn
-            if (isbnstring.length>11) {
+            if (isbnstring.match( /\d{13}|\d{12}|\d{9}[0-9xX]{1}/ )){
                 isbnstring=isbnstring.replace(/[\s-]/g, '');
             }
             

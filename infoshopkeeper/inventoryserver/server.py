@@ -224,7 +224,7 @@ class Register:
     
     #check out cart
     @cherrypy.expose
-    def check_out(self):
+    def check_out(self, **args):
         cart={}
         #is there a cart?
         if cherrypy.session.has_key('cart'):
@@ -232,17 +232,25 @@ class Register:
             #does it have items?
             if cart.has_key('items'):
                 shouldRaiseException=False
-                for item in cart['items']:
+                #make a shallow copy of cart to iterate on
+                #for is a generator, so it gets confused
+                #if you iterate on a list you're removing items from.
+                cart_items_copy = cart['items'][:]
+                for item in cart_items_copy:
                     #if it is an inventoried item
                     #mark item sold, record transaction
                     #and remove from cart
                     print>>sys.stderr, "checkout: item is ", item
-                    if item['bookID']:
+                    if item.get('bookID'):
                         try:
                             print>>sys.stderr, "preparing to sell book"
-                            print>>sys.stderr, "item is ", item
-                            b=Book.selectBy(id=item['bookID'])[0]
-                            b.set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
+                            b=Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
+                            if item.get('special_order_selected'):
+                                tso=TitleSpecialOrder.get(item['special_order_selected']) 
+                                tso.orderStatus='SOLD'
+                                print>>sys.stderr, tso
+                                print>>sys.stderr, 'special order marked sold'
+                           
                             print>>sys.stderr, "book is ", b
                             infostring = "'[] " + item['department']
                             if item.has_key('booktitle'):
@@ -253,16 +261,21 @@ class Register:
                             print>>sys.stderr, "Item removed from cart"
                         except Exception as err:
                             print>>sys.stderr, "error in selling book", err
+                            problemItems.append(item)
                             shouldRaiseException=True
                     #if it's a noninventoried item just 
                     #record transaction and remove from cart
                     else:
-                        
-                        infostring = "'[] " + item['department']
-                        if item.haskey('booktitle'):
-                            infostring=infostring + ": " +item['booktitle']
-                        Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
-                        cart['items'].remove(item)
+                        try:
+                            infostring = "'[] " + item['department']
+                            if item.has_key('booktitle'):
+                                infostring=infostring + ": " +item['booktitle']
+                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=float(item['ourprice']), cartID=cart.get('uuid', ''))
+                            cart['items'].remove(item)
+                        except Exception as err:
+                            print>>sys.stderr, "error in selling book", err
+                            problemItems.append(item)
+                            shouldRaiseException=True
             #it should be zero but just in case
             #there was an error, items with error are still kept
             if cart['items'].__len__()==0:
@@ -719,7 +732,29 @@ class InventoryServer:
     def index(self,**args):
         self.common()
         return self._indextemplate.respond()
-     
+    
+    #data source for jquery autocomplete widget for author field
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def author_autocomplete(self, **args):
+        term=args.get('term')
+        print>>sys.stderr, "term is", term
+        if term:
+            results=[ results.authorName for results in Author.select("author.author_name RLIKE '%s' LIMIT 20" % term)]
+            print>>sys.stderr, results
+            return results
+
+    #data source for jquery autocomplete widget for title field
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def title_autocomplete(self, **args):
+        term=args.get('term')
+        print>>sys.stderr, "term is", term
+        if term:
+            results=[ results.booktitle for results in Title.select("title.booktitle RLIKE '%s' LIMIT 20" % term)]
+            print>>sys.stderr, results
+            return results
+    
     #hook to book edit template
     @cherrypy.expose
     def bookedit(self,**args):
@@ -782,6 +817,7 @@ class InventoryServer:
             title=Title.get(args.get('id'))
             title.removeAuthor(args.get('author_id'))
         self._titleedittemplate.title=Title.form_to_object(Title,args)
+        return self._titleedittemplate.respond()
         return self._titleedittemplate.respond()
      
     #hook to title list template
