@@ -15,6 +15,7 @@ from simplejson import JSONEncoder
 import turbojson
 import json
 from sqlobject.sqlbuilder import *
+from sqlobject.mysql.mysqlconnection import DuplicateEntryError
 
 #Class that manages dictionary of menu items.
 #Format for adding a menu:
@@ -743,7 +744,29 @@ class InventoryServer:
     def index(self,**args):
         self.common()
         return self._indextemplate.respond()
-     
+    
+    #data source for jquery autocomplete widget for author field
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def author_autocomplete(self, **args):
+        term=args.get('term')
+        print>>sys.stderr, "term is", term
+        if term:
+            results=[ results.authorName for results in Author.select("author.author_name RLIKE '%s' LIMIT 20" % term)]
+            print>>sys.stderr, results
+            return results
+
+    #data source for jquery autocomplete widget for title field
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def title_autocomplete(self, **args):
+        term=args.get('term')
+        print>>sys.stderr, "term is", term
+        if term:
+            results=[ results.booktitle for results in Title.select("title.booktitle RLIKE '%s' LIMIT 20" % term)]
+            print>>sys.stderr, results
+            return results
+    
     #hook to book edit template
     @cherrypy.expose
     def bookedit(self,**args):
@@ -832,7 +855,7 @@ class InventoryServer:
             title.removeAuthor(args.get('author_id'))
         self._titleedittemplate.title=Title.form_to_object(Title,args)
         return self._titleedittemplate.respond()
-        
+
     #hook to title list template
     @cherrypy.expose
     def titlelist(self,**args):
