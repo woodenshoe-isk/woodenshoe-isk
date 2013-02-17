@@ -76,7 +76,6 @@
                     inventory_data={};
                     jQuery(this).find('.isbnfield').val('');
                     jQuery(this).find('.title_list').children().remove();
-                    jQuery(this).find('input:checkbox').removeAttr('checked')
                     var so_div=jQuery(this).find('.special_order_div').css('display', 'none');
                     so_div.find('.special_order_data_div').css('display', 'none');
                     so_div.find('select').empty();
@@ -94,9 +93,7 @@
                         //Should be ajax update
                         //Only if there's really an item.
                         if (Object.keys(inventory_data).length > 0 ) {
-                        
-                            //if there is a special order chosen, add it to data to post to cart
-                            inventory_data['special_order_selected'] = jQuery(this).find('.special_order_data_select').val()
+
                             //add item to the cart
                             jQuery.post('/register/add_item_to_cart', {item:JSON.stringify(inventory_data)}, function(){
                                 jQuery('#cart_table > tbody').append('<tr><td>'+(((typeof  inventory_data.department) != "undefined")?inventory_data.department:'')
@@ -139,7 +136,7 @@
 
             //scrub isbn of spaces and hyphens if it is a potential 
             //real isbn
-            if (isbnstring.match( /\d{13}|\d{12}|\d{9}[0-9xX]{1}/ )){
+            if (isbnstring.length>11) {
                 isbnstring=isbnstring.replace(/[\s-]/g, '');
             }
             
@@ -223,6 +220,9 @@
             }
         });
         
+        jQuery('.special_order_data_select').change( function() {
+            jQuery.extend(inventory_data, {'special_order_chosen':jQuery(this).find(":selected").val()});
+        });
     });
 </script>
 #end def

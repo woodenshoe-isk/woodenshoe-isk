@@ -9,14 +9,14 @@ from etc import db_col_password as password
 
 class SpecialOrder( SQLObjectWithFormGlue ):
     _connection = db.conn()
-    _aes = AES.new( password + (16- (len(password[0:16])))*'{', AES.MODE_CBC, '0'*16) 
+    _aes = AES.new( password + (16- (password.__len__() % 16))*'{', AES.MODE_CBC) 
     
     class sqlmeta:
         fromDatabase=True
         
-    dateOrdered=DateCol(default=now)
-    titles = RelatedJoin('Title', intermediateTable='title_special_order',createRelatedTable=False)    
-    title_pivots = MultipleJoin('TitleSpecialOrder')
+    orderedWhen=DateCol(default=now)
+    status=EnumCol( enumValues = (u'PENDING', u'ORDERED', u'ON HOLD', u'UNAVAILABLE', u'SOLD', u'RETURNED TO SHELVES'), default = u'PENDING')
+    title = ForeignKey('Title')
     
     def _get_contactInfo(self):
         return self._SO_get_contactInfo()

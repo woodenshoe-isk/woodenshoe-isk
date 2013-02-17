@@ -31,8 +31,6 @@
 
                     //add item to special order, and update page
                     special_order_args={'item':JSON.stringify(item), 'specialOrderID':jQuery('#special_order_id').text()};
-                    alert(special_order_args);
-                    jQuery.get('/add_to_special_order');
                     jQuery.post('/add_to_special_order', special_order_args);
                     
                     //go back to special order edit page, success or not.

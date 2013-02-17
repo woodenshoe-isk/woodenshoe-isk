@@ -53,21 +53,11 @@ class Book(SQLObjectWithFormGlue):
 
     def change_status(self,new_status):
         self.status=new_status
-    
+
     def _set_status(self, value):
         if value in ('SOLD', 'DELETED'):
             self.sold_when=now()
         elif value == 'STOCK':
             self.sold_when=self.inventoried_when
         self._SO_set_status(value)
-
-   
-    def _set_status(self, value):
-        if value in ('SOLD', 'DELETED'):
-            self.sold_when=now()
-        elif value == 'STOCK':
-            self.sold_when=self.inventoried_when
-        self._SO_set_status(value)
-
-
 

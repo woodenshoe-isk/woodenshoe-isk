@@ -1,3 +1,4 @@
+
 ##edit information for a particular title
 ##linked classes, like author and book appear and
 ##are editable by links to thier own templates
@@ -12,13 +13,9 @@
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
                 alert(textStatus);
                 alert(errorThrown);
-                alert(XMLHttpRequest.responseText);          
+                alert(XMLHttpRequest.responseText);
+          
         }});
-
-        //enable autocomplete for title
-        jQuery('#id_booktitle').autocomplete({
-            source: 'title_autocomplete',
-        });   
         
         jQuery('.print_link').bind('click', function() {
             jQuery.get(jQuery(this)[0].href);
@@ -42,10 +39,10 @@ $title.object_to_form
 
 ##show the author records with button to edit each author record
 <h2>Author(s):</h2>
+<!-- 11/10/2008 john fixed manually -->
 #for $a in $title.author
 <div><span>$a.authorName</span><a class="listinglink" href="/authoredit?id=$a.id&title_id=$title.id&new_author=False">edit</a><a class="listinglink" href="/titleedit?id=$title.id&author_id=$a.id&remove_author=True&new_author=False">remove</a></div>
 #end for
-<div><a class="listinglink" href="/authoredit?title_id=$title.id&new_author=True">new author</a></div>
 
 ##show records for each individual copy.
 ##each is editable in a book edit template

@@ -5,7 +5,7 @@
 #extends Skeleton
 
 #def pagetitle
-Special Orders
+Search the inventory
 #end def
 
 #def headscripts
@@ -55,9 +55,7 @@ Special Orders
 #end def
 
 #def body
-<button id='new_special_order' class='new_special_order'><h2>New Special Order</h2></button></br>
-
-<h1>Search Special Orders</h1>
+<h1>Special Orders</h1>
 
 <form id="search_form" method="get" action="/special_order_list"
 #if not($empty)
@@ -95,6 +93,7 @@ selected="true"
 <br />
 </form>
 
+<button id='new_special_order' class='new_special_order'>New Order</button></br>
 <table class="sortable" id="results_table" >
 <colgroup class="title_id">
 <thead>
@@ -116,17 +115,24 @@ selected="true"
         <td>$s.customerPhoneNumber</td>
         <td>$s.customerEmail</td>
         <td>
-            <ul class=special_order_list>
-                #for t in $s.titles
-                    <li>
-                        <ul>
-                            <li>$t.isbn</li>
-                            <li>$t.booktitle</li>
-                            <li>$t.authors_as_string</li>
-                        </ul>
-                    </li>
-                #end for
-            </ul>
+            <table>
+                <tbody>
+                    #for t in $s.titles
+                        <tr><td>$t.isbn&</td><td>$t.booktitle</td><td>$t.authors_as_string</td></tr>
+                    #end for
+                </tbody>
+            </table>
+##              #try
+##                <ul>
+##                    #for t in $s.titles
+##                        <li>
+##                            <pre>$t.isbn&#09;$t.booktitle&#09;$t.authors_as_string</pre>
+##                        </li>
+##                    #end for     
+##                </ul>
+##            #except
+##                
+##            #end try
         </td>
         <td>$s.id</td>
     </tr>

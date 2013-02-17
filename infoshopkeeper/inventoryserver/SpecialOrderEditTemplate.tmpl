@@ -22,7 +22,7 @@
         
         //add validator
         jQuery('form').validate();
-        
+
         var dlg=jQuery('#new_special_order_dialog').dialog( {
             autoOpen: false,
             modal: true,
@@ -55,10 +55,7 @@
                         //add item to special order, and update page if it succeeds
                         itemargs={'item':JSON.stringify(inventory_data), 'specialOrderID':jQuery('#sqlobject_id').val()};
                         jQuery.post('/add_to_special_order', itemargs, function(){
-                            console.log(inventory_data);
-                            //special_order_string='<li class=\'special_order_item_list\'><ul><li>' + inventory_data.id + '</li><li>' +inventory_data.isbn + '</li><li>' + inventory_data.title+ + '</li><li>' + inventory_data.authors_as_string + '</li><li><button onclick=\"window.location.href=\'\/special_order_item_edit?id=' + inventory_data.id + '\">edit</button</ul></li>'                         //<li><button onclick=\"window.location.href=\'/special_order_item_edit?id='inventory_data.id'\">edit</button></li></ul></li>';
-                            //jQuery('#special_order_list').append(special_order_string);                           
-                            location.reload();
+                            special_order_string='<pre>' + itemargs.item.isbn + '&#09;' + itemargs.item.booktitle+ + '&#09;' + itemargs.item.authors_as_string + '</pre>'
                             dlg.dialog('close');
                         });
                     }
@@ -184,19 +181,12 @@ $specialorder.object_to_form
 </div>
 
 #if $specialorder.titles
-    <ul id= 'special_order_list' class='special_order_list'>
-        #for $tso in $specialorder.title_pivots
-        <li class='special_order_item_list'>
-            <ul>
-                <li>$tso.id</li>
-                <li>$tso.title.isbn</li>
-                <li>$tso.title.booktitle</li>
-                <li>$tso.title.authors_as_string</li>
-                <li>$tso.orderStatus</li>
-                <li><button onclick="window.location.href='/special_order_item_edit?id=$tso.id'">edit</button></li>
-            </ul>
-        #end for
+    <ul>
+        #for $t in $specialorder.titles
+        <li>
+            <pre>$t.isbn&#09;$t.booktitle&#09;$t.authors_as_string</pre>
         </li>
+        #end for
     </ul>
 #end if
 #end def

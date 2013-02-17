@@ -325,34 +325,21 @@ class inventory:
             return (process_data(a) for a in ecs.ItemSearch(Keywords=authorOrTitle, SearchIndex='Books', ResponseGroup="ItemAttributes,BrowseNodes"))
         
         print>>sys.stderr, 'at ', authorOrTitle
-        iter_array = [database_gen]
-        #test if internet is up
-        try:
-            urllib2.urlopen('http://google.com', timeout=1)
-        except:
-            pass
-        else:
-            iter_array.append(amazon_gen)
-        
-        print>>sys.stderr, "iterarray ", iter_array
+        iter_array = [database_gen, amazon_gen]
         for iter1 in iter_array:
+            #we wrap this in a try statement in case
+            #we don't have internet for the amazon_gen
             try:
                 iter1=iter1(authorOrTitle)
             except IOError as err:
-                print err
-                yield
-            except Exception as err:
-                print err
-                yield
+                pass
             else:
-                print iter1
                 for element in iter1:
                     try:
                         yield element
-                    except IOError:
-                        print err
+                    except:
                         yield
-                    
+
     def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
         print>>sys.stderr, "GOT to addToInventory"
         if known_title:

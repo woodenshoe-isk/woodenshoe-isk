@@ -1,6 +1,6 @@
 from components import db
 from mx import DateTime
-from objects.special_order import SpecialOrder
+from objects.specialorder import SpecialOrder
 from objects.title import Title
 from sqlobject import *
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
