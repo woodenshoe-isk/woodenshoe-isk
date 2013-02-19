@@ -181,7 +181,8 @@ from Skeleton import Skeleton
                                         + ' of this book have been special ordered.'
                                         + 'Please put them aside and attach the special order labels.');
                                 special_orders_to_hold=special_orders.slice(0, num_special_orders_to_hold);
-                                args={'special_orders':special_orders_to_hold, 'status':'ON HOLD SHELF'}
+                                args={special_orders:JSON.stringify(special_orders_to_hold), status:'ON HOLD SHELF'}
+                                console.log(args)
                                 jQuery.post('/set_special_order_item_status', args);
                             }
                                 

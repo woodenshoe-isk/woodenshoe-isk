@@ -988,11 +988,14 @@ class InventoryServer:
     #change status of special order items
     @cherrypy.expose
     def set_special_order_item_status(self, **args):
-        if (args.get('special_orders[]') and args.get('status')):
-            if type(args['special_orders[]']) == type(u''):
-                args['special_orders']=[args['special_orders[]']]
-            for so in args['special_orders[]']:
-                TitleSpecialOrder.get(so).orderStatus=args['status']
+        print>>sys.stderr, "set_spec_order_args", args
+        if (args.get('special_orders') and args.get('status')):
+            special_orders=json.loads(args.get('special_orders'))
+            print>>sys.stderr, special_orders
+            if type(special_orders) == type(u''):
+                special_orders=[special_orders]
+            for so in special_orders:
+                TitleSpecialOrder.get(int(so)).orderStatus=args['status']
                 
     #wrapper to inventory.search_inventory
     #looks for an item in database, if we don't have it, 
