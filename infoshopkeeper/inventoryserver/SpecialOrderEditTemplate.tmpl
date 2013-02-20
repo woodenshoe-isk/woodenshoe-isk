@@ -17,11 +17,27 @@
     jQuery(document).ready( function(){
         var inventory_data={};
 
-        //add required class to elements for validator
-        jQuery('#id_customerName, #id_customerEmail, #id_customerPhoneNumber, #id_customOrder').addClass('required')
-        
         //add validator
-        jQuery('form').validate();
+        jQuery('form').validate({
+            rules: {
+                        customerName: {
+                            required: "#id_customerName:blank"
+                        },
+                        customerEmail: {
+                            required: "#id_customerPhoneNumber:blank",
+                            email: true
+                        },
+                        customerPhoneNumber: {
+                            required: "#id_customerEmail:blank",
+                            phoneUS: true
+                        }
+                    },
+            messages:   {
+                customerName: "Customer Name is required",
+                customerEmail: "Customer Email or Phone Number is required",
+                customerPhoneNumber: "Customer Email or Phone Number is required"
+            }
+        });
         
         var dlg=jQuery('#new_special_order_dialog').dialog( {
             autoOpen: false,
@@ -168,6 +184,8 @@ $specialorder.object_to_form
 #if $specialorder.titles
     <h2>Inventoried items special ordered</h2>
 #end if
+
+#if $specialorder.customerName
 <div id='new_special_order_group'>
     <button id='new_special_order_item' class='new_special_order_item'>New Item</button></br>
     <div id='new_special_order_dialog' class='new_special_order_dialog' title='Enter ISBN, Author/Title or Price'>
@@ -182,6 +200,7 @@ $specialorder.object_to_form
             Check the ISBN again or use the search button to search the inventory by attributes.
     </div>
 </div>
+#end if
 
 #if $specialorder.titles
     <ul id= 'special_order_list' class='special_order_list'>
