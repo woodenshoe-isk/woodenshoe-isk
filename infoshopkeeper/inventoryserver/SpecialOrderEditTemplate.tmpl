@@ -20,9 +20,7 @@
         //add validator
         jQuery('form').validate({
             rules: {
-                        customerName: {
-                            required: "#id_customerName:blank"
-                        },
+                        customerName: "required",
                         customerEmail: {
                             required: "#id_customerPhoneNumber:blank",
                             email: true
