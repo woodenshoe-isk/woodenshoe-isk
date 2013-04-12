@@ -1,18 +1,42 @@
-from reportlab import platypus
-from reportlab.graphics.shapes import Drawing
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+from reportlab import rl_config
 from reportlab.graphics import barcode, renderPDF
-from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.pdfbase.pdfmetrics import registerFont
+from reportlab.pdfbase.pdfmetrics import registerFontFamily
+from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.pdfgen import canvas
+
+import tempfile
+import subprocess
+import string
+
+import etc
 
 isbn='9780345497499'
 booktitle='Kraken Kraken Kraken Kraken Kraken'
 author='China Mieville, CHina Mieville, CHinea Miefille'
 price=28
 
-def print_barcode_label(isbn='', booktitle='', author='', price=0):
-    font = 'Courier'
+def print_barcode_label(isbn='', booktitle='', author='', price=0, copies=1):
+    rl_config.warnOnMissingFontGlyphs = 1
+    try:
+        registerFont(TTFont('Courier New', 'Courier New.ttf'))
+        registerFont(TTFont('Courier New Bold', 'Courier New Bold.ttf'))
+        registerFont(TTFont('Courier New Italic', 'Courier New Italic.ttf'))
+        registerFont(TTFont('Courier New Bold Italic', 'Courier New Bold Italic.ttf'))
+        registerFontFamily('Courier New', normal='Courier New', bold='Courier New Bold', italic='Courier New Italic', boldItalic='Courier New Bold Italic')
+    except TTFError:
+        registerFont(TTFont('Courier New', 'Courier_New.ttf'))
+        registerFont(TTFont('Courier New Bold', 'Courier_New_Bold.ttf'))
+        registerFont(TTFont('Courier New Italic', 'Courier_New_Italic.ttf'))
+        registerFont(TTFont('Courier New Bold Italic', 'Courier_New_Bold_Italic.ttf'))
+        registerFontFamily('Courier New', normal='Courier New', bold='Courier New Bold', italic='Courier New Italic', boldItalic='Courier New Bold Italic')
+
+    font = 'Courier New'
     font_size = 9
     format_price='$' + ('%3.2f' % float(unicode(price).strip('$')))
     doc_width = 2.4*inch
@@ -21,6 +45,7 @@ def print_barcode_label(isbn='', booktitle='', author='', price=0):
     column_width = doc_width - 2*margin
     column_height = doc_height - 2*margin
     price_width = stringWidth('$888.88', font, font_size)
+    tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
     
     #breaks string at word boundary which is less than max width in pixels
     def truncate_by_word( booktitle, max_width=0, split_char=' ' ):
@@ -32,7 +57,7 @@ def print_barcode_label(isbn='', booktitle='', author='', price=0):
                 break
         return string.join(title_array, split_char)
     
-    canvas1 = canvas.Canvas('/tmp/test.pdf', (doc_width, doc_height))
+    canvas1 = canvas.Canvas(tmpfile, (doc_width, doc_height))
     #change coordinates so origin is now at left bottom margin corner
     canvas1.translate(margin, margin)
     canvas1.saveState()
@@ -47,10 +72,17 @@ def print_barcode_label(isbn='', booktitle='', author='', price=0):
     text_object.textLine(truncate_by_word(author, max_width=column_width, split_char=','))
     canvas1.drawText(text_object)
     #create barcode and draw it at the origin.
-    barcode1=barcode.createBarcodeDrawing('EAN13', value=isbn, validate=True, width= column_width, height=1.4*inch, humanReadable=True)
+    barcode1=barcode.createBarcodeDrawing('EAN13', value=isbn, validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
     renderPDF.draw(barcode1, canvas1, 0,0)
     canvas1.restoreState()
     canvas1.showPage()
     canvas1.save()
+
+    #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+    print_command_string = string.Template(u"lpr -P $printer -# $numcopies -o media=Custom.175x120 $filename")
+    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'numcopies':copies})
+    print pcs_sub
+    subprocess.check_call( pcs_sub)
+    #tmpfile.unlink(tmpfile.name)
     
 print_barcode_label(isbn=isbn, booktitle=booktitle, author=author, price=price)
