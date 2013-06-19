@@ -79,6 +79,9 @@ from upc import upc2isbn
 
 import etc
 
+import barcodeLabel
+import specialOrderLabel
+
 cfg = configuration()
 
 from MySQLdb import escape_string
@@ -514,21 +517,22 @@ class Admin:
     #prints label for item. needs printer info to be set up in etc.
     @cherrypy.expose
     def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', num_copies=1):
+        barcodeLabel.print_barcode_label(isbn=isbn, booktitle=booktitle, ourprice=ourprice, num_copies=num_copies)
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
         #find out where gs lives on this system; chop off /n
-        p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        gs_location=out.strip()
-        print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
-        if isbn and booktitle and ourprice:
+        #p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
+        #out, err = p.communicate()
+        #gs_location=out.strip()
+        #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+        #if isbn and booktitle and ourprice:
             #print>>sys.stderr, authorstring
             #print>>sys.stderr,  print_command_string.substitute(
             #    {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " ").encode('utf8', 'backslashreplace'), 'authorstring': authorstring.replace("'", " ").encode('utf8', 'backslashreplace'), 'isbn':isbn, 'ourprice':ourprice, 
            #         'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
-            pcs_sub=print_command_string.substitute(
-                {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " "), 'authorstring': authorstring.replace("'", " "), 'isbn':isbn, 'ourprice':ourprice, 
-                    'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
-            subprocess.call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
+            #pcs_sub=print_command_string.substitute(
+            #    {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " "), 'authorstring': authorstring.replace("'", " "), 'isbn':isbn, 'ourprice':ourprice, 
+             #       'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
+            #subprocess.call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
 
 
     #get next isbn in series that we are using for in-house labels`

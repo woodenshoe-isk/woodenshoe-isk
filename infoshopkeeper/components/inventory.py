@@ -168,7 +168,7 @@ class inventory:
                         Format=b.Binding
                     
                     Kind=''
-                    if b.ProductGroup=='Books':
+                    if b.ProductGroup=='Book':
                         Kind='books'
                     elif b.ProductGroup=='Music':
                         Kind='music'

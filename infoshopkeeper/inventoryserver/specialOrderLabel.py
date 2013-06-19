@@ -9,14 +9,16 @@ from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfbase.pdfmetrics import registerFont
 from reportlab.pdfbase.pdfmetrics import registerFontFamily
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.pdfgen import canvas
 from time import strftime
 
-import tempfile
+import etc
+
+import os
 import string
 import subprocess
-
+import tempfile
 isbn='9780345497499'
 booktitle='Kraken'
 author='China Mieville'
@@ -26,15 +28,24 @@ customer_name = 'Markos Kapes'
 customer_phone = '222 222 2222'
 customer_email = 'test@gmail.com'
 
-def print_special_order_label(isbn='', booktitle='', author='', price=0, customer_name='', customer_phone='', customer_email='', num_copies=1):
+def print_special_order_label(isbn='', booktitle='', author='', price=0, customer_name='', customer_phone='', customer_email='', copies=1):
     rl_config.warnOnMissingFontGlyphs = 1
-    registerFont(TTFont('Courier New', 'Courier New.ttf'))
-    registerFont(TTFont('Courier New Bold', 'Courier New Bold.ttf'))
-    registerFont(TTFont('Courier New Italic', 'Courier New Italic.ttf'))
-    registerFont(TTFont('Courier New Bold Italic', 'Courier New Bold Italic.ttf'))
-    registerFontFamily('Courier New', normal='Courier New', bold='Courier New Bold', italic='Courier New Italic', boldItalic='Courier New Bold Italic')
+    try:
+            registerFont(TTFont('Courier New', 'Courier New.ttf'))
+            registerFont(TTFont('Courier New Bold', 'Courier New Bold.ttf'))
+            registerFont(TTFont('Courier New Italic', 'Courier New Italic.ttf'))
+            registerFont(TTFont('Courier New Bold Italic', 'Courier New Bold Italic.ttf'))
+            registerFontFamily('Courier New', normal='Courier New', bold='Courier New Bold', italic='Courier New Italic', boldItalic='Courier New Bold Italic')
+    except TTFError:
+            registerFont(TTFont('Courier New', 'Courier_New.ttf'))
+            registerFont(TTFont('Courier New Bold', 'Courier_New_Bold.ttf'))
+            registerFont(TTFont('Courier New Italic', 'Courier_New_Italic.ttf'))
+            registerFont(TTFont('Courier New Bold Italic', 'Courier_New_Bold_Italic.ttf'))
+            registerFontFamily('Courier New', normal='Courier New', bold='Courier New Bold', italic='Courier New Italic', boldItalic='Courier New Bold Italic')
 
-    font = 'Courier New'
+
+
+    font = 'Courier New Bold'
     font_size = 9
     format_price='$' + ('%3.2f' % float(unicode(price).strip('$')))
     doc_width = 2.4*inch
@@ -96,9 +107,10 @@ def print_special_order_label(isbn='', booktitle='', author='', price=0, custome
     canvas1.save()
     
     #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
-    print_command_string = string.Template(u"open $filename")
-    pcs_sub = print_command_string.substitute({'filename':tmpfile.name})
+    tmpfile.close()
+    print_command_string = string.Template(u"lpr -P $printer -# $numcopies -o media=Custom.175x300 $filename")
+    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer':etc.label_printer_name, 'numcopies':copies})
     subprocess.check_call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
     #tmpfile.unlink(tmpfile.name)
 
-print_special_order_label(isbn=isbn, booktitle=booktitle, author=author, price=price, customer_name=customer_name, customer_phone=customer_phone, customer_email=customer_email)
+#print_special_order_label(isbn=isbn, booktitle=booktitle, author=author, price=price, customer_name=customer_name, customer_phone=customer_phone, customer_email=customer_email)

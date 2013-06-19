@@ -16,12 +16,15 @@ import string
 
 import etc
 
-isbn='9780345497499'
+isbn1='9780345497499'
 booktitle='Kraken Kraken Kraken Kraken Kraken'
 author='China Mieville, CHina Mieville, CHinea Miefille'
-price=28
+ourprice=28
+num_copies=1
 
-def print_barcode_label(isbn='', booktitle='', author='', price=0, copies=1):
+def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, num_copies=1):
+    import sys
+    print>>sys.stderr, type(isbn), type(isbn1), type(booktitle)
     rl_config.warnOnMissingFontGlyphs = 1
     try:
         registerFont(TTFont('Courier New', 'Courier New.ttf'))
@@ -36,15 +39,15 @@ def print_barcode_label(isbn='', booktitle='', author='', price=0, copies=1):
         registerFont(TTFont('Courier New Bold Italic', 'Courier_New_Bold_Italic.ttf'))
         registerFontFamily('Courier New', normal='Courier New', bold='Courier New Bold', italic='Courier New Italic', boldItalic='Courier New Bold Italic')
 
-    font = 'Courier New'
+    font = 'Courier New Bold'
     font_size = 9
-    format_price='$' + ('%3.2f' % float(unicode(price).strip('$')))
+    format_ourprice='$' + ('%3.2f' % float(unicode(ourprice).strip('$')))
     doc_width = 2.4*inch
     doc_height = 2*inch
     margin = 0.1*inch
     column_width = doc_width - 2*margin
     column_height = doc_height - 2*margin
-    price_width = stringWidth('$888.88', font, font_size)
+    ourprice_width = stringWidth('$888.88', font, font_size)
     tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
     
     #breaks string at word boundary which is less than max width in pixels
@@ -64,25 +67,26 @@ def print_barcode_label(isbn='', booktitle='', author='', price=0, copies=1):
     text_object = canvas1.beginText()
     text_object.setFont(font, font_size)
     text_object.setTextOrigin(0, column_height-margin)
-    text_object.textOut( truncate_by_word(booktitle, max_width=(column_width - price_width - margin)))
-    text_object.moveCursor(column_width - price_width, 0)
-    text_object.textLine(unicode(format_price))
+    text_object.textOut( truncate_by_word(booktitle, max_width=(column_width - ourprice_width - margin)))
+    text_object.moveCursor(column_width - ourprice_width, 0)
+    text_object.textLine(unicode(format_ourprice))
     #move cursor permanently moves margin, so we have to move back to zero
     text_object.setXPos( -text_object.getX())
     text_object.textLine(truncate_by_word(author, max_width=column_width, split_char=','))
     canvas1.drawText(text_object)
     #create barcode and draw it at the origin.
-    barcode1=barcode.createBarcodeDrawing('EAN13', value=isbn, validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
+    barcode1=barcode.createBarcodeDrawing('EAN13', value=str(isbn), validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
     renderPDF.draw(barcode1, canvas1, 0,0)
     canvas1.restoreState()
     canvas1.showPage()
     canvas1.save()
 
-    #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
-    print_command_string = string.Template(u"lpr -P $printer -# $numcopies -o media=Custom.175x120 $filename")
-    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'numcopies':copies})
-    print pcs_sub
-    subprocess.check_call( pcs_sub)
-    #tmpfile.unlink(tmpfile.name)
-    
-print_barcode_label(isbn=isbn, booktitle=booktitle, author=author, price=price)
+    #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sourprice='$ourourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+
+    tmpfile.close()
+    print_command_string = string.Template(u"lpr -P $printer -# $numnum_copies -o media=Custom.175x120 $filename")
+    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'numnum_copies':num_copies})
+    result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
+    tmpfile.unlink(tmpfile.name)
+
+#print_barcode_label(isbn=isbn, booktitle=booktitle, author=author, ourprice=ourprice)
