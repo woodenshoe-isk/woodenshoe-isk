@@ -54,7 +54,6 @@ class Book(SQLObjectWithFormGlue):
     def change_status(self,new_status):
         self.status=new_status
 
-
     def _set_status(self, value):
         if value in ('SOLD', 'DELETED'):
             self.sold_when=now()

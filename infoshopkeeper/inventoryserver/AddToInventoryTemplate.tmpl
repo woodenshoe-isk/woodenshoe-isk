@@ -7,24 +7,12 @@ from Skeleton import Skeleton
 <script type="text/javascript">                                         
     var isbnDirty = false;
     jQuery(document).ready(function() {
-        //temporarily use an alert to remind people to check
-        //the special order box
-        alert("Please remember to check the special order box");
-        
         //Ajax setup for error handling
         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
                 alert(textStatus + '\r\r' + errorThrown 
                     + '\r\r' + XMLHttpRequest.responseText);
           
         }});
-
-        jQuery('#title').autocomplete({
-            source: 'title_autocomplete',
-        });   
-
-        jQuery('#authors').autocomplete({
-            source: 'author_autocomplete',
-        });   
         
         jQuery('#add_to_inventory_form').ajaxStart( function() {
             jQuery('input[type=submit]', this).attr('disabled', 'disabled');
@@ -100,7 +88,7 @@ from Skeleton import Skeleton
                 }
                 
                 //use isdirty to avoid infinite loop
-                if (isbnDirty == false) {
+                if (true) {
                     //check database for isbn
                     jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
                         //if success, fill in all the other fields
@@ -126,8 +114,9 @@ from Skeleton import Skeleton
                             } else if ( key == 'known_title') {
                                 jQuery('#known_title').val(value);
                             } else if ( key == 'most_freq_location' ) {
-                                console.log(key, value)
                                 jQuery('#location').val( value );
+                            } else if ( key == 'special_order_pivots' ) {
+                                jQuery( '#special_orders').val( value );
                             }
                         });
                     });
@@ -169,7 +158,6 @@ from Skeleton import Skeleton
             },
             submitHandler: function(form) {
                 try {
-                    
                     jQuery('#add_to_inventory_form').ajaxSubmit({
                         url:'/admin/add_item_to_inventory', 
                         clearForm:false, 
@@ -178,11 +166,26 @@ from Skeleton import Skeleton
                             //add to inventory succeeds
                             
                             //print label if we need to
+                            copies = jQuery('#quantity').val()
                             if (jQuery('#printlabel').is(':checked')) {
-                                total_copies = jQuery('#quantity').val() * jQuery('#num_copies').val()
+                                total_copies = copies * jQuery('#num_copies').val()
                                 jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
                             }                        
-                            //
+                            
+                            //check on special orders
+                            special_orders=jQuery('#special_orders').val().split(',');
+                            num_special_orders_to_hold = copies - Math.max(copies - special_orders.length, 0);
+                            if (num_special_orders_to_hold > 0 ) {
+                                cop_string = num_special_orders_to_hold == 1 ? 'copy':'copies'
+                                alert( num_special_orders_to_hold + ' ' + cop_string
+                                        + ' of this book have been special ordered.'
+                                        + 'Please put them aside and attach the special order labels.');
+                                special_orders_to_hold=special_orders.slice(0, num_special_orders_to_hold);
+                                args={special_orders:JSON.stringify(special_orders_to_hold), status:'ON HOLD SHELF'}
+                                console.log(args)
+                                jQuery.post('/set_special_order_item_status', args);
+                            }
+                                
                             //clear all text fields except price & quantity
                             //set prices & quantity to defaults
                             //leave pulldown menus as they were
@@ -204,16 +207,17 @@ from Skeleton import Skeleton
         });
         
         jQuery('#add_to_inventory_form').bind('reset', function(){
-                    //clear all text fields except price & quantity
-                    //set prices & quantity to defaults
-                    //leave pulldown menus as they were
-                    jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
-                    jQuery('#printlabel').removeAttr('checked');
-                    jQuery("#quantity").val(1);
-                    jQuery("#listprice").val('0.0');
-                    jQuery("#ourprice").val('0.0');
-                    jQuery('#isbn').focus()
-                    isbnDirty=false;
+                
+                //clear all text fields except price & quantity
+                //set prices & quantity to defaults
+                //leave pulldown menus as they were
+                jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                jQuery('#printlabel').removeAttr('checked');
+                jQuery("#quantity").val(1);
+                jQuery("#listprice").val('0.0');
+                jQuery("#ourprice").val('0.0');
+                jQuery('#isbn').focus()
+                isbnDirty=false;
         });
     });
 </script> 
@@ -319,6 +323,7 @@ selected="true"
 </select><br />
 
 <input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
+<input class='textbox' type='hidden' id='special_orders' name='special_orders'/>
 
 <input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
 <br />

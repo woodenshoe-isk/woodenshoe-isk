@@ -3,8 +3,8 @@
 import cherrypy
 import os
 import string
-import sys
 import subprocess
+import sys
 import tempfile
 import uuid
 
@@ -15,7 +15,6 @@ from simplejson import JSONEncoder
 import turbojson
 import json
 from sqlobject.sqlbuilder import *
-from sqlobject.mysql.mysqlconnection import DuplicateEntryError
 
 #Class that manages dictionary of menu items.
 #Format for adding a menu:
@@ -37,14 +36,16 @@ class MenuData:
 
 from components import db
 from components import inventory
-from objects.title import Title
-from objects.book import Book
 from objects.author import Author
+from objects.book import Book
 from objects.category import Category
 from objects.kind import Kind
 from objects.location import Location
-from objects.transaction import Transaction
 from objects.notes import Notes
+from objects.special_order import SpecialOrder
+from objects.title import Title
+from objects.title_special_order import TitleSpecialOrder
+from objects.transaction import Transaction
 from tools.isbn import checkI13, convert
 import tools.isbn as isbnlib
 from IndexTemplate import IndexTemplate
@@ -69,10 +70,17 @@ from CartTemplate2 import CartTemplate2
 from CheckoutTemplate import CheckoutTemplate
 from StaffingCalendarTemplate import StaffingCalendarTemplate
 from AddToInventoryTemplate import AddToInventoryTemplate
+from SpecialOrderEditTemplate import SpecialOrderEditTemplate
+from SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
+from SpecialOrderListTemplate import SpecialOrderListTemplate
+from SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
 from config import configuration
 from upc import upc2isbn
 
 import etc
+
+import barcodeLabel
+import specialOrderLabel
 
 cfg = configuration()
 
@@ -106,7 +114,7 @@ class Noteboard:
     def __init__(self):
         self._notestemplate = NotesTemplate()
         self.menudata=MenuData
-        MenuData.setMenuData({'5':('Notes', '/notes/noteboard', [])}) 
+        MenuData.setMenuData({'6':('Notes', '/notes/noteboard', [])}) 
    
     #handler for noteboard template call   
     @cherrypy.expose
@@ -208,19 +216,19 @@ class Register:
             #print>>sys.stderr, cart, cart['items'], cart['items'][item_index]
         #if so, are there items in it?
         if cart.has_key('items'):
-            #print>>sys.stderr, "has items"
+            print>>sys.stderr, "has items"
             #pop item number n
             cart['items'].pop(item_index)
-            #print>>sys.stderr, cart
+            print>>sys.stderr, cart
         cherrypy.session['cart']=cart
         cherrypy.session.save()
-    
+            
     #ditch the whole cart
     @cherrypy.expose
     def void_cart(self):
         if cherrypy.session.has_key('cart'):
             cherrypy.session['cart']={}
-        cherrypy.session.save()
+        cherrypy.session.save()        
     
     #check out cart
     @cherrypy.expose
@@ -232,6 +240,7 @@ class Register:
             #does it have items?
             if cart.has_key('items'):
                 shouldRaiseException=False
+
                 #make a shallow copy of cart to iterate on
                 #for is a generator, so it gets confused
                 #if you iterate on a list you're removing items from.
@@ -278,6 +287,7 @@ class Register:
                             shouldRaiseException=True
             #it should be zero but just in case
             #there was an error, items with error are still kept
+            print>>sys.stderr, 'cart length is now ', len(cart['items'])
             if cart['items'].__len__()==0:
                 cherrypy.session['cart']={}
             else:
@@ -355,6 +365,7 @@ class Register:
         if authorOrTitle:
             print>>sys.stderr, "in authorOrTitle ", authorOrTitle
             where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (escape_string(authorOrTitle.strip()), escape_string(authorOrTitle.strip())))
+
         #AND all where clauses together
         where_clause=' AND '.join(where_clause_list)
         print>>sys.stderr, 'where clause ', where_clause
@@ -371,8 +382,8 @@ class Register:
     #search by isbn to find item
     @cherrypy.expose
     @cherrypy.tools.jsonify()
-    def get_item_by_isbn(self, **kwargs):
-        print>>sys.stderr, kwargs
+    def get_item_by_isbn(self,   **kwargs):
+        print>>sys.stderr, 'kwargs are', kwargs
         isbn=kwargs.get('isbn', '')
         print>>sys.stderr, isbn
         #strip spaces and quotes from isbn string
@@ -385,12 +396,12 @@ class Register:
         b=[]
         #if we find it search for associated books in stock
         if titlelist:
-            for t1 in titlelist:
-                for b1 in Book.selectBy(titleID=t1.id).filter(Book.q.status=='STOCK'):
-                    b.append(b1)
-            b.sort(key=lambda x: x.inventoried_when)
+            b=Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').orderBy(Book.q.inventoried_when)
+            print>>sys.stderr, b
             if b:
-                return [{'titleID':b[0].title.id, 'booktitle':b[0].title.booktitle, 'isbn':b[0].title.isbn, 'bookID':b[0].id, 'ourprice':b[0].ourprice}]
+                so=[[tso.id, tso.specialOrder.customerName] for tso in b.throughTo.title.throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON HOLD SHELF')]
+                print>>sys.stderr, b, so
+                return [{'titleID':b[0].title.id, 'booktitle':b[0].title.booktitle, 'isbn':b[0].title.isbn, 'bookID':b[0].id, 'ourprice':b[0].ourprice, 'special_orders':so}]
             #if there's no in stock books 
             else:
                 return []
@@ -429,7 +440,7 @@ class Admin:
          
         MenuData.setMenuData({'3': ('Add to Inventory', '/admin/add_to_inventory', [])})
         #notice trac is on here but it's run out of its own wsgi script
-        MenuData.setMenuData({'6':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
+        MenuData.setMenuData({'7':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
                                                    ('Bug Reports/Issues', 'javascript:document.location=&#39http://&#39+document.location.hostname+&#39:8050&#39+&#39/trac/newticket&#39;', []),
                                                  ])})
@@ -506,21 +517,22 @@ class Admin:
     #prints label for item. needs printer info to be set up in etc.
     @cherrypy.expose
     def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', num_copies=1):
+        barcodeLabel.print_barcode_label(isbn=isbn, booktitle=booktitle, ourprice=ourprice, num_copies=num_copies)
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
         #find out where gs lives on this system; chop off /n
-        p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        gs_location=out.strip()
-        print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
-        if isbn and booktitle and ourprice:
+        #p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
+        #out, err = p.communicate()
+        #gs_location=out.strip()
+        #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+        #if isbn and booktitle and ourprice:
             #print>>sys.stderr, authorstring
             #print>>sys.stderr,  print_command_string.substitute(
             #    {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " ").encode('utf8', 'backslashreplace'), 'authorstring': authorstring.replace("'", " ").encode('utf8', 'backslashreplace'), 'isbn':isbn, 'ourprice':ourprice, 
            #         'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
-            pcs_sub=print_command_string.substitute(
-                {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " "), 'authorstring': authorstring.replace("'", " "), 'isbn':isbn, 'ourprice':ourprice, 
-                    'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
-            subprocess.call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
+            #pcs_sub=print_command_string.substitute(
+            #    {'gs_location':gs_location, 'booktitle': booktitle.replace("'", " "), 'authorstring': authorstring.replace("'", " "), 'isbn':isbn, 'ourprice':ourprice, 
+             #       'num_copies':num_copies, 'printer':etc.label_printer_name, 'tmpdir':tempfile.gettempdir()})
+            #subprocess.call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
 
 
     #get next isbn in series that we are using for in-house labels`
@@ -586,6 +598,7 @@ class Admin:
             print>>sys.stderr, 'data modified. new data are ', data
         return [data]
     add_to_inventory.search_isbn=search_isbn
+
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def search_id(self, titleid):
@@ -696,12 +709,16 @@ class InventoryServer:
         self._reportlisttemplate = ReportListTemplate()
         self._reporttemplate = ReportTemplate()
         self._transactionstemplate = TransactionsTemplate()
-     
+        self._special_order_edit_template = SpecialOrderEditTemplate()
+        self._special_order_list_template = SpecialOrderListTemplate()
+        self._special_order_item_edit_template =  SpecialOrderItemEditTemplate()  
+        self._select_special_order_template = SelectSpecialOrderTemplate()
         self.inventory=inventory.inventory()
         self.conn=db.connect()
          
         MenuData.setMenuData({'2': ('Search the Inventory', '/search', [])})
-        MenuData.setMenuData({'4': ('Reports', '/reports',
+        MenuData.setMenuData({'4': ('Special Order', '/special_order_list', [])})
+        MenuData.setMenuData({'5': ('Reports', '/reports',
                                         [(i.metadata['name'], '/report?reportname=' + i.metadata['action'], []) for i in self.reportlist])})
      
     def loadUserByUsername(self, login):
@@ -732,6 +749,13 @@ class InventoryServer:
     def index(self,**args):
         self.common()
         return self._indextemplate.respond()
+     
+    #hook to book edit template
+    @cherrypy.expose
+    def bookedit(self,**args):
+        self.common()
+        self._bookedittemplate.book=Book.form_to_object(Book,args)
+        return self._bookedittemplate.respond()
     
     #data source for jquery autocomplete widget for author field
     @cherrypy.expose
@@ -754,14 +778,9 @@ class InventoryServer:
             results=[ results.booktitle for results in Title.select("title.booktitle RLIKE '%s' LIMIT 20" % term)]
             print>>sys.stderr, results
             return results
-    
-    #hook to book edit template
-    @cherrypy.expose
-    def bookedit(self,**args):
-        self.common()
-        self._bookedittemplate.book=Book.form_to_object(Book,args)
-        return self._bookedittemplate.respond()
      
+    #hook to author edit template
+    @cherrypy.expose
     #hook to author edit template
     @cherrypy.expose
     def authoredit(self,**args):
@@ -772,6 +791,7 @@ class InventoryServer:
         self._authoredittemplate.title_id=args.get('title_id')
         print>>sys.stderr, self._authoredittemplate.title_id
         if args.has_key('id'):
+            self._authoredittemplate.new_author=False
             if not args.get('delete'):
                 print>>sys.stderr, "in edit author", self._authoredittemplate.author
                 try:
@@ -818,8 +838,7 @@ class InventoryServer:
             title.removeAuthor(args.get('author_id'))
         self._titleedittemplate.title=Title.form_to_object(Title,args)
         return self._titleedittemplate.respond()
-        return self._titleedittemplate.respond()
-     
+        
     #hook to title list template
     @cherrypy.expose
     def titlelist(self,**args):
@@ -855,6 +874,148 @@ class InventoryServer:
                 httptools.redirect(cherrypy.session['lastsearch'])  
         except:
             return self._titlelisttemplate.respond()
+    #search for in stock items by attribute
+ 
+    #special order list template
+    @cherrypy.expose
+    def special_order_list(self, customer_name="", customer_phone_number='', customer_email='', title="",sortby="customer_name",isbn="",author="", kind=""):
+        self._special_order_list_template.empty=True
+        self._special_order_list_template.customer_name=customer_name
+        self._special_order_list_template.customer_phone_number=customer_phone_number
+        self._special_order_list_template.customer_email=customer_email
+        self._special_order_list_template.title=title
+        self._special_order_list_template.isbn=isbn
+        self._special_order_list_template.author=author
+        self._special_order_list_template.kinds=list(Kind.select())
+        self._special_order_list_template.kind=kind
+        the_kind=kind
+        if type(the_kind) == type([]):
+            the_kind=the_kind[0]
+        self._special_order_list_template.table_is_form=True
+        
+        titles=[]
+        
+        #used to check that any filtering is done
+        fields=[customer_name, customer_phone_number, customer_email,title,author,isbn,kind]
+        fields_used = [f for f in fields if f != ""]
+        
+        #start out with the join clauses in the where clause list
+        where_clause_list = []
+        clause_tables=['title_special_order', 'title', 'author', 'author_title', ]
+        join_list=[LEFTJOINOn('special_order', 'title_special_order', 'title_special_order.special_order_id=special_order.id'), LEFTJOINOn(None, 'title', 'title.id=title_special_order.title_id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author_title.author_id=author.id')]
+
+        #add filter clauses if they are called for
+        if customer_name:
+            where_clause_list.append("special_order.customer_name RLIKE '%s'" % escape_string(customer_name.strip()))
+        if customer_phone_number:
+            where_clause_list.append("special_order.customer_phone_number RLIKE '%s'" % escape_string(customer_phone_number.strip()))
+        if customer_email:
+            where_clause_list.append("special_order.customer_email RLIKE '%s'" % escape_string(customer_email.strip()))
+        if the_kind:
+            where_clause_list .append("(title.kind_id = '%s' OR title.kind_id IS NULL)" % escape_string(the_kind))
+        if title:
+            where_clause_list.append("title.booktitle RLIKE '%s'" % escape_string(title.strip()))
+        if isbn:
+            where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
+        if author:
+            where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
+        where_clause=None
+        if len(where_clause_list) > 0:
+            #AND all where clauses together
+            where_clause=' AND '.join(where_clause_list)
+        orders=[]
+        #do search. 
+        orders=SpecialOrder.select( where_clause,join=join_list,clauseTables=clause_tables,orderBy=sortby,distinct=True)
+        self._special_order_list_template.orders=orders
+        return self._special_order_list_template.respond()
+        
+    #hook to special order edit template
+    @cherrypy.expose
+    def special_order_edit(self,**args):
+        self.common()
+        self._special_order_edit_template.specialorder=SpecialOrder.form_to_object(SpecialOrder,args)
+        return self._special_order_edit_template.respond()
+        
+    #hook to special order item edit template
+    @cherrypy.expose
+    def special_order_item_edit(self, **args):
+        self._special_order_item_edit_template.special_order_item=TitleSpecialOrder.form_to_object(TitleSpecialOrder, args)
+        return self._special_order_item_edit_template.respond()
+    
+    #hook to select_specialorder template
+    #simple table of results for authorOrTitle search
+    #from database and amazon. Uses inventory.search_by_keyword
+    #which returns an itereator. Only does the first 100 for now.
+    #Hope to figure out how to do a paged ajax call.
+    @cherrypy.expose
+    def select_special_order_search(self, authorOrTitle='', special_order='', **args):
+        #self.common()
+        self._select_special_order_template.authorOrTitle = authorOrTitle
+        self._select_special_order_template.specialOrderID = special_order
+        resultset = self._select_special_order_template.resultset = {}
+        keyword_search_iter = self.inventory.search_by_keyword(authorOrTitle=authorOrTitle)
+        while len(resultset) <20:
+            try:
+                search_result = keyword_search_iter.next()
+                if not resultset.has_key( search_result['isbn'] ):
+                    resultset[search_result['isbn']] = search_result
+            except StopIteration:
+                break
+        return self._select_special_order_template.respond()
+    
+       
+    #add special order.
+    #First we check to see if we know the book
+    #and add it to inventory if we don't;
+    #then we add the book to the special order
+    @cherrypy.expose
+    def add_to_special_order(self, **args):
+        print>>sys.stderr, "in add to spec order", args
+        if args.get('item'):
+            print>>sys.stderr,  args.get('item')
+            item=json.loads(args.get('item'))
+            print>>sys.stderr,  "known_title is", item.get('known_title', '')
+            if item.get('known_title'):
+                print>>sys.stderr, 'know_titles id key is', item.get('known_title')['id']
+            print>>sys.stderr, 'known_title_id is', item.get('known_title_id', '')
+            known_title=''
+            if item.get('known_title_id'):
+                known_title= Title.get( int(item.get('known_title_id')))
+            elif item.get('known_title'):
+                known_title=Title.get(int(item.get('known_title')['id']))
+            else:
+                self.inventory.addToInventory(title=item['booktitle'], authors=item['authors'], isbn=item['isbn'], categories=item['categories'], quantity=0, known_title=known_title, kind_name='kind', types=item['types'])
+                known_title=Title.selectBy(isbn=item['isbn'])
+            TitleSpecialOrder(titleID=known_title.id, specialOrderID=args.get('specialOrderID'))            
+        return
+
+    #change status of special order items
+    @cherrypy.expose
+    def set_special_order_item_status(self, **args):
+        print>>sys.stderr, "set_spec_order_args", args
+        if (args.get('special_orders') and args.get('status')):
+            special_orders=json.loads(args.get('special_orders'))
+            print>>sys.stderr, special_orders
+            if type(special_orders) == type(u''):
+                special_orders=[special_orders]
+            for so in special_orders:
+                TitleSpecialOrder.get(int(so)).orderStatus=args['status']
+                
+    #wrapper to inventory.search_inventory
+    #looks for an item in database, if we don't have it, 
+    #looks in amazon
+    @cherrypy.expose
+    @cherrypy.tools.jsonify()
+    def search_isbn(self, **args):
+        data=self.inventory.lookup_by_isbn(args['isbn'])
+        
+        copies_in_stock = 0
+        if data:
+            d = data.get('known_title')
+            if d:
+                copies_in_stock=d.copies_in_status('STOCK')
+        data['copies_in_stock'] = copies_in_stock
+        return [data]            
      
     #old checkout template
     @cherrypy.expose
@@ -915,9 +1076,7 @@ class InventoryServer:
                 original_title_id=original.titleID
                 howmany=q[1]
                 for copy in list(Book.select(AND(Book.q.titleID==original_title_id,Book.q.status==original_status,Book.q.listprice==original_price)))[0:howmany]:
-                     
                     Book.delete(copy.id)
-                     
             cherrypy.session['quantities']=[]
  
              
@@ -980,7 +1139,6 @@ class InventoryServer:
         cherrypy.session['lastsearch']=False
         self.common()
         cherrypy.session['lastsearch']=cherrypy.url()
-        #print>>sys.stderr, "In SEarch"
  
         self._searchtemplate.empty=True
         self._searchtemplate.title=title
@@ -1043,15 +1201,10 @@ class InventoryServer:
         if tag:
             where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
         if isbn:
-            print>>sys.stderr, 'getting ready to convert'
-            print>>sys.stderr, 'stripped'
             if ( len(isbn)==10 and isbnlib.isValid(isbn)): 
                 isbn=isbnlib.convert(isbn)
-            print>>sys.stderr, 'isbn is ', isbn
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
-            print>>sys.stderr, where_clause_list
         if formatType:
-            #print>>sys.stderr, formatType, formatType.strip(), escape_string(formatType.strip())
             where_clause_list.append("title.type RLIKE '%s'" % escape_string(formatType.strip()))
         if owner:
             where_clause_list.append("book.owner RLIKE '%s'" % escape_string(owner.strip()))
@@ -1072,33 +1225,24 @@ class InventoryServer:
         if id:
             where_clause_list.append("title.id=%s" % escape_string(id))
         where_clause=' AND '.join(where_clause_list)
-        print>>sys.stderr, where_clause
          
         #do search first. Note it currently doesnt let you search for every book in database, unless you use some sort of
         #trick like '1=1' for the where clause string, as the where clause string may not be blank
         titles=[]
         if len(fields_used)>0 or out_of_stock=="yes":
             titles=Title.select( where_clause,join=join_list, orderBy=sortby,clauseTables=clause_tables,distinct=True)
-            print>>sys.stderr, titles.queryForSelect()
-        print>>sys.stderr, "titles ", list(titles)
         #filter for stock status
         if out_of_stock == 'yes':
                     titles = [t for t in titles if t.copies_in_status("STOCK") == 0]
-        #print>>sys.stderr, list(titles)
         #filter on specific numbers in stock
         if stock_less_than != "":
             titles = [t for t in titles if t.copies_in_status("STOCK") <= int(stock_less_than)]
-        #print>>sys.stderr, list(titles)
         if stock_more_than != "":
             titles = [t for t in titles if t.copies_in_status("STOCK") >= int(stock_more_than)]
-        #print>>sys.stderr, list(titles)
         #filter by items sold
         if sold_more_than != "":
             titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
-        #print>>sys.stderr, list(titles)
         self._searchtemplate.titles=titles
-        print>>sys.stderr, list(titles)
-        print>>sys.stderr, self._searchtemplate.titles
         return  self._searchtemplate.respond()            
 
     #old transactions template
@@ -1163,3 +1307,14 @@ class InventoryServer:
             self._reporttemplate.do_query=False
              
         return  self._reporttemplate.respond()
+        
+    @cherrypy.expose
+    def test(self):
+        return '''
+                <link type="text/css" href="/javascript/css/smoothness/jquery-ui-1.8.13.custom.css" rel="Stylesheet" />	
+                <script type='text/javascript' src='/javascript/jquery-1.6.1.min.js'></script>
+                <script type='text/javascript' src='/javascript/jquery.dataTables.js'></script>
+                <script type='text/javascript' src='/javascript/FixedHeader.js'></script>
+                <script type='text/javascript' src='/javascript/jquery-ui-1.9.1.custom/js/jquery-ui-1.9.1.custom.js'></script>
+
+                <body><table class="sortable dataTable" id="message_table" aria-describedby="message_table_info"><thead><tr role="row"><th class="sorting" role="columnheader" tabindex="0" aria-controls="message_table" rowspan="1" colspan="1" style="width: 1004px; " aria-label="Notes&amp;nbsp;&amp;nbsp;&amp;nbsp;: activate to sort column ascending"><a href="#" class="sortheader" onclick="ts_resortTable(this);return false;">Notes<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th></tr></thead><tbody role="alert" aria-live="polite" aria-relevant="all"><tr class="odd"><td class=""><ul><li>Lou</li><li>2012-10-03 12:14:56</li><li>Start at 5469</li></ul></td></tr><tr class="even"><td class=""><ul><li>Lou</li><li>2012-08-12 18:23:29</li><li>Start at 5468</li></ul></td></tr><tr class="odd"><td class=""><ul><li>Zen</li><li>2012-08-07 16:59:43</li><li>Fugazi - Repeater was purchased, marked "REG 5456" on sleeve, in inventory marked "REG 4472"</li></ul></td></tr><tr class="even"><td class=""><ul><li>Zen</li><li>2012-08-05 18:31:55</li><li>Sold a copy of "Soccer vs. the State," which is not listed in ISK --Zen, 8/5/12</li></ul></td></tr><tr class="odd"><td class=""><ul><li>Lou</li><li>2012-07-28 17:09:25</li><li>Start at 5461</li></ul></td></tr><tr class="even"><td class=""><ul><li>test</li><li>2012-07-20 13:57:18</li><li>test</li></ul></td></tr><tr class="odd"><td class=""><ul><li>test</li><li>2012-07-20 13:06:53</li><li>test</li></ul></td></tr><tr class="even"><td class=""><ul><li>Lou</li><li>2012-06-13 17:56:27</li><li>Start at 5360</li></ul></td></tr><tr class="odd"><td class=""><ul><li>Lou</li><li>2012-06-07 15:05:19</li><li>Start at 5348</li></ul></td></tr><tr class="even"><td class=""><ul><li>Lou</li><li>2012-06-07 14:15:19</li><li>CORRECTION:  Start at 5346</li></ul></td></tr></tbody></table></body>'''

@@ -21,15 +21,6 @@ Search the inventory
         var disclosureTriContent = ['<span class="show_hide_disc_triangle ui-state-default ui-corner-all" data-subscript="0"><span class="ui-icon ui-icon-triangle-1-e"></span><span class="text" style="display: block; ">More options...</span></span>',
             '<span class="show_hide_disc_triangle ui-state-default ui-corner-all" data-subscript="1"><span class="ui-icon ui-icon-triangle-1-s"></span><span class="text" style="display: block; ">Fewer options...</span></span>'];
 
-        //enable autocomplete for author/title
-        jQuery('#title').autocomplete({
-            source: 'title_autocomplete',
-        });   
-
-        jQuery('#author').autocomplete({
-            source: 'author_autocomplete',
-        });   
-        
         //start out with .slidingDiv hidden
         jQuery(".slidingDiv").hide();
         jQuery(".show_hide_disc_triangle").show();

@@ -18,7 +18,6 @@ infoshopkeeper/inventoryserver/*Template.py
 infoshopkeeper/inventoryserver/*Template2.py
 infoshopkeeper/inventoryserver/Skeleton.py
 infoshopkeeper/inventoryserver/javascript/*
-
 .DS_Store
 infoshopkeeper/reports/untitled text
 tmp.py
@@ -31,3 +30,7 @@ infoshopkeeper-trac/
 *.log.*
 
 infoshopkeeper/cherrypy_local.conf
+
+/infoshopkeeper/install_superpack.sh
+SpecialOrderItemEdit.py
+/infoshopkeeper/infoshopkeeper.xcworkspace/
