@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ContentFilters</key>
+	<dict/>
+	<key>auto_connect</key>
+	<true/>
+	<key>data</key>
+	<dict>
+		<key>connection</key>
+		<dict>
+			<key>database</key>
+			<string>infoshopkeeper2</string>
+			<key>host</key>
+			<string>woodenshoebooks.dyndns.org</string>
+			<key>kcid</key>
+			<string>1244792286505877888</string>
+			<key>name</key>
+			<string>woodenshoe@woodenshoebooks.dyndns.org</string>
+			<key>rdbms_type</key>
+			<string>mysql</string>
+			<key>ssh_host</key>
+			<string>woodenshoebooks.dyndns.org</string>
+			<key>ssh_keyLocation</key>
+			<string></string>
+			<key>ssh_keyLocationEnabled</key>
+			<integer>0</integer>
+			<key>ssh_port</key>
+			<integer>22</integer>
+			<key>ssh_user</key>
+			<string>woodenshoe</string>
+			<key>sslCACertFileLocation</key>
+			<string></string>
+			<key>sslCACertFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>sslCertificateFileLocation</key>
+			<string></string>
+			<key>sslCertificateFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>sslKeyFileLocation</key>
+			<string></string>
+			<key>sslKeyFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>type</key>
+			<string>SPSSHTunnelConnection</string>
+			<key>useSSL</key>
+			<integer>0</integer>
+			<key>user</key>
+			<string>woodenshoe</string>
+		</dict>
+		<key>session</key>
+		<dict>
+			<key>connectionEncoding</key>
+			<string>utf8</string>
+			<key>contentFilter</key>
+			<dict/>
+			<key>contentPageNumber</key>
+			<integer>1</integer>
+			<key>contentSelectedIndexSet</key>
+			<array>
+				<integer>0</integer>
+			</array>
+			<key>contentSortColIsAsc</key>
+			<true/>
+			<key>contentViewport</key>
+			<string>{{0, 0}, {1151, 591}}</string>
+			<key>isToolbarVisible</key>
+			<true/>
+			<key>table</key>
+			<string>title_special_order</string>
+			<key>view</key>
+			<string>SP_VIEW_CONTENT</string>
+			<key>windowVerticalDividerPosition</key>
+			<real>214</real>
+		</dict>
+	</dict>
+	<key>encrypted</key>
+	<false/>
+	<key>format</key>
+	<string>connection</string>
+	<key>queryFavorites</key>
+	<array/>
+	<key>queryHistory</key>
+	<array>
+		<string>DESCRIBE `special_order`</string>
+		<string>ALTER TABLE special_order MODIFY customer_order TEXT AFTER customer_phone_number</string>
+		<string>ALTER TABLE special_order MODIFY customer_phone_number VARCHAR(32) AFTER customer_name</string>
+		<string>ALTER TABLE special_order MODIFY customer_phone_number VARCHAR(32) AFTER customerName</string>
+		<string>ALTER TABLE special_order MODIFY customerPhoneNumber VARCHAR(32) AFTER customerName</string>
+		<string>SELECT * FROM title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn JOIN book b ON b.title_id=t3.id ORDER BY t3.isbn, t3.id</string>
+		<string>SELECT * FROM title WHERE isbn RLIKE 9781594517655</string>
+		<string>SELECT * FROM title t LEFT JOIN book b ON b.`title_id`= t.id LEFT JOIN `title_special_order` tso ON t.id=tso.title_id WHERE tso.id IS NULL AND b.id IS NULL</string>
+		<string>UPDATE title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn JOIN book b ON b.title_id=t3.id SET b.title_id=subq1.MIN_ID</string>
+		<string>UPDATE title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn JOIN book b ON b.title_id=t3.id SET b.title_id=subq1.MIN_ID ORDER BY t3.isbn, t3.id</string>
+		<string>UPDATE title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn JOIN book b ON b.title_id=t3.id SET b.title_id=subq1.MIN_ID ORDER BY t3.isbn, t3.id SET b.title_id=subq1.MIN_ID</string>
+		<string>UPDATE title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn JOIN book b ON b.title_id=t3.id SET b.title_id=subq1.MIN_IDORDER BY t3.isbn, t3.id SET b.title_id=subq1.MIN_ID</string>
+		<string>UPDATE title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn JOIN book b ON b.title_id=t3.id ORDER BY t3.isbn, t3.id SET b.title_id=subq1.MIN_ID</string>
+		<string>SELECT * FROM title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn ORDER BY t3.isbn, t3.id</string>
+		<string>SELECT * FROM title t3 JOIN (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1 ON t3.isbn=subq1.subisbn</string>
+		<string>SELECT * FROM (SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1</string>
+		<string>SELECT MIN(t1.id) AS MIN_ID, t1.isbn AS subisbn FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id</string>
+		<string>AS MIN_ID, t1.*, t2.* FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.i</string>
+		<string>SELECT * FROM (SELECT MIN(t1.id), t1.isbn AS subisbn AS MIN_ID, t1.*, t2.* FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id) AS subq1</string>
+		<string>SELECT MIN(t1.id) AS MIN_ID, t1.*, t2.* FROM title t1 JOIN title t2 WHERE t1.isbn=t2.isbn AND t1.id != t2.id AND t1.isbn RLIKE '[0-9]{13}' GROUP BY t1.isbn ORDER BY t1.isbn, t1.id</string>
+	</array>
+	<key>rdbms_type</key>
+	<string>mysql</string>
+	<key>rdbms_version</key>
+	<string>5.5.29-0ubuntu0.12.04.1-log</string>
+	<key>version</key>
+	<integer>1</integer>
+</dict>
+</plist>

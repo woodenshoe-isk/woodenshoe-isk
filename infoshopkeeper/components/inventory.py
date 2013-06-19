@@ -3,18 +3,23 @@ import types,string
 
 import ecs
 from etc import amazon_license_key,amazon_secret_key, amazon_associate_tag, default_kind
-from objects.title import Title
-from objects.book import Book
+
 from objects.author import Author
+from objects.book import Book
 from objects.category import Category
 from objects.kind import Kind
 from objects.location import Location
+from objects.title import Title
+from objects.title_special_order import TitleSpecialOrder
+
 import tools.isbn as isbnlib
 from upc import upc2isbn
 
 import sys
 import re
-from sqlobject.sqlbuilder import Field, RLIKE, AND
+
+from sqlobject.sqlbuilder import Field, RLIKE, AND, LEFTJOINOn
+from MySQLdb import escape_string
 
 class inventory:
     def __init__(self):
@@ -61,6 +66,7 @@ class inventory:
                 Manufacturer = the_titles[0].publisher.format()
                 Format=the_titles[0].type.format()
                 Kind=the_titles[0].kind.kindName
+                SpecialOrders=[tso.id for tso in Title.selectBy(isbn=isbn).throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON ORDER')]
                 return {"title":ProductName,
                     "authors":authors,
                     "authors_as_string":authors_as_string,
@@ -70,7 +76,8 @@ class inventory:
                     "isbn":isbn,
                     "format":Format,
                     "kind":Kind,
-                    "known_title": self.known_title}
+                    "known_title": self.known_title,
+                    "special_order_pivots":SpecialOrders}
             else: #we don't have it yet
                 #print "in isbn"
                 sleep(1) # so amazon doesn't get huffy 
@@ -106,7 +113,7 @@ class inventory:
                                 authors.append(getattr(b,x))
                     
 
-                    authors_as_string = string.join(authors,',')
+                    authors_as_string = ', '.join(authors)
  
                     categories_as_string =""
                     
@@ -137,13 +144,10 @@ class inventory:
                         for n in nodeslist:
                             nodes = nodes.union(n)
                         return nodes
+       
 
                     categories=parseBrowseNodes(b.BrowseNodes)
-                    categories_as_string = string.join(categories,',')                   
-
-                    categories=parseBrowseNodes(b.BrowseNodes)
-                    categories_as_string = string.join(categories,',')
-                    #print categories, categories_as_string
+                    categories_as_string = ', '.join(categories)
 
 
                     ProductName=""
@@ -164,7 +168,7 @@ class inventory:
                         Format=b.Binding
                     
                     Kind=''
-                    if b.ProductGroup=='Books':
+                    if b.ProductGroup=='Book':
                         Kind='books'
                     elif b.ProductGroup=='Music':
                         Kind='music'
@@ -180,7 +184,8 @@ class inventory:
                         "isbn":isbn,
                         "format":Format,
                         "kind":Kind,
-                        "known_title": self.known_title}
+                        "known_title": self.known_title,
+                        "special_orders": []}
                 else:
                     return []
                 
@@ -188,93 +193,167 @@ class inventory:
         else:
             return []
         
-    def lookup_by_upc(self,upc):
-
-        if len(upc)>0:
-            #first we check our database
-            titles =  Title.select(Title.q.isbn==upc)
-            #print titles #debug
-            self.known_title= False
-            the_titles=list(titles)
-            if len(the_titles) > 0:
-                self.known_title= the_titles[0]
-                ProductName = the_titles[0].booktitle
-                authors = [x.authorName for x in the_titles[0].authors]
-                authors_as_string = string.join(authors,',')
-                categories = [x.categoryName for x in the_titles[0].categorys]
-                categories_as_string = string.join(categories,',')
-                if len(the_titles[0].books) > 0:
-                    ListPrice = the_titles[0].books[0].listprice
-                else:
-                    ListPrice = 0
-                Manufacturer = the_titles[0].publisher
-                
-            else: #we don't have it yet
-                sleep(1) # so amazon doesn't get huffy 
-                ecs.setLicenseKey(amazon_license_key)
-                ecs.setSecretAccessKey(amazon_secret_key)
-                ecs.setAssociatTag(amazon_associate_tag)
-                pythonItems = ecs.searchByUPC(upc)
-                if pythonItems:
-                    result={}
-                    authors=[]
-                    author_object="none"
-                    categories=[]
-                    b=pythonItems[0]
-                    try:
-                        author_object=b.Artists.Artist
-                    except AttributeError:
-                        author_object="none"
-                    if type(author_object) in types.StringTypes:
-                        authors.append(author_object)
-                    else: 
-                        authors=author_object
-                    authors_as_string = string.join(authors,',')
-
-                    for category in b.BrowseNode:
-                        categories.append(category.BrowseName)
-
-                    categories_as_string = string.join(categories,',')
-                 
-                    ProductName=""
-                    try:
-                        if b.ProductName:
-                            ProductName=b.ProductName
-                    except AttributeError:
-                        x=1
+    def search_by_keyword(self, authorOrTitle=''):
+        def database_gen(authorOrTitle=''):
+            titles=[]
+            
+            #start out with the join clauses in the where clause list
+            where_clause_list = []
+            clause_tables=['book', 'author', 'author_title',]
+            join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id')]
+            
+            #add filter clauses if they are called for
+            where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (escape_string(authorOrTitle.strip()), escape_string(authorOrTitle.strip())))
+            #AND all where clauses together
+            where_clause=' AND '.join(where_clause_list)
+            titles=[]
+            
+            #do search. 
+            titles=Title.select( where_clause,join=join_list,clauseTables=clause_tables,distinct=True)
+            for t1 in titles:
+                yield { "title":t1.booktitle,
+                        'authors':t1.author,
+                        'authors_as_string':t1.authors_as_string(),
+                        'categories_as_string':t1.categories_as_string(),
+                        'list_price':t1.highest_price_book().ourprice,
+                        'publisher':t1.publisher,
+                        'isbn':t1.isbn,
+                        'format': t1.type, 
+                        'kind':t1.kind.kindName,
+                        'known_title':t1}
                         
-                    Manufacturer=""
-                    try:
-                        if b.Manufacturer:
-                            Manufacturer=b.Manufacturer
-                    except AttributeError:
-                        x=1
-
-                    ListPrice=""
-                    try:
-                        if b.ListPrice:
-                            ListPrice=b.ListPrice
-                    except AttributeError:
-                        x=1
-
-                    ReleaseDate=""
-                    try:
-                        if b.ReleaseDate:
-                            ReleaseDate=b.ReleaseDate
-                    except AttributeError:
-                        x=1
+        def amazon_gen(authorOrTitle=''):
+            sleep(1) # so amazon doesn't get huffy 
+            ecs.setLicenseKey(amazon_license_key)
+            ecs.setSecretAccessKey(amazon_secret_key)
+            ecs.setAssociateTag(amazon_associate_tag)
+            
+            iter1 = ecs.ItemSearch(Keywords='python', SearchIndex='Books', ResponseGroup="ItemAttributes,BrowseNodes")
+            #iter1=xrange(0,20)
+            def process_data(data):
+                result={}
+                authors=[]
+                categories=[]
+        
+                for x in ['Author','Creator', 'Artist', 'Director']:
+                    if hasattr(data,x):
+                        if type(getattr(data,x))==type([]):
+                            authors.extend(getattr(data,x))
+                        else:
+                            authors.append(getattr(data,x))
+                
+        
+                authors_as_string = ', '.join(authors)
+        
+                categories_as_string =""
+                
+                # a bit more complicated of a tree walk than it needs be.
+                # set up to still have the option of category strings like "history -- us"
+                # switched to sets to quickly remove redundancies.
+                def parseBrowseNodes(bNodes):
+                    def parseBrowseNodesInner(item):
+                        bn=set()
+                        if hasattr(item, 'Name'):
+                            bn.add(item.Name)
+                        if hasattr(item, 'Ancestors'):
+                            #print "hasansc"   
+                            for i in item.Ancestors:
+                                bn.update(parseBrowseNodesInner(i))
+                        if hasattr(item, 'Children'):
+                            for i in item.Children:
+                                bn.update(parseBrowseNodesInner(i))
+                                #print "bn ", bn
+                        if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
+                            if hasattr(item, 'Name'):
+                                return set([item.Name])
+                            else:
+                                return set()
+                        return bn
+                    nodeslist=[parseBrowseNodesInner(i) for i in bNodes ]
+                    nodes=set()
+                    for n in nodeslist:
+                        nodes = nodes.union(n)
+                    return nodes
+        
+        
+                categories=parseBrowseNodes(data.BrowseNodes)
+                categories_as_string = ', '.join(categories)
+        
+        
+                ProductName=""
+                if hasattr(data,'Title'):
+                    ProductName=data.Title
+        
                     
-            return {"title":ProductName,
+                Manufacturer=""
+                if hasattr(data,'Manufacturer'):
+                    Manufacturer=data.Manufacturer
+        
+                ListPrice=""
+                if hasattr(data,'ListPrice'):
+                    ListPrice=data.ListPrice.FormattedPrice.replace("$",'')
+        
+                Format=''
+                if hasattr(data, "Binding"):
+                    Format=data.Binding
+                
+                ISBN=''
+                if hasattr(data, "ISBN"):
+                    ISBN=data.ISBN
+                elif hasattr(data, "EAN"):
+                    ISBN=data.EAN
+                    
+                Kind=''
+                if data.ProductGroup=='Books':
+                    Kind='books'
+                elif data.ProductGroup=='Music':
+                    Kind='music'
+                elif data.ProductGroup in ('DVD', 'Video'):
+                    Kind='film'
+                
+                return {"title":ProductName,
                     "authors":authors,
                     "authors_as_string":authors_as_string,
                     "categories_as_string":categories_as_string,
                     "list_price":ListPrice,
                     "publisher":Manufacturer,
-                    "isbn":upc,
-                    "known_title": self.known_title}
-
-
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False):
+                    "isbn":ISBN,
+                    "format":Format,
+                    "kind":Kind,
+                    "known_title": None,}
+        
+            return (process_data(a) for a in ecs.ItemSearch(Keywords=authorOrTitle, SearchIndex='Books', ResponseGroup="ItemAttributes,BrowseNodes"))
+        
+        print>>sys.stderr, 'at ', authorOrTitle
+        iter_array = [database_gen]
+        #test if internet is up
+        try:
+            urllib2.urlopen('http://google.com', timeout=1)
+        except:
+            pass
+        else:
+            iter_array.append(amazon_gen)
+        
+        print>>sys.stderr, "iterarray ", iter_array
+        for iter1 in iter_array:
+            try:
+                iter1=iter1(authorOrTitle)
+            except IOError as err:
+                print err
+                yield
+            except Exception as err:
+                print err
+                yield
+            else:
+                print iter1
+                for element in iter1:
+                    try:
+                        yield element
+                    except IOError:
+                        print err
+                        yield
+                    
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
         print>>sys.stderr, "GOT to addToInventory"
         if known_title:
             print>>sys.stderr, "known_title ", known_title
@@ -327,8 +406,6 @@ class inventory:
 #               b.extracolumns()
 #~ #               for mp in extra_prices.keys():
 #                   setattr(b,string.replace(mp," ",""),extra_prices[mp])
-
-
 
                 
     def getInventory(self,queryTerms):
@@ -390,8 +467,7 @@ class inventory:
             books=Book.select(
                 string.join([term for term in [statusSelect,titleSelect,authorSelect,kindSelect,categorySelect] if term !=""]," AND "),
                 clauseTables=clauseTables   )
-            
-        
+
         results={}
         i=1
         for b in books:
@@ -411,26 +487,6 @@ class inventory:
                         b.title.kind and b.title.kind.kindName if b.title.kind is not None else '',
             categoryString,
             b.title.type if b.title.type is not None else '')
-        #~ for b in books:
-            #~ theTitle=b.title.booktitle.format()
-            #~ authorString=string.join([a.authorName.format() for a in b.title.author],",")
-            #~ categoryString=string.join([c.categoryName.format() for c in b.title.categorys],",")
-            #~ results[i]=(string.capitalize(theTitle),
-                        #~ authorString, 
-                        #~ b.listprice  if b.listprice is not None else '',
-                        #~ b.title.publisher.format() if b.title.publisher is not None else '',
-                        #~ b.status.format() if b.status is not None else'',
-                        #~ b.title.isbn,
-                        #~ b.distributor.format() if b.distributor is not None else '',
-            #~ b.location.locationName.format() if b.location is not None else '',
-                        #~ b.notes.format() if b.notes is not None else '',
-                        #~ b.id,
-                        #~ b.title.kind and b.title.kind.kindName if b.title.kind is not None else '',
-            #~ categoryString,
-            #~ b.title.type if b.title.type is not None else '')
-
-            i=i+1                
-        #print "results are ", results
         return results
 
     

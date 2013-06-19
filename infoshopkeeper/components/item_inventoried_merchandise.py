@@ -98,7 +98,7 @@ class inventoried_merchandise:
             owner=self.book.owner
         except:
             cfg = configuration()
-            owner = cfg.get("default_owner")
+	    owner = cfg.get("default_owner")
         cursor.execute ("""
         INSERT INTO transactionLog SET
         action = "SALE",
