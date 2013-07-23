@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+import barcode_monkeypatch
 
 from reportlab import rl_config
 from reportlab.graphics import barcode, renderPDF
@@ -22,7 +23,7 @@ author='China Mieville, CHina Mieville, CHinea Miefille'
 ourprice=28
 num_copies=1
 
-def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, num_copies=1):
+def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=0, num_copies=1):
     import sys
     print>>sys.stderr, type(isbn), type(isbn1), type(booktitle)
     rl_config.warnOnMissingFontGlyphs = 1
@@ -60,13 +61,22 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, num_copies
                 break
         return string.join(title_array, split_char)
     
+    saleBanner=False
+    if float(unicode(ourprice).strip('$')) < float(unicode(listprice).strip('$')):
+        saleBanner=True
+        doc_height = doc_height + font_size*1.5
+        column_height = doc_height -2*margin
+
     canvas1 = canvas.Canvas(tmpfile, (doc_width, doc_height))
     #change coordinates so origin is now at left bottom margin corner
     canvas1.translate(margin, margin)
     canvas1.saveState()
     text_object = canvas1.beginText()
-    text_object.setFont(font, font_size)
     text_object.setTextOrigin(0, column_height-margin)
+    if saleBanner==True:
+        text_object.setFont(font, font_size+2)
+        text_object.textLine("SALE! SALE! SALE! SALE!")
+    text_object.setFont(font, font_size)
     text_object.textOut( truncate_by_word(booktitle, max_width=(column_width - ourprice_width - margin)))
     text_object.moveCursor(column_width - ourprice_width, 0)
     text_object.textLine(unicode(format_ourprice))
@@ -74,19 +84,26 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, num_copies
     text_object.setXPos( -text_object.getX())
     text_object.textLine(truncate_by_word(author, max_width=column_width, split_char=','))
     canvas1.drawText(text_object)
+    
+    price_string='5999'
+    if 0 <= float(unicode(ourprice).strip('$')) < 100:
+        price_string='5' + ('%3.2f' % float(unicode(ourprice).strip('$'))).replace('.', '')[-4:]
+        
     #create barcode and draw it at the origin.
-    barcode1=barcode.createBarcodeDrawing('EAN13', value=str(isbn), validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
+    barcode1=barcode.createBarcodeDrawing('EAN13EXT5', value=str(isbn + price_string), validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
     renderPDF.draw(barcode1, canvas1, 0,0)
     canvas1.restoreState()
     canvas1.showPage()
     canvas1.save()
 
-    #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sourprice='$ourourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
-
+    #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sourprice='$ourourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+    print tmpfile.name
     tmpfile.close()
-    print_command_string = string.Template(u"lpr -P $printer -# $numnum_copies -o media=Custom.175x120 $filename")
-    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'numnum_copies':num_copies})
+#   print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o media=Custom.175x120 $filename")
+    print_command_string = string.Template(u"open $filename")
+    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'num_copies':num_copies})
     result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
-    tmpfile.unlink(tmpfile.name)
+    #tmpfile.unlink(tmpfile.name)
 
-#print_barcode_label(isbn=isbn, booktitle=booktitle, author=author, ourprice=ourprice)
+def test_label():
+    print_barcode_label(isbn=isbn1, booktitle=booktitle, author=author, ourprice=ourprice, listprice=ourprice)

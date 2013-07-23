@@ -1,16 +1,17 @@
-from sqlobject import *
 from formencode import htmlfill
 from datetime import date
 from importlib import import_module
 import sys
 import operator
-
+from sqlobject import *
 
 class SQLObjectWithFormGlue(SQLObject):
     _cacheValues=False
     _cols=None
     _make_multiline_length=128
     _multiline_rows=5
+    
+    readOnlyColumns = ()
     
     def form_to_object(myClass,formdata):
         try:
@@ -26,17 +27,28 @@ class SQLObjectWithFormGlue(SQLObject):
                 raise NameError("Class has neither meta.columnList nor _columns attribute")
         for col in cols:
             try:
-                value=formdata[col.name]
-                if type(col) == SODateTimeCol:
-                    if len(value)==10:
-                        value=date(int(value[0:4]),int(value[5:7]),int(value[8:10]))
+                if col.name not in obj.readOnlyColumns:
+                    value=formdata[col.name]
+                    if type(col) == SODateTimeCol:
+                        if len(value)==10:
+                            value=date(int(value[0:4]),int(value[5:7]),int(value[8:10]))
+                            setattr(obj,col.name,value)
+                        elif len(value) == 0:
+                            value=None
+                            setattr(obj,col.name,value)
+                    elif type(col) == SODateCol:
+                        if len(value)==10:
+                            value=date(int(value[0:4]),int(value[5:7]),int(value[8:10]))
+                            setattr(obj,col.name,value)
+                        elif len(value) == 0:
+                            value=None
+                            setattr(obj,col.name,value)
+                    else:
+                        if type(col) == SOFloatCol:
+                            value=float(value)
+                        if type(col) == SOForeignKey or type(col) == SOIntCol:
+                            value=int(value)
                         setattr(obj,col.name,value)
-                else:
-                    if type(col) == SOFloatCol:
-                        value=float(value)
-                    if type(col) == SOForeignKey or type(col) == SOIntCol:
-                        value=int(value)
-                    setattr(obj,col.name,value)
             except KeyError as e:
                 pass
     
@@ -44,8 +56,12 @@ class SQLObjectWithFormGlue(SQLObject):
     form_to_object=staticmethod(form_to_object)
 
     
-    def object_to_form(self):
-        def handleForeignKey(col):
+    def object_to_form(self, **kwargs):
+        def handleForeignKey(col, readOnly=False):
+            if readOnly:
+                readOnlyFragment = "disabled='disabled'"
+            else:
+                readOnlyFragment = ""
             colName=col.joinName
             # eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
             #print "passed eval"
@@ -58,7 +74,7 @@ class SQLObjectWithFormGlue(SQLObject):
             if self.sortTheseKeys:
                 #pass
                 toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
-            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
+            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox' %s>" %(colName,colName, readOnlyFragment)
             for o in toObjects:
                 equals_fragment=""
                 try:
@@ -72,8 +88,12 @@ class SQLObjectWithFormGlue(SQLObject):
             form_fragment=form_fragment+"</SELECT><br />"
             return form_fragment
 
-        def handleEnum(col):
-            form_fragment = "<label class='textbox' for='id_%s'>%s</label><select name='%s' class='textbox'>" % (col.name, col.name, col.name)
+        def handleEnum(col, readOnly=False):
+            if readOnly:
+                readOnlyFragment = "disabled='disabled'"
+            else:
+                readOnlyFragment = ""
+            form_fragment = "<label class='textbox' for='id_%s'>%s</label><select name='%s' class='textbox' %s>" % (col.name, col.name, col.name, readOnlyFragment)
             value=getattr(self, col.name)
             for enumval in col.enumValues:
                 selected_fragment=''
@@ -84,20 +104,24 @@ class SQLObjectWithFormGlue(SQLObject):
             return form_fragment
             
                                            
-        def handleString(col):
+        def handleString(col, readOnly=False):
+            if readOnly:
+                readOnlyFragment = "disabled='disabled'"
+            else:
+                readOnlyFragment = ""
             # look at http://formencode.org/docs/htmlfill.html
             if getattr(col, 'length', 0) < 256:
                 form_fragment = """<label class='textbox' for='id_%s'>
                                      %s
                                    </label>
-                                   <input class='textbox' type='text' name='%s' id='id_%s'/>
-                                   """ % (col.name,col.name,col.name,col.name)
+                                   <input class='textbox' type='text' name='%s' id='id_%s' %s/>
+                                   """ % (col.name, col.name, col.name, col.name, readOnlyFragment)
             else:
                 form_fragment = """<label class='textbox' for='id_%s'>
                                      %s
                                    </label>
-                                   <textarea rows=%s class='textbox' type='text' name='%s' id='id_%s'/>
-                                   """ % (5, col.name,col.name,col.name,col.name)
+                                   <textarea rows=%s class='textbox' type='text' name='%s' id='id_%s' %s/>
+                                   """ % (5, col.name,col.name,col.name,col.name, readOnlyFragment)
                 
             value=getattr(self,col.name)
             if 'tostring' in dir(value):
@@ -109,19 +133,26 @@ class SQLObjectWithFormGlue(SQLObject):
             html_fragment=parser.text()
             return html_fragment+"<br />"
         
-        def handleUnicodeStr(col):
-            return handleString(col)
+        def handleUnicodeStr(col, readOnly=False):
+            return handleString(col, readOnly=readOnly)
     
-        def handleFloat(col):
-            return handleString(col)
+        def handleFloat(col, readOnly=False):
+            return handleString(col, readOnly=readOnly)
     
-        def handleBlob(col):
-            return handleString(col)
+        def handleBlob(col, readOnly=False):
+            return handleString(col, readOnly=readOnly)
     
-        def handleDateTime(col):
-            return handleString(col)
+        def handleDateTime(col, readOnly=False):
+            return handleString(col, readOnly=readOnly)
+
+        def handleDate(col, readOnly=False):
+            return handleString(col, readOnly=readOnly)
 
         formhtml = "<input type='hidden' id='sqlobject_id' name='id' value='%s' />" % (self.id)
+        try:
+            readOnlyColumns=self.__class__.readOnlyColumns
+        except:
+            readOnlyColumns=()
         try:
             cols=self.__class__.__getattribute__(self, 'sqlmeta').columnList
         except:
@@ -130,6 +161,116 @@ class SQLObjectWithFormGlue(SQLObject):
             except:
                 raise NameError("Class has no attribute sqlmeta.columns or _colums")
         for c in cols:
+            if c.name in readOnlyColumns:
+                readOnly=True
+            else:
+                readOnly=False
+            if type(c)==SOStringCol:
+                formhtml = formhtml + handleString(c, readOnly=readOnly)
+            if type(c)==SOUnicodeCol:
+                formhtml = formhtml + handleUnicodeStr(c, readOnly=readOnly)
+            if type(c)==SOBLOBCol:
+                formhtml = formhtml + handleBlob(c, readOnly=readOnly)
+            if type(c)==SOFloatCol:
+                formhtml = formhtml + handleFloat(c, readOnly=readOnly)
+            if type(c)==SODateTimeCol:
+                formhtml = formhtml + handleDateTime(c, readOnly=readOnly)
+            if type(c)==SODateCol:
+                formhtml = formhtml + handleDate(c, readOnly=readOnly)
+            if type(c)==SOEnumCol:
+                formhtml = formhtml + handleEnum(c, readOnly=readOnly)
+            if type(c)==SOForeignKey:
+                try:
+                    if c.joinName in self.listTheseKeys:
+                        formhtml = formhtml + handleForeignKey(c, readOnly=readOnly)
+                except:
+                    pass
+
+
+        formhtml=formhtml+"<input class='submit' type='submit'><br />"
+        return formhtml
+
+    @classmethod
+    def class_to_form(cls, **associatedObjects):
+        def handleForeignKey(col):
+            colName=col.joinName
+            # eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
+            #print "passed eval"
+            #colClass=eval(colName.capitalize())
+            
+            colClass = getattr( import_module('objects.%s'%colName), colName.capitalize())
+            
+            toObjects=list(colClass.select())
+            print toObjects
+            if cls.sortTheseKeys:
+                #pass
+                toObjects.sort(key=operator.attrgetter(cls.sortTheseKeys))
+            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
+            for o in toObjects:
+                equals_fragment=""
+                try:
+                    if o.id==getattr(cls,colName+"ID"):
+                        equals_fragment="SELECTED='true'"
+                    form_fragment=form_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id,equals_fragment,getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
+                
+                except:
+                    import sys
+                    print "Unexpected error:", sys.exc_info()[1]
+            form_fragment=form_fragment+"</SELECT><br />"
+            return form_fragment
+        
+        def handleEnum(col):
+            form_fragment = "<label class='textbox' for='id_%s'>%s</label><select name='%s' class='textbox'>" % (col.name, col.name, col.name)
+            value=getattr(cls, col.name)
+            for enumval in col.enumValues:
+                selected_fragment=''
+                if value==enumval:
+                    selected_fragment= "selected='true'"
+                form_fragment= form_fragment + "<option value='%s' %s>%s</option>" % (enumval, selected_fragment, enumval)
+            form_fragment= form_fragment + "</select><br />"
+            return form_fragment
+        
+        
+        def handleString(col):
+            # look at http://formencode.org/docs/htmlfill.html
+            form_fragment = """<label class='textbox' for='id_%s'>
+                %s
+                </label>
+                <input class='textbox' type='text' name='%s' id='id_%s'/>
+                """ % (col.name,col.name,col.name,col.name)
+            value=getattr(cls,col.name)
+            if 'tostring' in dir(value):
+                value=value.tostring()
+            parser = htmlfill.FillingParser({})
+            parser.feed(form_fragment)
+            parser.close()
+            html_fragment=parser.text()
+            return html_fragment+"<br />"
+        
+        def handleUnicodeStr(col):
+            return handleString(col)
+        
+        def handleFloat(col):
+            return handleString(col)
+        
+        def handleBlob(col):
+            return handleString(col)
+        
+        def handleDateTime(col):
+            return handleString(col)
+        
+        formhtml = "<input type='hidden' name='id' value='%s' />" % ('')
+        print>>sys.stderr, associatedObjects
+        for k,v in associatedObjects.items():
+            formhtml = formhtml + "<input type='hidden' name=%s value='%s' /><br>" % (k, v)
+        try:
+            cols=cls.sqlmeta.columns
+        except:
+            try:
+                cols=cls._columns
+            except:
+                raise NameError("Class has no attribute sqlmeta.columns or _colums")
+        for c in cols.values():
             if type(c)==SOStringCol:
                 formhtml = formhtml + handleString(c)
             if type(c)==SOUnicodeCol:
@@ -144,15 +285,15 @@ class SQLObjectWithFormGlue(SQLObject):
                 formhtml = formhtml + handleEnum(c)
             if type(c)==SOForeignKey:
                 try:
-                    if c.joinName in self.listTheseKeys:
+                    if c.joinName in cls.listTheseKeys:
                         formhtml = formhtml + handleForeignKey(c)
                 except:
                     pass
 
-
         formhtml=formhtml+"<input class='submit' type='submit'><br />"
         return formhtml
 
+    
     def object_to_view(self):
         def handleForeignKey(col):
             colName=col.joinName

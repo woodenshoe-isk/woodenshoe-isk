@@ -21,24 +21,34 @@ import re
 from sqlobject.sqlbuilder import Field, RLIKE, AND, LEFTJOINOn
 from MySQLdb import escape_string
 
-class inventory:
+class inventory(object):
     def __init__(self):
         x=1
+    
        
-        
-    def lookup_by_isbn(self,number):
-        isbn=""
-        number=re.sub("^([\'\"])(.*)\\1$", '\\2', number)
-        #print "number is now: ", number
-        if len(number)>=9:
-            number=re.sub("[-\s]", '', number)
-        #print "number is now: ", number
-        if len(number)==10 and isbnlib.isValid(number):
-            isbn=isbnlib.convert(number)
-
+    @staticmethod
+    def process_isbn(isbn):
+        #only strip quotes if wsr, reg, or consignment number, or none
+        if re.match('^wsr|^reg|^\d{2,4}-\d+|n/a|none', isbn, re.I):
+            isbn = re.sub('[\'\"]', '', isbn)
+            price = None
+        #strip quotes and whitespace. convert isbn10 to isbn13.
+        #split isbn and price if it's an extended isbn
         else:
-            isbn=number
-        #print "NUMBER was " +number+ ",ISBN was "+isbn
+            isbn=re.sub('[\s\'\"-]', '', isbn)
+            price = None
+            #note the checking for the first character of ean5 extension
+            #if it's 5, it means price is in us dollars 0-99.99
+            #otherwise, we need to do price ourself.
+            if len(isbn) in (15,17,18) and isbn[-5] == '5':
+                price = float(isbn[-4:])/100
+                isbn=isbn[:-5]
+            if ( len(isbn)==10 and isbnlib.isValid(isbn)):
+                isbn=isbnlib.convert(isbn)
+        return isbn, price
+
+    def lookup_by_isbn(self,number):
+        isbn, price = self.process_isbn(number)
         if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
             #first we check our database
             titles =  Title.select(Title.q.isbn==isbn)
@@ -411,6 +421,7 @@ class inventory:
     def getInventory(self,queryTerms):
         #print queryTerms
         keys=queryTerms.keys()
+        print "keys are ", keys
         
         isbnSelect=""
         kindSelect=""
@@ -443,7 +454,9 @@ class inventory:
 
 
             if 'isbn' in keys:
-                titleSelect=Book.sqlrepr(AND(Field("book","title_id")==Field("title","id"), Field("title","isbn")==queryTerms["isbn"]))
+                isbn, price = self.process_isbn(queryTerms['isbn'])
+                print "isbn and price are ", isbn, price
+                titleSelect=Book.sqlrepr(AND(Field("book","title_id")==Field("title","id"), Field("title","isbn")==isbn))
 
 
             if 'authorName' in keys:
