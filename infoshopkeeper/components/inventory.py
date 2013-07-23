@@ -3,9 +3,9 @@ import types,string
 
 import ecs
 from etc import amazon_license_key,amazon_secret_key, amazon_associate_tag, default_kind
-
-from objects.author import Author
+from objects.title import Title
 from objects.book import Book
+from objects.author import Author
 from objects.category import Category
 from objects.kind import Kind
 from objects.location import Location
