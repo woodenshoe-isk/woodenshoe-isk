@@ -169,7 +169,7 @@ from Skeleton import Skeleton
                             copies = jQuery('#quantity').val()
                             if (jQuery('#printlabel').is(':checked')) {
                                 total_copies = copies * jQuery('#num_copies').val()
-                                jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
+                                jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(),'listprice':jQuery('#listprice'),'num_copies': total_copies});
                             }                        
                             
                             //check on special orders

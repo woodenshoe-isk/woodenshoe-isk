@@ -45,12 +45,9 @@ $title.object_to_form
 <h2>Author(s):</h2>
 <!-- 11/10/2008 john fixed manually -->
 #for $a in $title.author
-<<<<<<< HEAD
-<div><span>$a.authorName</span><a class="listinglink" href="/authoredit?id=$a.id&title_id=$title.id">edit</a><a class="listinglink" href="/titleedit?id=$title.id&author_id=$a.id&remove_author=True">remove</a></div>
-=======
 <div><span>$a.authorName</span><a class="listinglink" href="/authoredit?id=$a.id&title_id=$title.id&new_author=False">edit</a><a class="listinglink" href="/titleedit?id=$title.id&author_id=$a.id&remove_author=True&new_author=False">remove</a></div>
->>>>>>> 8871e95d39a500d69622fca6e43df20b0ec512e9
 #end for
+<div><a class="listinglink" href="/authoredit?title_id=$title.id&new_author=True">Add Author</a><div>
 
 ##show records for each individual copy.
 ##each is editable in a book edit template
@@ -63,7 +60,7 @@ $title.object_to_form
 <td>
 <ul style='list-style-type:none;'>
 <li><a class="listinglink" href="/bookedit?id=$b.id">edit</a></li>
-<li><a class="listinglink print_link" href='/admin/print_label?booktitle=$b.title.booktitle.replace("'", " ")&isbn=$b.title.isbn&authorstring=$b.title.authors_as_string.replace("'", " ")&ourprice=$b.ourprice'>Print label</li>
+<li><a class="listinglink print_link" href='/admin/print_label?booktitle=$b.title.booktitle.replace("'", " ")&isbn=$b.title.isbn&authorstring=$b.title.authors_as_string.replace("'", " ")&ourprice=$b.ourprice&listprice=$b.listprice'>Print label</li>
 </ul>
 </td>
 <td>

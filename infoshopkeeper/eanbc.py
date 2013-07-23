@@ -192,8 +192,6 @@ class Ean13BarcodeWidget(PlotArea):
         self.value=max(self._digits-len(value),0)*'0'+value[:self._digits]
         for k, v in kw.iteritems():
             setattr(self, k, v)
-        import ipdb
-        ipdb.set_trace()
 
     width = property(lambda self: self.barWidth*(self._nbars-18+self._calc_quiet(self.lquiet)+self._calc_quiet(self.rquiet)))
 
@@ -444,8 +442,9 @@ class Ean5BarcodeWidget(PlotArea):
                 a(self._interdigit_sep)            
     
     def _short_bar(self,i):
-        i += 9 - self._lquiet
-        return self.humanReadable and ((12<i<55) or (57<i<101))
+        return False
+#        i += 9 - self._lquiet
+#        return self.humanReadable and ((12<i<55) or (57<i<101))
     
     def _calc_quiet(self,v):
         if self.quiet:
@@ -519,7 +518,7 @@ class Ean5BarcodeWidget(PlotArea):
         c = s[0]
         w = stringWidth(c,fontName,fontSize)
         x = self.x+barWidth*(self._lquiet-8)
-        y = self.y + 0.2*fth
+        y = self.y + self.barHeight + 0.2*fth
         
     #gAdd(String(x,y,c,fontName=fontName,fontSize=fontSize,fillColor=textColor))
         x = self.x + (33-9+self._lquiet)*barWidth
@@ -568,127 +567,18 @@ class Ean13Ext5BarcodeWidget(PlotArea):
     barStrokeWidth = 0
     x = 0
     y = 0
-    
-    
-    def __init__(self, value='123456789012345678', **kw):
-        import ipdb
-        ipdb.set_trace()
         
+    def __init__(self, value='123456789012345678', **kw):
         for k, v in kw.iteritems():
             setattr(self, k, v)
         ean13 = value[0:12]
         
         self.barcode13=createBarcodeDrawing('EAN13', value=str(ean13), validate=True, width= 1.44*inch, height=1.4*inch, humanReadable=self.humanReadable, fontName=self.fontName)
         ean5 = value[13:18]
-        self.barcode5 = createBarcodeDrawing('EAN5', value=str(ean5), validate=True, width= 0.72*inch, height=1.4*inch, humanReadable=self.humanReadable, fontName=self.fontName)
-        import ipdb
-        ipdb.set_trace()
+        self.barcode5 = createBarcodeDrawing('EAN5', value=str(ean5), validate=True, width= 0.72*inch, height=1.4*inch, barHeight = self.barcode13.height*0.66, humanReadable=self.humanReadable, fontName=self.fontName)
+        self.barcode5.contents[0].barHeight = self.barcode13.contents[0].barHeight - self.fontSize
         self.barcode5.translate(2.8*inch, 0)
  
     def draw(self):
         """Just return a group"""
         return Group(self.barcode13, self.barcode5)
-
-#class Ean13Ext5BarcodeWidget(Ean13BarcodeWidget, Ean5BarcodeWidget):
-#    import reportlab
-#    reportlab.rl_config.shapeChecking = 0
-#    codeName = "EAN13EXT5"
-#    _attrMap = AttrMap(BASE=Ean13BarcodeWidget,
-#                       value = AttrMapValue(nDigits(17), desc='the number'),
-#                       fullvalue = AttrMapValue(nDigits(17), desc='the whole number'),
-#                       )
-#    _nbars=113 + 5 + 65
-#    _digits=17
-#
-#    def draw(self):
-#        self.fullwidth=self.width
-#        self.fullvalue=self.value
-#        self._digits=12
-#        self._attrMap = AttrMap(BASE=Ean13BarcodeWidget,
-#                       value = AttrMapValue(nDigits(12), desc='the number'),
-#                       fullvalue = AttrMapValue(nDigits(17), desc='the whole number'),
-#                        )
-#        self.value=self.fullvalue[0:12]
-#        #self.width=self.fullwidth*0.60
-#        
-#        group1=Ean13BarcodeWidget.draw(self)
-#
-#        _attrMap = AttrMap(BASE=PlotArea,
-#                               value = AttrMapValue(nDigits(5), desc='the number'),
-#                               fontName = AttrMapValue(isString, desc='fontName'),
-#                               fontSize = AttrMapValue(isNumber, desc='font size'),
-#                               x = AttrMapValue(isNumber, desc='x-coord'),
-#                               y = AttrMapValue(isNumber, desc='y-coord'),
-#                               barFillColor = AttrMapValue(isColor, desc='bar color'),
-#                               barHeight = AttrMapValue(isNumber, desc='Height of bars.'),
-#                               barWidth = AttrMapValue(isNumber, desc='Width of bars.'),
-#                               barStrokeWidth = AttrMapValue(isNumber, desc='Width of bar borders.'),
-#                               barStrokeColor = AttrMapValue(isColor, desc='Color of bar borders.'),
-#                               textColor = AttrMapValue(isColor, desc='human readable text color'),
-#                               humanReadable = AttrMapValue(isBoolean, desc='if human readable'),
-#                               quiet = AttrMapValue(isBoolean, desc='if quiet zone to be used'),
-#                               lquiet = AttrMapValue(isBoolean, desc='left quiet zone length'),
-#                               rquiet = AttrMapValue(isBoolean, desc='right quiet zone length'),
-#                               )
-#        _digits=5
-#        _start_right = 5    #for ean-13 left = [0:7] right=[7:13]
-#        _nbars = 65
-#        barHeight = 25.93*mm    #millimeters
-#        barWidth = (37.29/_nbars)*mm
-#        humanReadable = 1
-#        _0csw = 3
-#        _1csw = 9
-#
-#        #Left Hand Digits.
-#        _left = (   ("0001101", "0011001", "0010011", "0111101",
-#                     "0100011", "0110001", "0101111", "0111011",
-#                     "0110111", "0001011",
-#                     ),  #odd left hand digits
-#                 ("0100111", "0110011", "0011011", "0100001",
-#                  "0011101", "0111001", "0000101", "0010001",
-#                  "0001001", "0010111"),  #even left hand digits
-#                 )
-#
-#        _right = ("1110010", "1100110", "1101100", "1000010",
-#                  "1011100", "1001110", "1010000", "1000100",
-#                  "1001000", "1110100")
-#
-#        quiet = 1
-#        rquiet = lquiet = None
-#        _tail = "1011"
-#        _sep = ''
-#        _interdigit_sep = "01"
-#
-#        _lhconvert={
-#            "0": (1,1,0,0,0),
-#            "1": (1,0,1,0,0),
-#            "2": (1,0,0,1,0),
-#            "3": (1,0,0,0,1),
-#            "4": (0,1,1,0,0),
-#            "5": (0,0,1,1,0),
-#            "6": (0,0,0,1,1),
-#            "7": (0,1,0,1,0),
-#            "8": (0,1,0,0,1),
-#            "9": (0,0,1,0,1)
-#        }
-#
-#        fontSize = 8        #millimeters
-#        fontName = 'Helvetica'
-#        textColor = barFillColor = colors.black
-#        barStrokeColor = None
-#        barStrokeWidth = 0
-#        x = 0
-#        y = 0
-#
-#        group2=Ean5BarcodeWidget.draw(self)
-#        import ipdb
-#        ipdb.set_trace()
-#
-#
-#        for i in group2.getContents():
-#            group1.add(i)
-#        return group1
-#
-
-
-        

@@ -15,6 +15,7 @@ from simplejson import JSONEncoder
 import turbojson
 import json
 from sqlobject.sqlbuilder import *
+from sqlobject.dberrors import DuplicateEntryError
 
 #Class that manages dictionary of menu items.
 #Format for adding a menu:
@@ -79,6 +80,7 @@ from upc import upc2isbn
 
 import etc
 
+import barcode_monkeypatch
 import barcodeLabel
 import specialOrderLabel
 
@@ -388,16 +390,28 @@ class Register:
         print>>sys.stderr, isbn
         #strip spaces and quotes from isbn string
         isbn=isbn.replace('\"', '')
-        if ( len(isbn)==10 and isbnlib.isValid(isbn)): 
+        price=0
+        if len(isbn) in (15,17,18) and isbn[-5] == '5':
+            price = float(isbn[-4:])/100
+            isbn=isbn[:-5]
+        if ( len(isbn)==10 and isbnlib.isValid(isbn)):
             isbn=isbnlib.convert(isbn)
-        print>>sys.stderr, isbn
         #search for isbn
         titlelist=list(Title.selectBy(isbn=isbn))
         b=[]
         #if we find it search for associated books in stock
         if titlelist:
-            b=Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').orderBy(Book.q.inventoried_when)
-            print>>sys.stderr, b
+            b1=Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').orderBy(Book.q.inventoried_when)
+
+            #search for book that has the proper price if price is given.
+            #otherwise, fall back to just returning the oldest book.
+            b2=[]
+            if price:
+                b2 =Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').filter(Book.q.ourprice==price).orderBy(Book.q.inventoried_when)
+            if b2 and b2.count():
+                b=b2
+            elif b1.count():
+                b=b1
             if b:
                 so=[[tso.id, tso.specialOrder.customerName] for tso in b.throughTo.title.throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON HOLD SHELF')]
                 print>>sys.stderr, b, so
@@ -516,8 +530,8 @@ class Admin:
          
     #prints label for item. needs printer info to be set up in etc.
     @cherrypy.expose
-    def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', num_copies=1):
-        barcodeLabel.print_barcode_label(isbn=isbn, booktitle=booktitle, ourprice=ourprice, num_copies=num_copies)
+    def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', listprice='0.00', num_copies=1):
+        barcodeLabel.print_barcode_label(isbn=isbn, booktitle=booktitle, ourprice=ourprice, listprice=listprice, num_copies=num_copies)
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
         #find out where gs lives on this system; chop off /n
         #p = subprocess.Popen(["which", "gs"], stdout=subprocess.PIPE)
@@ -781,8 +795,6 @@ class InventoryServer:
      
     #hook to author edit template
     @cherrypy.expose
-    #hook to author edit template
-    @cherrypy.expose
     def authoredit(self,**args):
         print>>sys.stderr, "in  authoredit", args, args.get('id'), args.get('title_id')
         self.common()
@@ -796,29 +808,21 @@ class InventoryServer:
                 print>>sys.stderr, "in edit author", self._authoredittemplate.author
                 try:
                     self._authoredittemplate.author=Author.form_to_object(Author,args)
+                #                 self._authoredittemplate.author.addTitle(Title.get(args['title_id']))
                 except DuplicateEntryError as e:
                     a=Author.selectBy(authorName=args['authorName'])[0]
-                    a.addTitle(Title.get(args['title_id']))
+                    try:
+                        a.addTitle(Title.get(args['title_id']))
+                    except DuplicateEntryError as e:
+                        pass
                     self._authoredittemplate.author=a
-                return self._authoredittemplate.respond()        
+                return self._authoredittemplate.respond()       
             else:
                 Author.delete(args.get('id'))
                 return self._indextemplate.respond()
         elif args.get('new_author'):
             self._authoredittemplate.new_author=True
             self._authoredittemplate.title_id=args.get('title_id')
-
-#             if not self._authoredittemplate.author:
-#                 title=Title.get(args.get('title_id'))
-#                 try:
-#                     self._authoredittemplate.author=Author.form_to_object(Author,args)
-#                 except DuplicateEntryError as e:
-#                     a=Author.selectBy(authorName=args['authorName'])[0]
-#                     a.addTitle(Title.get(args['title_id']))
-#                     self._authoredittemplate.author=a
-#                 print>>sys.stderr, "in new_author", self._authoredittemplate.author
-#                 self._authoredittemplate.author.addTitle(title)
-#                 self._titleedittemplate.title=title
             return self._authoredittemplate.respond()
      
     #hook to category edit template
@@ -1201,8 +1205,7 @@ class InventoryServer:
         if tag:
             where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
         if isbn:
-            if ( len(isbn)==10 and isbnlib.isValid(isbn)): 
-                isbn=isbnlib.convert(isbn)
+            isbn, price=inventory.inventory.process_isbn(isbn)
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
         if formatType:
             where_clause_list.append("title.type RLIKE '%s'" % escape_string(formatType.strip()))
