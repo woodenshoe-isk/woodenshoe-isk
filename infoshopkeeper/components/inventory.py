@@ -164,7 +164,7 @@ class inventory:
                         Format=b.Binding
                     
                     Kind=''
-                    if b.ProductGroup=='Books':
+                    if b.ProductGroup=='Book':
                         Kind='books'
                     elif b.ProductGroup=='Music':
                         Kind='music'
@@ -274,7 +274,7 @@ class inventory:
                     "known_title": self.known_title}
 
 
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False):
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",location_id=0,owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False):
         print>>sys.stderr, "GOT to addToInventory"
         if known_title:
             print>>sys.stderr, "known_title ", known_title
@@ -315,9 +315,13 @@ class inventory:
             for category in categories:
                 Category(categoryName=category.encode("utf8", "backslashreplace"),title=known_title)
         the_locations=list(Location.select(Location.q.locationName==location))
-        location_id=1
-        if the_locations:
+        print>>sys.stderr, 'location is',  location_id, 'of type', type(location_id)
+        if location_id:
+            location_id=int(location_id)
+            print>>sys.stderr, 'location_id', location_id
+        elif the_locations:
             location_id = the_locations[0].id
+            print>>sys.stderr, 'location_id from location', location_id
         if not ourprice:
             ourprice=listprice
         print>>sys.stderr, "about to enter book loop"
