@@ -87,7 +87,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     
     price_string='5999'
     if 0 <= float(unicode(ourprice).strip('$')) < 100:
-        price_string='5' + ('%3.2f' % float(unicode(ourprice).strip('$'))).replace('.', '')[-4:]
+        price_string='5' + ('%3.2f' % float(unicode(ourprice).strip('$'))).replace('.', '').zfill(4)[-4:]
         
     #create barcode and draw it at the origin.
     barcode1=barcode.createBarcodeDrawing('EAN13EXT5', value=str(isbn + price_string), validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
@@ -99,11 +99,11 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sourprice='$ourourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
     print tmpfile.name
     tmpfile.close()
-#   print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o media=Custom.175x120 $filename")
-    print_command_string = string.Template(u"open $filename")
+    print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o media=Custom.175x120 $filename")
+    #print_command_string = string.Template(u"open $filename")
     pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'num_copies':num_copies})
     result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
-    #tmpfile.unlink(tmpfile.name)
+    tmpfile.unlink(tmpfile.name)
 
 def test_label():
     print_barcode_label(isbn=isbn1, booktitle=booktitle, author=author, ourprice=ourprice, listprice=ourprice)

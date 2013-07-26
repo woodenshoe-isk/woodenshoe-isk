@@ -106,10 +106,11 @@ def jsonify_tool_callback(*args, **kwargs):
     cherrypy.response.body=body
 cherrypy.tools.jsonify = cherrypy.Tool('before_finalize', jsonify_tool_callback, priority=30)
 
-#flag for when admin loads.
-#use it to turn on & off printing depending on whether
-#we are local or not. I hate this. Better way?
+#flag for when admin and special_orders load.
+#use it to turn on & off printing and special order checking
+#depending on whether we are local or not. I hate this. Better way?
 admin_loaded = False
+special_order_loaded=False
 
 #Noteboard app
 class Noteboard:
@@ -704,6 +705,147 @@ class Admin:
         self._chooseitemforisbntemplate.titles=titles
         return self._chooseitemforisbntemplate.respond()
         
+class SpecialOrder:
+    
+    def __init__(self):
+        self.current_dir = os.path.dirname(os.path.abspath(__file__))
+        self._special_order_edit_template = SpecialOrderEditTemplate()
+        self._special_order_list_template = SpecialOrderListTemplate()
+        self._special_order_item_edit_template =  SpecialOrderItemEditTemplate()
+        self._select_special_order_template = SelectSpecialOrderTemplate()
+        self.inventory=inventory.inventory()
+        self.conn=db.connect()
+        
+        #let package know special order is loaded
+        special_order_loaded=True
+
+        MenuData.setMenuData({'4': ('Special Order', '/special_order_list', [])})
+
+    #special order list template
+    @cherrypy.expose
+    def special_order_list(self, customer_name="", customer_phone_number='', customer_email='', title="",sortby="customer_name",isbn="",author="", kind=""):
+        self._special_order_list_template.empty=True
+        self._special_order_list_template.customer_name=customer_name
+        self._special_order_list_template.customer_phone_number=customer_phone_number
+        self._special_order_list_template.customer_email=customer_email
+        self._special_order_list_template.title=title
+        self._special_order_list_template.isbn=isbn
+        self._special_order_list_template.author=author
+        self._special_order_list_template.kinds=list(Kind.select())
+        self._special_order_list_template.kind=kind
+        the_kind=kind
+        if type(the_kind) == type([]):
+            the_kind=the_kind[0]
+        self._special_order_list_template.table_is_form=True
+        
+        titles=[]
+        
+        #used to check that any filtering is done
+        fields=[customer_name, customer_phone_number, customer_email,title,author,isbn,kind]
+        fields_used = [f for f in fields if f != ""]
+        
+        #start out with the join clauses in the where clause list
+        where_clause_list = []
+        clause_tables=['title_special_order', 'title', 'author', 'author_title', ]
+        join_list=[LEFTJOINOn('special_order', 'title_special_order', 'title_special_order.special_order_id=special_order.id'), LEFTJOINOn(None, 'title', 'title.id=title_special_order.title_id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author_title.author_id=author.id')]
+        
+        #add filter clauses if they are called for
+        if customer_name:
+            where_clause_list.append("special_order.customer_name RLIKE '%s'" % escape_string(customer_name.strip()))
+        if customer_phone_number:
+            where_clause_list.append("special_order.customer_phone_number RLIKE '%s'" % escape_string(customer_phone_number.strip()))
+        if customer_email:
+            where_clause_list.append("special_order.customer_email RLIKE '%s'" % escape_string(customer_email.strip()))
+        if the_kind:
+            where_clause_list .append("(title.kind_id = '%s' OR title.kind_id IS NULL)" % escape_string(the_kind))
+        if title:
+            where_clause_list.append("title.booktitle RLIKE '%s'" % escape_string(title.strip()))
+        if isbn:
+            where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
+        if author:
+            where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
+        where_clause=None
+        if len(where_clause_list) > 0:
+            #AND all where clauses together
+            where_clause=' AND '.join(where_clause_list)
+        orders=[]
+        #do search.
+        orders=SpecialOrder.select( where_clause,join=join_list,clauseTables=clause_tables,orderBy=sortby,distinct=True)
+        self._special_order_list_template.orders=orders
+        return self._special_order_list_template.respond()
+
+    #hook to special order edit template
+    @cherrypy.expose
+    def special_order_edit(self,**args):
+        self.common()
+        self._special_order_edit_template.specialorder=SpecialOrder.form_to_object(SpecialOrder,args)
+        return self._special_order_edit_template.respond()
+    
+    #hook to special order item edit template
+    @cherrypy.expose
+    def special_order_item_edit(self, **args):
+        self._special_order_item_edit_template.special_order_item=TitleSpecialOrder.form_to_object(TitleSpecialOrder, args)
+        return self._special_order_item_edit_template.respond()
+    
+    #hook to select_specialorder template
+    #simple table of results for authorOrTitle search
+    #from database and amazon. Uses inventory.search_by_keyword
+    #which returns an itereator. Only does the first 100 for now.
+    #Hope to figure out how to do a paged ajax call.
+    @cherrypy.expose
+    def select_special_order_search(self, authorOrTitle='', special_order='', **args):
+        #self.common()
+        self._select_special_order_template.authorOrTitle = authorOrTitle
+        self._select_special_order_template.specialOrderID = special_order
+        resultset = self._select_special_order_template.resultset = {}
+        keyword_search_iter = self.inventory.search_by_keyword(authorOrTitle=authorOrTitle)
+        while len(resultset) <20:
+            try:
+                search_result = keyword_search_iter.next()
+                if not resultset.has_key( search_result['isbn'] ):
+                    resultset[search_result['isbn']] = search_result
+            except StopIteration:
+                break
+        return self._select_special_order_template.respond()
+    
+    
+    #add special order.
+    #First we check to see if we know the book
+    #and add it to inventory if we don't;
+    #then we add the book to the special order
+    @cherrypy.expose
+    def add_to_special_order(self, **args):
+        print>>sys.stderr, "in add to spec order", args
+        if args.get('item'):
+            print>>sys.stderr,  args.get('item')
+            item=json.loads(args.get('item'))
+            print>>sys.stderr,  "known_title is", item.get('known_title', '')
+            if item.get('known_title'):
+                print>>sys.stderr, 'know_titles id key is', item.get('known_title')['id']
+            print>>sys.stderr, 'known_title_id is', item.get('known_title_id', '')
+            known_title=''
+            if item.get('known_title_id'):
+                known_title= Title.get( int(item.get('known_title_id')))
+            elif item.get('known_title'):
+                known_title=Title.get(int(item.get('known_title')['id']))
+            else:
+                self.inventory.addToInventory(title=item['booktitle'], authors=item['authors'], isbn=item['isbn'], categories=item['categories'], quantity=0, known_title=known_title, kind_name='kind', types=item['types'])
+                known_title=Title.selectBy(isbn=item['isbn'])
+            TitleSpecialOrder(titleID=known_title.id, specialOrderID=args.get('specialOrderID'))
+        return
+
+    #change status of special order items
+    @cherrypy.expose
+    def set_special_order_item_status(self, **args):
+        print>>sys.stderr, "set_spec_order_args", args
+        if (args.get('special_orders') and args.get('status')):
+            special_orders=json.loads(args.get('special_orders'))
+            print>>sys.stderr, special_orders
+            if type(special_orders) == type(u''):
+                special_orders=[special_orders]
+            for so in special_orders:
+                TitleSpecialOrder.get(int(so)).orderStatus=args['status']
+
 class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -731,7 +873,6 @@ class InventoryServer:
         self.conn=db.connect()
          
         MenuData.setMenuData({'2': ('Search the Inventory', '/search', [])})
-        MenuData.setMenuData({'4': ('Special Order', '/special_order_list', [])})
         MenuData.setMenuData({'5': ('Reports', '/reports',
                                         [(i.metadata['name'], '/report?reportname=' + i.metadata['action'], []) for i in self.reportlist])})
      
@@ -997,13 +1138,16 @@ class InventoryServer:
     @cherrypy.expose
     def set_special_order_item_status(self, **args):
         print>>sys.stderr, "set_spec_order_args", args
+        if args.get('special_orders', ''):
+            print "special_ordrs", json.loads(args.get('special_orders', ''))
         if (args.get('special_orders') and args.get('status')):
             special_orders=json.loads(args.get('special_orders'))
             print>>sys.stderr, special_orders
             if type(special_orders) == type(u''):
                 special_orders=[special_orders]
             for so in special_orders:
-                TitleSpecialOrder.get(int(so)).orderStatus=args['status']
+                if so:
+                    TitleSpecialOrder.get(int(so)).orderStatus=args['status']
                 
     #wrapper to inventory.search_inventory
     #looks for an item in database, if we don't have it, 
