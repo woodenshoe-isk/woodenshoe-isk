@@ -364,7 +364,7 @@ class inventory(object):
                         print err
                         yield
                      
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="", location_id=0,owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location=1, location_id=0,owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
         print>>sys.stderr, "GOT to addToInventory"
         if known_title:
             print>>sys.stderr, "known_title ", known_title
@@ -404,16 +404,16 @@ class inventory(object):
                 print>>sys.stderr, "mmm... looks like you have multiple author of the sama name in your database..."
             for category in categories:
                 Category(categoryName=category.encode("utf8", "backslashreplace"),title=known_title)
-        the_locations=list(Location.select(Location.q.locationName==location))
-        location_id=1
-        if the_locations:
-            location_id = the_locations[0].id
+        #the_locations=list(Location.select(Location.q.locationName==location))
+        #location_id=1
+        #if the_locations:
+        #    location_id = the_locations[0].id
         if not ourprice:
             ourprice=listprice
         print>>sys.stderr, "about to enter book loop"
         for i in range(int(quantity)): 
             print>>sys.stderr, "book loop"
-            b=Book(title=known_title,status=status.encode("utf8", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=location_id,owner=owner.encode("utf8", "backslashreplace"),notes=notes.encode("utf8", "backslashreplace"),consignmentStatus="")
+            b=Book(title=known_title,status=status.encode("utf8", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location_id=location,owner=owner.encode("utf8", "backslashreplace"),notes=notes.encode("utf8", "backslashreplace"),consignmentStatus="")
 #               b.extracolumns()
 #~ #               for mp in extra_prices.keys():
 #                   setattr(b,string.replace(mp," ",""),extra_prices[mp])

@@ -402,13 +402,13 @@ class Register:
         b=[]
         #if we find it search for associated books in stock
         if titlelist:
-            b1=Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').orderBy(Book.q.inventoried_when)
+            b1=Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').orderBy([-Book.q.ourprice, Book.q.inventoried_when])
 
             #search for book that has the proper price if price is given.
             #otherwise, fall back to just returning the oldest book.
             b2=[]
             if price:
-                b2 =Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').filter(Book.q.ourprice==price).orderBy(Book.q.inventoried_when)
+                b2 =Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').filter(Book.q.ourprice==price).orderBy([-Book.q.ourprice, Book.q.inventoried_when])
             if b2 and b2.count():
                 b=b2
             elif b1.count():
