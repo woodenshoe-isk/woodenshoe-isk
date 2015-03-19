@@ -1,7 +1,11 @@
 ##edit special order items
 
-#from Skeleton import Skeleton
-#extends Skeleton
+#from EditTemplate import EditTemplate
+#extends EditTemplate
+
+#def headscripts
+$EditTemplate.headscripts($self)
+#end def
 
 #def pagetitle
 Editing special order item
@@ -9,7 +13,7 @@ Editing special order item
 
 #def body
 <h1>Edit a special order item</h1>
-<form method="get" action="/special_order_item_edit">
+<form class='editform' method="get" action="/special_order_item_edit">
 $special_order_item.object_to_form
 </form>
 #end def

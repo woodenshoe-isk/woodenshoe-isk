@@ -9,13 +9,13 @@
         jQuery('form:first input:first').focus();    	    
         
         //set up ajax error handling
-        jQuery.ajaxSetup({  'cache':false,
-                            'error':function(XMLHttpRequest,textStatus, errorThrown) {   
-                                alert(textStatus + '\r' +
-                                      errorThrown + '\r' +
-                                      XMLHttpRequest.responseText);
-                            }
-        });
+//         jQuery.ajaxSetup({  'cache':false,
+//                             'error':function(XMLHttpRequest,textStatus, errorThrown) {   
+//                                 alert(textStatus + '\r' +
+//                                       errorThrown + '\r' +
+//                                       XMLHttpRequest.responseText);
+//                             }
+//         });
         
         //populate table with contents of notes table.
         //dataTable does pagination, etc, for free

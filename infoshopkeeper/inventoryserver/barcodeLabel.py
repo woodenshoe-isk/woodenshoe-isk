@@ -96,14 +96,14 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     canvas1.showPage()
     canvas1.save()
 
-    #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sourprice='$ourourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
+    #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sourprice='$ourourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x144' barcode_label.ps 1>&2")
     print tmpfile.name
     tmpfile.close()
-    print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o media=Custom.175x120 $filename")
+    print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o media=Custom.175x145 $filename")
     #print_command_string = string.Template(u"open $filename")
     pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'num_copies':num_copies})
     result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
-    tmpfile.unlink(tmpfile.name)
+#    tmpfile.unlink(tmpfile.name)
 
 def test_label():
     print_barcode_label(isbn=isbn1, booktitle=booktitle, author=author, ourprice=ourprice, listprice=ourprice)

@@ -1,0 +1,19 @@
+##List all kinds.
+##each kind is linked to a kind edit form to edit info.
+
+#from Skeleton import Skeleton
+#extends Skeleton
+
+#def pagetitle
+Kinds
+#end def
+
+#def body
+<h1>Kinds</h1>
+<ul>
+#for $k in $kinds
+<li><a href="/admin/kindedit?id=$k.id">$k.kindName</></li>
+#end for
+</ul>
+<a href="/admin/kindedit">Add a new kind of item</a>
+#end def

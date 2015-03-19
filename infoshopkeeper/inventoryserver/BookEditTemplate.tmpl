@@ -1,6 +1,10 @@
 ##edit book information
-#from Skeleton import Skeleton
-#extends Skeleton
+#from EditTemplate import EditTemplate
+#extends EditTemplate
+
+#def headscripts
+$EditTemplate.headscripts($self)
+#end def
 
 #def pagetitle
 Editing a copy of ${book.title.booktitle}
@@ -8,7 +12,7 @@ Editing a copy of ${book.title.booktitle}
 
 #def body
 <h1>$book.title.booktitle</h1>
-<form method="get" action="/bookedit">
+<form class='editform' method="get" action="/bookedit">
 $book.object_to_form
 </form>
 #end def

@@ -48,7 +48,7 @@ def start_modpython():
     cherrypy.engine.start(blocking=False)
 
 def start_standalone():
-    cherrypy.quickstart(DVD(), config=cherrypy_global_config_file)
+    cherrypy.quickstart(DVD()) #, config=cherrypy_global_config_file)
 
 #
 # If we're not being imported, it means we should be running stand-alone.

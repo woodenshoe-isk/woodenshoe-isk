@@ -4,18 +4,19 @@
 
 #import urllib
 
-#from Skeleton import Skeleton
-#extends Skeleton
+#from EditTemplate import EditTemplate
+#extends EditTemplate
 
 #def headscripts
+$EditTemplate.headscripts($self)
 <script type="text/javascript">                                         
     jQuery(document).ready(function() {
-        //Ajax setup for error handling
-        jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-                alert(textStatus);
-                alert(errorThrown);
-                alert(XMLHttpRequest.responseText);          
-        }});
+//         //Ajax setup for error handling
+//         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
+//                 alert(textStatus);
+//                 alert(errorThrown);
+//                 alert(XMLHttpRequest.responseText);          
+//         }});
 
         //enable autocomplete for title
         jQuery('#id_booktitle').autocomplete({
@@ -36,10 +37,9 @@ Editing ${title.booktitle}
 
 #def body
 <h1>Edit the Information for a Title</h1>
-Remember!! This actually changes the item info in the database.
 
 ##show the title info as editable form
-<form method="get" action="/titleedit">
+<form class='editform' method="get" action="/titleedit">
 $title.object_to_form
 </form>
 

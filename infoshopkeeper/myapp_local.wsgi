@@ -6,7 +6,9 @@ sys.path.append(os.path.dirname(__file__))
 import atexit
 import threading
 import cherrypy
+
 from etc import cherrypy_global_config_file, cherrypy_nonlocal_config_file, cherrypy_local_config_file, cherrypy_config_file
+
 from inventoryserver.server import InventoryServer
 from inventoryserver.server import Register
 from inventoryserver.server import Admin
@@ -32,4 +34,6 @@ root.register=Register()
 
 application = cherrypy.Application(root, script_name=None, config=cherrypy_local_config_file)
 
+if __name__ == '__main__':
+     cherrypy.quickstart(root)
 

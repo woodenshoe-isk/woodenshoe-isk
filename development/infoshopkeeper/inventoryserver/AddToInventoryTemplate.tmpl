@@ -1,0 +1,338 @@
+from Skeleton import Skeleton
+#extends Skeleton
+
+#def headscripts
+<script type="text/javascript" src="/javascript/jquery.form.js"></script>
+<script type="text/javascript" src="/javascript/jquery.validate.min.js"></script>
+<script type="text/javascript">                                         
+    var isbnDirty = false;
+    jQuery(document).ready(function() {
+        //Ajax setup for error handling
+        jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
+                alert(textStatus + '\r\r' + errorThrown 
+                    + '\r\r' + XMLHttpRequest.responseText);
+          
+        }});
+        
+        jQuery('#add_to_inventory_form').ajaxStart( function() {
+            jQuery('input[type=submit]', this).attr('disabled', 'disabled');
+        });
+        
+        jQuery('#add_to_inventory_form').ajaxComplete( function() {
+            jQuery('input[type=submit]', this).removeAttr('disabled');
+        });
+
+        var dlg=jQuery('#isbndialog').dialog({
+            autoOpen: false, 
+            modal: true,
+            open: function(){
+                //set default button on open
+                jQuery('.ui-dialog-buttonset > button').blur();
+                jQuery('.ui-dialog-buttonset > button:last').focus();
+            },
+            buttons: {
+                'Not Use ISBN': function(){
+                    jQuery('#isbn').val( 'N/A' ).blur();
+                    dlg.dialog('close');
+                    jQuery('#printlabel').attr('checked', true);
+                    return false;
+                },
+                'Generate ISBN': function(){
+                    jQuery.ajax({url: '/admin/get_next_unused_local_isbn', 
+                                        success: function(data){
+                                            jQuery('#isbn').val(data).blur();
+                                        },
+                                        async: false,
+                                    });                
+                    dlg.dialog('close');
+                    jQuery('#printlabel').attr('checked', true);
+                    return false;
+                },
+                'Search for ISBN': function(){
+                    window.open('/admin/select_item_for_isbn_search', '_self');
+                    dlg.dialog('close');
+                    return false;
+                },
+            }
+        });
+
+        //give isbn text box cursor focus 
+        jQuery('#isbn').focus();
+
+        //make return go to next text box instead of submit
+        jQuery('.textbox').live('keypress', function(evt) {
+                    if (evt.keyCode == 13||evt.chatCode == 13) {
+                            /* FOCUS ELEMENT */
+                            var inputs = jQuery(this).parents("form").eq(0).find(":input");
+                            var idx = inputs.index(this);
+ 
+                            if (idx == inputs.length - 1) {
+                                inputs[0].select()
+                            } else {
+                                inputs[idx + 1].focus(); //  handles submit buttons
+                                inputs[idx + 1].select();
+                            }   
+                            return false;
+                    }   
+        });
+        
+        //isbn autofill
+        jQuery('#isbn').blur( function() {
+            var isbnstring=jQuery(this).val();
+            if (isbnstring != null) {
+                isbnstring=isbnstring.toLowerCase();
+    
+                //scrub spaces & hyphens if isbn is candidate 'real isbn'
+                if (isbnstring.length>11) {
+                    isbnstring.replace('/[\s-]/g', '');
+                }
+                
+                //use isdirty to avoid infinite loop
+                if (true) {
+                    //check database for isbn
+                    jQuery.getJSON( '/admin/search_isbn', {isbn:isbnstring}, function(data){
+                        //if success, fill in all the other fields
+                        data=data[0]
+                        jQuery.each(data, function(key, value) {
+                            if (key == 'publisher') {
+                                jQuery('#publisher').val(value);
+                            } else if ( key == 'authors_as_string') {
+                                jQuery('#authors').val(value);
+                            } else if ( key == 'categories_as_string') {
+                                jQuery('#categories').val(value);
+                            } else if ( key == 'title') {
+                                jQuery('#title').val(value);
+                            } else if ( key == 'list_price') {
+                                jQuery('#listprice').val(value);
+                                jQuery('#ourprice').val(value);
+                            } else if (key == 'isbn') {
+                                jQuery('#isbn').val(value);
+                            } else if ( key == 'format') {
+                                jQuery('#types').val(value);
+                            } else if (key ==  'kind') {
+                                jQuery('#kind').val(value);
+                            } else if ( key == 'known_title') {
+                                jQuery('#known_title').val(value);
+                            } else if ( key == 'most_freq_location' ) {
+                                jQuery('#location').val( value );
+                            } else if ( key == 'special_order_pivots' ) {
+                                jQuery( '#special_orders').val( value );
+                            }
+                        });
+                    });
+                    isbnDirty = true;
+                }
+            }
+            return false;
+        });
+        
+        //jQuery to make select isbn button clickable link
+        jQuery('#select_isbn_button').click( function(){
+            console.log('in click handler');
+            window.open('/admin/select_item_for_isbn_search', '_self');
+        });
+        
+        //jQuery validate using class 'required' in input fields
+        jQuery('#add_to_inventory_form').validate({
+            onfocusout: true,
+            onblur: true,
+            rules: {
+                isbn: {
+                    required: function(){
+                        //if there is no isbn, ask whether to generate one
+                        //async must be false or it goes on asynchronously
+                        //(remember the a in ajax). If you don't want an isbn,
+                        //it still sets it to 'N/A' so displays don't choke.
+                        if (jQuery( '#isbn' ).val() == '') {
+                            //dlg.dialog('open');
+                            if (dlg.dialog('open')) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+            },
+            submitHandler: function(form) {
+                try {
+                    jQuery('#add_to_inventory_form').ajaxSubmit({
+                        url:'/admin/add_item_to_inventory/', 
+                        clearForm:false, 
+                        type:'post', 
+                        success:function(){
+                            //add to inventory succeeds
+                            
+                            //print label if we need to
+                            copies = jQuery('#quantity').val()
+                            if (jQuery('#printlabel').is(':checked')) {
+                                total_copies = copies * jQuery('#num_copies').val()
+                                jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(), 'num_copies': total_copies});
+                            }                        
+                            
+                            //check on special orders
+                            special_orders=jQuery('#special_orders').val().split(',');
+                            num_special_orders_to_hold = copies - Math.max(copies - special_orders.length, 0);
+                            if (num_special_orders_to_hold > 0 ) {
+                                cop_string = num_special_orders_to_hold == 1 ? 'copy':'copies'
+                                alert( num_special_orders_to_hold + ' ' + cop_string
+                                        + ' of this book have been special ordered.'
+                                        + 'Please put them aside and attach the special order labels.');
+                                special_orders_to_hold=special_orders.slice(0, num_special_orders_to_hold);
+                                args={special_orders:JSON.stringify(special_orders_to_hold), price:jQuery('#ourprice').val(), status:'ON HOLD SHELF'}
+                                console.log(args)
+                                jQuery.post('/check_in_special_order', args);
+                            }
+                                
+                            //clear all text fields except price & quantity
+                            //set prices & quantity to defaults
+                            //leave pulldown menus as they were
+                            jQuery('#add_to_inventory_form input.textbox').not('#distributor, #known_title, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                            jQuery('#printlabel').removeAttr('checked');
+                            jQuery("#quantity").val(1);
+                            jQuery("#listprice").val('0.0');
+                            jQuery("#ourprice").val('0.0');
+                            jQuery("#known_title").val('False');
+                            jQuery('#isbn').focus();
+                            isbnDirty=false;
+                        }
+                    });
+                } finally {
+                    jQuery('#isbn').focus();
+                    return false;
+                }
+            }                 
+        });
+        
+        jQuery('#add_to_inventory_form').bind('reset', function(){
+                
+                //clear all text fields except price & quantity
+                //set prices & quantity to defaults
+                //leave pulldown menus as they were
+                jQuery('#add_to_inventory_form input.textbox').not('#distributor, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
+                jQuery('#printlabel').removeAttr('checked');
+                jQuery("#quantity").val(1);
+                jQuery("#listprice").val('0.0');
+                jQuery("#ourprice").val('0.0');
+                jQuery('#isbn').focus()
+                isbnDirty=false;
+        });
+    });
+</script> 
+#end def
+
+#def pagetitle
+Add item to  inventory
+#end def
+
+#def body
+<h1>Add to Inventory</h1>
+<br />
+<form class="outerform" id="add_to_inventory_form" method="post" //~style="visibility:hidden; display:none">
+
+<label class="textbox" for="isbn">Item ID (UPC or ISBN)</label> 
+<input class="textbox" minlength='1' type="text" id="isbn" name="isbn" value="$isbn" />
+<input type="button" id='select_isbn_button' value='Search for ISBN'><br />
+
+<label class="textbox" for "printlabel"> </label>
+<input type="checkbox" id="printlabel" name="printlabel" 
+#if $printlabel
+checked=true 
+#end if
+value="1" />Print 
+<select class="inline" id="num_copies" name="num_copies">
+#for $i in [1, 2, 3, 4]
+<option value='$i'>$i</option>
+#end for
+</select> barcode label for each copy of this title<br />
+
+<label class="textbox" for "quantity">Quantity</label>
+<input class="textbox required" type="text" id="quantity", name="quantity", value="$quantity"/><br />
+
+<label class="textbox" for="title">Title</label> 
+<input class="textbox required" type="text" id="title" name="title" value="$title" /><br />
+
+<label class="textbox" for="authors">Author</label> 
+<input class="textbox required" type="text" name="authors" id="authors" value="$authors" /><br />
+
+<label class="textbox" for="listprice">List Price</label>
+<input class="textbox required" type="text" name="listprice" id="listprice" value="$listprice" /><br />
+
+<label class="textbox" for="ourprice">Our Price</label>
+<input class="textbox" type="text" name="ourprice" id="ourprice" value="$ourprice" /><br />
+
+<label class="textbox" for="publisher">Publisher</label> 
+<input class="textbox required" type="text" name="publisher" id="publisher" value="$publisher" /><br />
+
+<label class="textbox" for="categories">Keyword</label> 
+<input class="textbox required" type="text" name="categories" id="categories" value="$categories" /><br />
+
+<label class="textbox" for="distributor">Distributor</label> 
+<select class="textbox required" id="distributor"  name="distributor">
+#for $d in $distributors
+<option value='$d' 
+#if "%s" %($d)==$distributor
+selected="true" 
+#end if 
+>$d</option>
+#end for
+</select><br />
+
+<label class="textbox" for="location">Location</label> 
+<select class="textbox required" id="location" name="location">
+<option value=''></option>
+#set $i=0
+#for $loc in $locations
+<option value='$loc.id' 
+#if "%s" %($loc.id)==$location
+selected="true" 
+#end if 
+>$loc.locationName</option>
+#set $i=$i+1
+#end for
+</select><br />
+
+<label class="textbox" for="owner">Owner</label> 
+<input class="textbox" type="text" name="owner" id="owner" value="$owner" /><br />
+
+<label class="textbox" for="tag">Tag</label> 
+<input class="textbox" type="text" id="tag" name="tag" value="$tag" /><br />
+
+<label class="textbox" for="kind">Kind</label> 
+<select class="textbox required" id="kind" name="kind">
+#for $k in $kinds
+<option value='$k.kindName' 
+#if "%s" %($k.id)==$kind  
+selected="true" 
+#end if 
+>$k.kindName</option>
+#end for
+</select><br />
+
+<label class="textbox" for="type">Format</label> 
+<select class="textbox required" id="types" name="types">
+#for $f in $formats
+<option value='$f' 
+#if "%s" %($f)==$format
+selected="true" 
+#end if 
+>$f</option>
+#end for
+</select><br />
+
+<input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
+<input class='textbox' type='hidden' id='special_orders' name='special_orders'/>
+
+<input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
+<br />
+<input class='reset' type='reset' value='Cancel'>
+<br />
+</form>
+<div id='isbndialog' class='isbndialog' title='Alert!'>
+You did not enter an ISBN. If you don't see an ISBN, check inside the book, it may still have one.<br /><br />
+If the book really doesn't have an ISBN, the system can generate one for you (You really checked first though, right?).<br /> <br />
+What would you like to do?
+</div>
+#end def

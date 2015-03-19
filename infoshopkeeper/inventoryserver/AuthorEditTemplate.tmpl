@@ -1,10 +1,11 @@
 ##Edit Author information
 
-#from Skeleton import Skeleton
+#from EditTemplate import EditTemplate
 #from objects.author import Author
-#extends Skeleton
+#extends EditTemplate
 
 #def headscripts
+$EditTemplate.headscripts($self)
 <script type="text/javascript">
     jQuery('#id_authorName').autocomplete({
         source: 'author_autocomplete',
@@ -32,7 +33,7 @@ New author...
 #else
 <h1>New author record</h1>
 #end if
-<form method="get" action="/authoredit">
+<form class='editform' class='editform' method="get" action="/authoredit">
 #if not $new_author
 $author.object_to_form(**{'title_id':$title_id})
 #else

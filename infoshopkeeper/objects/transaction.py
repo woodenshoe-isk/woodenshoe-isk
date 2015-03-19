@@ -4,7 +4,8 @@ import string
 
 from sqlobject import *
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
-from mx.DateTime import now
+import datetime
+now=datetime.datetime.now   
 
 from components import db
 import etc

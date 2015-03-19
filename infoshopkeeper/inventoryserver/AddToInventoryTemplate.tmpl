@@ -3,16 +3,20 @@ from Skeleton import Skeleton
 
 #def headscripts
 <script type="text/javascript" src="/javascript/jquery.form.js"></script>
-<script type="text/javascript" src="/javascript/jquery.validate.min.js"></script>
+<script type="text/javascript" src="/javascript/jquery.validate.js"></script>
 <script type="text/javascript">                                         
     var isbnDirty = false;
     jQuery(document).ready(function() {
-        //Ajax setup for error handling
-        jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-                alert(textStatus + '\r\r' + errorThrown 
-                    + '\r\r' + XMLHttpRequest.responseText);
-          
-        }});
+        //temporarily use an alert to remind people to check
+        //the special order box
+        alert("Please remember to check the special order box");
+            
+//         //Ajax setup for error handling
+//         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
+//                 alert(textStatus + '\r\r' + errorThrown 
+//                     + '\r\r' + XMLHttpRequest.responseText);
+//           
+//         }});
         
         jQuery('#add_to_inventory_form').ajaxStart( function() {
             jQuery('input[type=submit]', this).attr('disabled', 'disabled');
@@ -181,8 +185,8 @@ from Skeleton import Skeleton
                                 special_orders = special_orders.split(",");
                             }
                             num_special_orders_to_hold = copies - Math.max(copies - special_orders.length, 0);
-                            console.log("so" + special_orders);
-                            console.log("numspec" + num_special_orders_to_hold);
+                            console.log("so " + special_orders);
+                            console.log("numspec " + num_special_orders_to_hold);
                             if (num_special_orders_to_hold > 0 ) {
                                cop_string = num_special_orders_to_hold == 1 ? 'copy':'copies'
                                alert( num_special_orders_to_hold + ' ' + cop_string
@@ -197,11 +201,13 @@ from Skeleton import Skeleton
                             //clear all text fields except price & quantity
                             //set prices & quantity to defaults
                             //leave pulldown menus as they were
+                            
+                            console.log("got to zeroing form");
                             jQuery('#add_to_inventory_form input.textbox').not('#distributor, #known_title, #quantity, #location, #owner, #status, #kind_name, #listprice, #ourprice').val('');
                             jQuery('#printlabel').removeAttr('checked');
                             jQuery("#quantity").val(1);
-                            jQuery("#listprice").val('0.0');
-                            jQuery("#ourprice").val('0.0');
+                            jQuery("#listprice").val('0.00');
+                            jQuery("#ourprice").val('0.00');
                             jQuery("#known_title").val('False');
                             jQuery('#isbn').focus();
                             isbnDirty=false;
@@ -333,10 +339,10 @@ selected="true"
 <input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
 <input class='textbox' type='hidden' id='special_orders' name='special_orders'/>
 
-<input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
+<div class="button_panel"><input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
 <br />
 <input class='reset' type='reset' value='Cancel'>
-<br />
+<br /></div>
 </form>
 <div id='isbndialog' class='isbndialog' title='Alert!'>
 You did not enter an ISBN. If you don't see an ISBN, check inside the book, it may still have one.<br /><br />

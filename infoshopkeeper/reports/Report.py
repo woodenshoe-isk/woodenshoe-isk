@@ -35,7 +35,7 @@ class Report:
     #generally leave this alone
     def queryForm(self):
         top="<form action='/report' method='get'>"
-        bottom_template="<input type='hidden' name='query_made' /><input type='hidden' name='reportname'/><input type='submit' class='submit' value='get report'/></form>"
+        bottom_template="<input type='hidden' name='query_made' /><input type='hidden' name='reportname'/><div class='button_panel'><input type='submit' class='submit' value='get report'/></div></form>"
         defaults={"reportname":self.metadata['action'], "query_made":"yes"}
         parser=htmlfill.FillingParser(defaults)
         parser.feed(bottom_template)

@@ -1,0 +1,51 @@
+#!/usr/bin/python
+
+# Copyright 2006 John Duda 
+
+# This file is part of Infoshopkeeper.
+
+# Infoshopkeeper is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or any later version.
+
+# Infoshopkeeper is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Infoshopkeeper; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+
+
+import cherrypy
+from etc import cherrypy_global_config_file, cherrypy_nonlocal_config_file, cherrypy_local_config_file, cherrypy_config_file
+from inventoryserver.server import InventoryServer
+from inventoryserver.server import Register
+from inventoryserver.server import Admin
+
+
+##~ cherrypy.quickstart(InventoryServer(), script_name="/", config=cherrypy_config_file)
+#~ cherrypy.config.update(config=cherrypy_config_file)
+
+cherrypy.server2 = server2 = cherrypy._cpserver.Server()
+cherrypy.config.namespaces['server2']=lambda k, v: setattr(cherrypy.server2, k, v)
+#cherrypy._cpserver.ServerAdapter(cherrypy.engine, server2, ('localhost',8030)).subscribe()
+#print cherrypy.server2
+#cherrypy.server2.socket_host='locahost'
+#cherrypy.server2.socket_port=8030
+#cherrypy.server2.subscribe()
+cherrypy.config.update(cherrypy_global_config_file)
+
+root=InventoryServer()
+root.register=Register()
+root.admin=Admin()
+cherrypy.tree.mount(root, script_name='/', config=cherrypy_nonlocal_config_file)
+#cherrypy.server.quickstart()
+#cherrypy.server.server2.quickstart()
+#cherrypy.server2.subscribe()
+
+cherrypy.engine.start()
+cherrypy.engine.block()

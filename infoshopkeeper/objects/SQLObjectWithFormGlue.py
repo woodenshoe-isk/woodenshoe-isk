@@ -29,6 +29,7 @@ class SQLObjectWithFormGlue(SQLObject):
             try:
                 if col.name not in obj.readOnlyColumns:
                     value=formdata[col.name]
+                    print col.name
                     if type(col) == SODateTimeCol:
                         if len(value)==10:
                             value=date(int(value[0:4]),int(value[5:7]),int(value[8:10]))
@@ -187,7 +188,7 @@ class SQLObjectWithFormGlue(SQLObject):
                     pass
 
 
-        formhtml=formhtml+"<input class='submit' type='submit'><br />"
+        formhtml=formhtml+" <div class='button_panel'><input class='reset' type='reset' value='Cancel Changes'><input class='submit' type='submit' value='Save Changes'></div><br />"
         return formhtml
 
     @classmethod
@@ -290,7 +291,7 @@ class SQLObjectWithFormGlue(SQLObject):
                 except:
                     pass
 
-        formhtml=formhtml+"<input class='submit' type='submit'><br />"
+        formhtml=formhtml+" <input class='reset' type='reset' value='Cancel Changes'><input class='submit' type='submit' value='Save Changes'><br />"
         return formhtml
 
     

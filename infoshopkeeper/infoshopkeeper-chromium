@@ -1,0 +1,1 @@
+chromium-browser --kiosk --no-context-menu --action-box --app=http://localhost:8020

@@ -204,9 +204,9 @@ border-color:#000;
 border-style:solid;
 }
 input.reset {
-margin-left: 320px;
+margin-left: 0px;
 background-color:#c44;
-width:350px;
+width:15em;
 font-family: lucida,sans-serif;
 font-size: 120%;
 border-width:2px;
@@ -214,7 +214,7 @@ border-color:#000;
 border-style:solid;
 }
 input.submit {
-margin-left: 15em;
+margin-left: 1em;
 background-color:#c44;
 width:15em;
 font-family: lucida,sans-serif;
@@ -285,6 +285,9 @@ padding-right:10px;
 border-width:2px;
 border-color:#000;
 border-style:solid;
+}
+div.button_panel{
+margin-left: 15em;
 }
 div.listing {
 margin:10px;

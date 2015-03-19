@@ -1,7 +1,11 @@
 ##edit category info
 
-#from Skeleton import Skeleton
-#extends Skeleton
+#from EditTemplate import EditTemplate
+#extends EditTemplate
+
+#def headscripts
+$EditTemplate.headscripts($self)
+#end def
 
 #def pagetitle
 Editing a category of ${category.title.booktitle}
@@ -9,7 +13,7 @@ Editing a category of ${category.title.booktitle}
 
 #def body
 <h1>Category record for $category.title.booktitle</h1>
-<form method="get" action="/categoryedit">
+<form class='editform' method="get" action="/categoryedit">
 $category.object_to_form
 </form>
 #end def

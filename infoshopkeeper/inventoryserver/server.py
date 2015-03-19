@@ -256,7 +256,9 @@ class Register:
                     if item.get('bookID'):
                         try:
                             print>>sys.stderr, "preparing to sell book"
-                            b=Book.selectBy(id=item['bookID'])[0].set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
+                            print>>sys.stderr, "bookID is", item.get('bookID')
+                            b=Book.selectBy(id=item['bookID'])[0]
+                            b.set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
                             if item.get('special_order_selected'):
                                 tso=TitleSpecialOrder.get(item['special_order_selected']) 
                                 tso.orderStatus='SOLD'
@@ -268,12 +270,12 @@ class Register:
                             if item.has_key('booktitle'):
                                 infostring=infostring + ": " +item['booktitle']
                             print>>sys.stderr, 'About to do transaction'
-                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
+                            Transaction(action='SALE', info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
                             cart['items'].remove(item)
                             print>>sys.stderr, "Item removed from cart"
                         except Exception as err:
                             print>>sys.stderr, "error in selling book", err
-                            problemItems.append(item)
+                            # problemItems.append(item)
                             shouldRaiseException=True
                     #if it's a noninventoried item just 
                     #record transaction and remove from cart
@@ -286,7 +288,7 @@ class Register:
                             cart['items'].remove(item)
                         except Exception as err:
                             print>>sys.stderr, "error in selling book", err
-                            problemItems.append(item)
+                            # problemItems.append(item)
                             shouldRaiseException=True
             #it should be zero but just in case
             #there was an error, items with error are still kept
@@ -559,7 +561,7 @@ class Admin:
             result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
             result= '199' + '0'*10
-        result= unicode(int(result[:-1])+1) + checkI13(result[:13])
+        result= unicode(int(result[:-1])+1) + checkI13(result[:12])
         return result
 
     #wrapper to inventory.addToInventory to be added

@@ -29,13 +29,13 @@ class inventory(object):
     @staticmethod
     def process_isbn(isbn):
         #only strip quotes if wsr, reg, or consignment number, or none
-        if re.match('^wsr|^reg|^\d{2,4}-\d+|n/a|none', isbn, re.I):
+        if re.match('^wsr|^reg|^\d{2,4}-\d{1,4}$|n/a|none', isbn, re.I):
             isbn = re.sub('[\'\"]', '', isbn)
             price = None
         #strip quotes and whitespace. convert isbn10 to isbn13.
         #split isbn and price if it's an extended isbn
         else:
-            isbn=re.sub('[\s\'\"-]', '', isbn)
+            isbn=re.sub('[\s\'\"\-]', '', isbn)
             price = None
             #note the checking for the first character of ean5 extension
             #if it's 5, it means price is in us dollars 0-99.99
@@ -50,6 +50,7 @@ class inventory(object):
  
     def lookup_by_isbn(self,number):
         isbn, price = self.process_isbn(number)
+        print>>sys.stderr, isbn, price
         if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
             #first we check our database
             titles =  Title.select(Title.q.isbn==isbn)
@@ -71,7 +72,7 @@ class inventory(object):
                     categories = [x.categoryName.format() for x in the_titles[0].categorys] 
                 categories_as_string = string.join(categories,',')
                 if len(the_titles[0].books) > 0:
-                    ListPrice = the_titles[0].books[0].listprice
+                    ListPrice = max([x.listprice for x in the_titles[0].books])
                 else:
                     ListPrice = 0
                 Manufacturer = the_titles[0].publisher.format()
@@ -385,9 +386,9 @@ class inventory(object):
  
             #print>>sys.stderr, title
              
-            title=title
+            title=title.encode('utf8', "backslashreplace")
             publisher=publisher
-            print>>sys.stderr, title, publisher
+            #print>>sys.stderr, title, publisher
             known_title=Title(isbn=isbn, booktitle=title, publisher=publisher,tag=" ",type=types, kindID=kind_id)
             print>>sys.stderr, known_title
             for rawAuthor in authors:

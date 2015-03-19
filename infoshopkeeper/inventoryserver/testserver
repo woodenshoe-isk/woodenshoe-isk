@@ -31,7 +31,7 @@ root.hello=HelloWorld()
 cherrypy.tree.mount(root, '/')
 
 import cherrypy as cherrypy2
-cherrypy2.server.socket_port=8040
+cherrypy2.server.socket_port=8080
 cherrypy2.server.socket_host='192.168.1.11'
 
 root2=HelloWorld()

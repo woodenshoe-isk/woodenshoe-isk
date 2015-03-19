@@ -1,0 +1,43 @@
+import cherrypy
+from threading import Thread
+
+class HelloWorld:
+    def index(self):
+        return "Hello world!"
+    index.exposed = True
+ 
+class MyThread1(Thread):
+    def run(self):
+        cherrypy.engine.start()
+        cherrypy.engine.block()
+
+class MyThread2(Thread):
+    def run(self):
+        cherrypy2.engine.start()
+        cherrypy2.engine.block()
+
+cherrypy.server.socket_port=8040
+cherrypy.server.socket_host='127.0.0.1'
+
+#cherrypy.server2 = s = cherrypy._cpserver.Server() 
+
+#s.socket_host='192.168.1.11'
+#s.socket_port = 8040
+#s.subscribe()
+#print s
+
+root=HelloWorld()
+root.hello=HelloWorld()
+cherrypy.tree.mount(root, '/')
+
+import cherrypy as cherrypy2
+cherrypy2.server.socket_port=8040
+cherrypy2.server.socket_host='192.168.1.11'
+
+root2=HelloWorld()
+cherrypy2.tree.mount(root2, '/')
+print cherrypy.server
+print cherrypy2.server
+
+MyThread1().start()
+#MyThread2().start()
