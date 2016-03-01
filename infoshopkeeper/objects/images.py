@@ -73,6 +73,7 @@ class Images(SQLObjectWithFormGlue):
          image_filename = os.path.join(image_dir, isbn + '_' + size + '.jpg')
          if os.path.exists(image_filename):
             relative_image_url = os.path.relpath(image_filename, image_directory_root)
+            print "file exists"
             return os.path.join('/images/', relative_image_url)
          else:
             try:
@@ -99,5 +100,6 @@ class Images(SQLObjectWithFormGlue):
                     relative_image_url = os.path.relpath(default_image, image_directory_root)
                     return os.path.join('/images/', relative_image_url)
                 else:
+                    print "in last else"
                     relative_image_url = os.path.relpath(image_filename, image_directory_root)
                     return os.path.join('/images/', relative_image_url)
