@@ -37,7 +37,7 @@ Search the inventory
         });
 
         //hide book id column 
-        jQuery('#results_table td:nth-child(13), #results_table th:nth-child(13)').hide();
+        jQuery('#results_table td:last-child, #results_table th:last-child').hide();
         
         //open title edit. Desktops open on doubleclick.
         //IOS & android use single click.
@@ -210,7 +210,9 @@ selected="true"
         #if $should_show_images
         <td>
             #if $t.images
-            <img src='$t.images.retrieve_image_url("small")'>
+                #if $t.images.retrieve_image_url("small")
+                    <img src='$t.images.retrieve_image_url("small")'>
+                #end if
             #end if
         </td>
         #end if
