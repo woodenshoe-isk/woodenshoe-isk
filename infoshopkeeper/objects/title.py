@@ -8,6 +8,7 @@ from etc import *
 from sqlobject import *
 from components import db
 from objects.kind import Kind
+from objects.images import Images
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
  #Set up db connection
@@ -37,6 +38,7 @@ class Title(SQLObjectWithFormGlue):
     author = RelatedJoin('Author', intermediateTable='author_title',createRelatedTable=True)
     specialorders = RelatedJoin('SpecialOrder', intermediateTable='title_special_order', createRelatedTable=False)
     specialorder_pivots = MultipleJoin('TitleSpecialOrder')
+    images = SingleJoin('Images')
     categorys = MultipleJoin('Category')
     kind = ForeignKey('Kind')
     listTheseKeys=['kindID','kind']

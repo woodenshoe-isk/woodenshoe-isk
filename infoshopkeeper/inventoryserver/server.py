@@ -191,15 +191,26 @@ class Register:
             print>>sys.stderr, cart
         elif args.has_key('titleid'):
             print>>sys.stderr, "add_item_to_cart: in titleid block", args['titleid']
-            b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')[0]
-            print>>sys.stderr, 'add_item_to_cart: book is', b
-            item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'isbn':b.title.isbn, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
-            cart['items'].append(item)
+            prev_same_title=[]
+            for previous_item in cart['items']:
+                if str(previous_item['titleID'])==args['titleid']:
+                    prev_same_title.append(previous_item['bookID'])
+            b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')
+            if prev_same_title:
+                b=b.filter(NOT(IN(Book.q.id, prev_same_title)))
+            if b.count()>0:
+                b=b[0]       
+                print>>sys.stderr, 'add_item_to_cart: book is', b
+                item={'bookID':b.id, 'titleID':b.titleID, 'booktitle':b.title.booktitle, 'isbn':b.title.isbn, 'ourprice':b.ourprice, 'department':b.title.kind.kindName.capitalize(), 'isInventoried':True, 'isTaxable':True}
+                cart['items'].append(item)
         print>>sys.stderr, "CART IS NOW ", cart
         cherrypy.session['cart']=cart
         #have to save or it all gets forgot
         print>>sys.stderr, cart, cherrypy.session['cart']
         cherrypy.session.save()
+        hooks = cherrypy.serving.request.hooks['before_finalize']
+        forbidden = cherrypy.lib.sessions.save
+        hooks[:] = [h for h in hooks if h.callback is not forbidden]
         print>>sys.stderr, "CART NOW IS: ", cherrypy.session['cart']
         print>>sys.stderr, "CART SESSION NOW IS: ", cherrypy.session.id
         return None
@@ -225,6 +236,9 @@ class Register:
             print>>sys.stderr, cart
         cherrypy.session['cart']=cart
         cherrypy.session.save()
+        hooks = cherrypy.serving.request.hooks['before_finalize']
+        forbidden = cherrypy.lib.sessions.save
+        hooks[:] = [h for h in hooks if h.callback is not forbidden]
             
     #ditch the whole cart
     @cherrypy.expose
@@ -232,6 +246,9 @@ class Register:
         if cherrypy.session.has_key('cart'):
             cherrypy.session['cart']={}
         cherrypy.session.save()        
+        hooks = cherrypy.serving.request.hooks['before_finalize']
+        forbidden = cherrypy.lib.sessions.save
+        hooks[:] = [h for h in hooks if h.callback is not forbidden]
     
     #check out cart
     @cherrypy.expose
@@ -299,6 +316,9 @@ class Register:
                 cherrypy.session['cart']=cart
             #save cart 
             cherrypy.session.save()
+            hooks = cherrypy.serving.request.hooks['before_finalize']
+            forbidden = cherrypy.lib.sessions.save
+            hooks[:] = [h for h in hooks if h.callback is not forbidden]
             #raise the delayed exception
             if shouldRaiseException:
                 raise SQLObjectNotFound
@@ -311,6 +331,7 @@ class Register:
     #search for in stock items by attribute
     @cherrypy.expose
     def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location="", authorOrTitle=""):
+        self._chooseitemtemplate.should_show_images = cfg.get('should_show_images')
         self._chooseitemtemplate.empty=True
         self._chooseitemtemplate.title=title
         self._chooseitemtemplate.isbn=isbn
@@ -375,7 +396,7 @@ class Register:
         where_clause=' AND '.join(where_clause_list)
         print>>sys.stderr, 'where clause ', where_clause
         titles=[]
-        
+
         #do search. 
         if len(fields_used)>0:
             titles=Title.select( where_clause,join=join_list,clauseTables=clause_tables,orderBy=sortby,distinct=True)
@@ -383,7 +404,7 @@ class Register:
         print>>sys.stderr, "titles ", list(titles)
         self._chooseitemtemplate.titles=titles
         return self._chooseitemtemplate.respond()
-    
+
     #search by isbn to find item
     @cherrypy.expose
     @cherrypy.tools.jsonify()
@@ -397,6 +418,8 @@ class Register:
         if len(isbn) in (15,17,18) and isbn[-5] == '5':
             price = float(isbn[-4:])/100
             isbn=isbn[:-5]
+        if len(isbn) in (15,17,18) and isbn[-5] != '5':
+                    isbn=isbn[:-5]
         if ( len(isbn)==10 and isbnlib.isValid(isbn)):
             isbn=isbnlib.convert(isbn)
         #search for isbn
@@ -497,8 +520,12 @@ class Admin:
      
     #hook for add to inventory template
     @cherrypy.expose
-    def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False, printlabel=False, num_copies=1):
+    def add_to_inventory(self, isbn="", orig_isbn='', large_url='', med_url='', small_url='', quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False, printlabel=False, num_copies=1):
         self._add_to_inventory_template.isbn=isbn
+        self._add_to_inventory_template.orig_isbn=orig_isbn
+        self._add_to_inventory_template.large_url=large_url
+        self._add_to_inventory_template.med_url=med_url
+        self._add_to_inventory_template.small_url=small_url
         self._add_to_inventory_template.quantity=quantity
         self._add_to_inventory_template.title=title
         self._add_to_inventory_template.authors=authors
@@ -506,7 +533,7 @@ class Admin:
         self._add_to_inventory_template.ourprice=ourprice
         self._add_to_inventory_template.publisher=publisher
         self._add_to_inventory_template.categories=categories
-         
+
         conn=Book._connection
         query=Select( Book.q.distributor, groupBy=Book.q.distributor)
         results=conn.queryAll( conn.sqlrepr(query))
@@ -521,7 +548,7 @@ class Admin:
         self._add_to_inventory_template.kinds=list(Kind.select())
         self._add_to_inventory_template.kind=kind
         self._add_to_inventory_template.printlabel=printlabel
-        
+
         conn=Title._connection
         query=Select( Title.q.type, groupBy=Title.q.type)
         results=conn.queryAll( conn.sqlrepr(query))
@@ -569,8 +596,9 @@ class Admin:
     #prices floats and turns categories & authors into lists
     @cherrypy.expose
     def add_item_to_inventory(self, **kwargs):
-        print "kwargs are:"
-        print kwargs
+        print>>sys.stderr, "in add_item_to_inventory"
+        print>>sys.stderr, "kwargs are:"
+        print>>sys.stderr, kwargs
         kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
         kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
         kwargs['authors']=kwargs['authors'].split(',')
@@ -585,8 +613,11 @@ class Admin:
         print "kwargs are now", kwargs
         kwargs['kind_name']=kwargs['kind']
         print kwargs
-        self.inventory.addToInventory(**kwargs)
-     
+        try:
+            self.inventory.addToInventory(**kwargs)
+        except Exception as e:
+            print>>sys.stderr, e
+                 
     #wrapper to inventory.search_inventory
     #looks for an item in database, if we don't have it, 
     #looks in amazon
@@ -639,13 +670,14 @@ class Admin:
                 max_price='0.00'
         print>>sys.stderr,  most_freq_location, max_price, title
         #return [{'isbn':title.isbn, 'title': title.booktitle, 'location':most_freq_location,'listprice':max_price, 'ourprice':max_price, 'known_title':True}]
-        return [{'isbn':title.isbn, 'title':title.booktitle, 'listprice':max_price, 'ourprice':max_price, 'authors':title.authors_as_string(), 'publisher':title.publisher, 'categories':title.categories_as_string(), 'location':most_freq_location, 'kind':title.kindID, 'type':title.type, 'known_title':True}]
+        return [{'isbn':title.isbn, 'orig_isbn':title.origIsbn, 'title':title.booktitle, 'listprice':max_price, 'ourprice':max_price, 'authors':title.authors_as_string(), 'publisher':title.publisher, 'categories':title.categories_as_string(), 'location':most_freq_location, 'kind':title.kindID, 'type':title.type, 'known_title':True}]
 
     #search for in stock items by attribute
     @cherrypy.expose
     def select_item_for_isbn_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
         self._chooseitemforisbntemplate.empty=True
         self._chooseitemforisbntemplate.title=title
+        self._chooseitemforisbntemplate.should_show_images = cfg.get('should_show_images')
         self._chooseitemforisbntemplate.isbn=isbn
         self._chooseitemforisbntemplate.author=author
         self._chooseitemforisbntemplate.category=category
@@ -979,6 +1011,8 @@ class InventoryServer:
     @cherrypy.expose
     def titleedit(self,**args):
         self.common()
+        self._titleedittemplate.should_show_images = cfg.get('should_show_images')
+        
         print>>sys.stderr, args
         if args.get('remove_author'):
             title=Title.get(args.get('id'))
@@ -1289,9 +1323,10 @@ class InventoryServer:
         cherrypy.session['lastsearch']=False
         self.common()
         cherrypy.session['lastsearch']=cherrypy.url()
- 
+        
         self._searchtemplate.empty=True
         self._searchtemplate.title=title
+        self._searchtemplate.should_show_images = cfg.get('should_show_images')
         self._searchtemplate.isbn=isbn
         self._searchtemplate.author=author
         self._searchtemplate.category=category

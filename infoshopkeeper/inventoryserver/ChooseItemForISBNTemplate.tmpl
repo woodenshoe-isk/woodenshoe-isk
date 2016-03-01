@@ -132,6 +132,9 @@ selected="true"
 <colgroup class="title_id">
 <thead>
   <tr>
+    #if $should_show_images
+    <th>Image</th>
+    #end if  
     <th>Title</th>
     <th>Author</th>
     <th>ISBN</th>
@@ -147,6 +150,13 @@ selected="true"
 <tbody>
 #for $t in $titles
   <tr>
+    #if $should_show_images
+    <td>
+        #if $t.images
+        <img src='$t.images.retrieve_image_url("small")'>
+        #end if
+    </td>
+    #end if 
     <td>$t.safe('booktitle')</td>
     <td>$t.authors_as_string</td>
     <td>$t.isbn</td>

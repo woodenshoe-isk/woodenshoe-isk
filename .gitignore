@@ -20,6 +20,7 @@ infoshopkeeper/inventoryserver/Skeleton.py
 infoshopkeeper/inventoryserver/javascript/*
 .DS_Store
 infoshopkeeper/reports/untitled text
+infoshopkeeper/inventoryserver/images/*
 tmp.py
 
 infoshopkeeper-trac/

@@ -3,30 +3,46 @@ from Report import Report
 from objects.kind import Kind
 
 class BestSellersReport(Report):
-    metadata={'name':'Best Sellers Report','action':'bestsellersreport'}
-    do_total=False
+    metadata={'name':'Best Sellers','action':'bestsellersreport'}
+    reportname = 'Best Sellers Report'
     show_header=True
-
-
+    do_total=False
+    
     def query(self,args):
+        begin_date=args.get('begin_date','1990-01-01')
+        end_date=args.get('end_date','2030-01-01')
+        if not begin_date:
+            begin_date='1990-01-01'
+        if not end_date:
+            end_date='2030-01-01'
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
-        SELECT title.id, title.booktitle, COUNT(CASE WHEN b1.status='STOCK' THEN 1 ELSE NULL END) number_in_stock, subq1.number_sold FROM (SELECT book.title_id AS id1, COUNT(*) AS number_sold FROM book WHERE book.status='SOLD' GROUP BY book.title_id ) AS subq1 JOIN book b1 ON subq1.id1=b1.title_id JOIN title ON title.id=subq1.id1 WHERE  title.kind_id=%s GROUP BY b1.title_id ORDER BY subq1.number_sold DESC;
-        """,(args['kind']))
+        select booktitle,count(book.id) as blah  from book,title where book.title_id=title.id and book.status='SOLD' and title.kind_id=%s and sold_when>=%s and sold_when<=ADDDATE(%s,INTERVAL 1 DAY)  group by title_id order by blah desc limit 100
+        """,(args['kind'],begin_date,end_date))
+        
         results= self.cursor.fetchall()
         self.cursor.close()
         return results
-    
+
     def format_header(self):
-        return "<tr><th>Title</th><th>Copies In Stock</th><th>Copies Sold</th></tr>"
-    
+	    return "<tr><th>Title</th><th>Date Sold</th><th>Count</th></tr>"
+
     def format_results(self,results):
-        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[0],r[1],r[2], r[3])  for r in results]
+        return ["<tr><td>%s</td><td>%s</td></tr>" % (r[0],r[1])  for r in results]
 
 
     def _queryForm(self):
-        val="<select class='textbox' id='kind' name='kind'>"
+        val="<label class='textbox' for='kind'>Kind</label><select class='textbox' id='kind' name='kind'>"
         for k in list(Kind.select()):
             val = val+"<option value='%s'>%s</option>" % (k.id,k.kindName)
-        val=val+"</select>"
+        val=val+"</select><br>"
+        val =val+"""
+            <label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value='%s'/><br>
+            <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
+            <script type="text/javascript">                                         
+                jQuery(document).ready( function(){
+                    jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
+                });
+            </script>        
+        """ % (self.args.get("begin_date",""),self.args.get("end_date",""))
         return val

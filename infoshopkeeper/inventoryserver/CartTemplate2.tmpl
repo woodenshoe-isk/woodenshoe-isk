@@ -16,6 +16,16 @@
         
         //jQuery('#void-toggle').button();
         
+        //make sure keypress goes to default dialog
+//         jQuery(document).keypress(function(event) {
+//             if (  jQuery('input:focus').length == 0 ) {
+//                 jQuery('#book').click();
+//                 jQuery('#my-form-book .isbnfield').focus();
+//                 jQuery('#my-form-book .isbnfield').trigger(event);
+//                 return false;
+//             }            
+//         });
+        
         //add remove this row button from every row
         jQuery('.remove_item').live('click', function(){
             table_row_index=jQuery(this).parent().parent().index();
@@ -250,9 +260,9 @@
                     ##    <input type="button" value="Search" onclick="window.open('/register/select_item_search', '_self');" /><br>
                     ##end if
                </form>
-                <div id='title_list_panel' class='title_list_panel' name='title_list_panel'>
+               <div id='title_list_panel' class='title_list_panel' name='title_list_panel'>
                     <ul id='title_list' class='title_list' name='title_list'></ul>
-                </div>  
+               </div>  
             </div>
         #end for
         #set $column_keys = ['department', 'booktitle', 'isbn', 'ourprice']

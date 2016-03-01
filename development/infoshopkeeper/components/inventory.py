@@ -32,7 +32,7 @@ class inventory(object):
         if re.match('^wsr|^reg|^\d{2,4}-\d+|n/a|none', isbn, re.I):
             isbn = re.sub('[\'\"]', '', isbn)
             price = None
-        #strip quotes and whitespace. convert isbn10 to isbn13.
+        #strip quotes and whitespace. convert isbn10 to orig_isbn.
         #split isbn and price if it's an extended isbn
         else:
             isbn=re.sub('[\s\'\"-]', '', isbn)

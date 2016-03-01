@@ -102,6 +102,14 @@ from Skeleton import Skeleton
                                 jQuery('#publisher').val(value);
                             } else if ( key == 'authors_as_string') {
                                 jQuery('#authors').val(value);
+                            } else if ( key == 'orig_isbn') {
+                                jQuery('#orig_isbn').val(value);
+                            } else if ( key == 'large_url') {
+                                jQuery('#large_url').val(value);
+                            } else if ( key == 'med_url') {
+                                jQuery('#med_url').val(value);
+                            } else if ( key == 'small_url') {
+                                jQuery('#small_url').val(value);
                             } else if ( key == 'categories_as_string') {
                                 jQuery('#categories').val(value);
                             } else if ( key == 'title') {
@@ -213,6 +221,8 @@ from Skeleton import Skeleton
                             isbnDirty=false;
                         }
                     });
+                } catch(err) {
+                    console.log(err);
                 } finally {
                     jQuery('#isbn').focus();
                     return false;
@@ -338,6 +348,10 @@ selected="true"
 
 <input class='textbox' type='hidden' id='known_title' name='known_title' value='$known_title'/>
 <input class='textbox' type='hidden' id='special_orders' name='special_orders'/>
+<input class='textbox' type='hidden' id='orig_isbn' name='orig_isbn' value='$orig_isbn'/>
+<input class='textbox' type='hidden' id='large_url' name='large_url' value='$large_url'/>
+<input class='textbox' type='hidden' id='med_url' name='med_url' value='$med_url'/>
+<input class='textbox' type='hidden' id='small_url' name='small_url' value='$small_url'/>
 
 <div class="button_panel"><input class="submit" type="submit" action='/admin/add_item_to_inventory' value='Add to Inventory'>
 <br />

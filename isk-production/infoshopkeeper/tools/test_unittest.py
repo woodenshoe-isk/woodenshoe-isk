@@ -32,29 +32,29 @@ class test_inventory(unittest.TestCase):
         random_item=random.sample(list(Title.select('isbn RLIKE \'[0-9]{9}[0-9xX]\'')), 1)[0]
         wrong_isbn=random_item.isbn[0:9] + tr_table[random_item.isbn[9]]
         self.assertRaises(InvalidParameterValue, inventory.lookup_by_isbn, wrong_isbn)
-    def test_lookup_by_isbn13_is_valid(self):
+    def test_lookup_by_orig_isbn_is_valid(self):
         random_item=random.sample(list(Title.select('isbn RLIKE \'[0-9]{9}[0-9xX]\'')), 1)[0]
         converted_isbn=isbn.convert(random_item.isbn)
         result=inventory.lookup_by_isbn(converted_isbn)
         self.assertEqual(random_item.isbn, result['isbn'], 'inventory.lookup_by_isbn returned wrong isbn for random isbn in database')
-    def test_lookup_by_isbn13_has_extra_spaces(self):
+    def test_lookup_by_orig_isbn_has_extra_spaces(self):
         random_item=random.sample(list(Title.select('isbn RLIKE \'[0-9]{9}[0-9xX]\'')), 1)[0]
         converted_isbn=isbn.convert(random_item.isbn)
         converted_isbn=converted_isbn[0:3]+' '+converted_isbn[3:8]+' '+converted_isbn[8:]
         result=inventory.lookup_by_isbn(converted_isbn)
         self.assertEqual(random_item.isbn, result['isbn'], 'inventory.lookup_by_isbn returned wrong isbn for random isbn in database')
-    def test_lookup_by_isbn13_has_extra_hyphens(self):
+    def test_lookup_by_orig_isbn_has_extra_hyphens(self):
         random_item=random.sample(list(Title.select('isbn RLIKE \'[0-9]{9}[0-9xX]\'')), 1)[0]
         converted_isbn=isbn.convert(random_item.isbn)
         converted_isbn=converted_isbn[0:3]+'-'+converted_isbn[3:8]+'-'+converted_isbn[8:]
         result=inventory.lookup_by_isbn(converted_isbn)
         self.assertEqual(random_item.isbn, result['isbn'], 'inventory.lookup_by_isbn returned wrong isbn for random isbn in database')
-    def test_lookup_by_isbn13_is_invalid(self):
+    def test_lookup_by_orig_isbn_is_invalid(self):
         random_item=random.sample(list(Title.select('isbn RLIKE \'[0-9]{9}[0-9xX]\'')), 1)[0]
         converted_isbn=isbn.convert(random_item.isbn)
         wrong_isbn=converted_isbn[0:12] + str((int(converted_isbn[12]) + 1) % 10)
         result=inventory.lookup_by_isbn(wrong_isbn)
-        self.assertEqual(random_item.isbn, result['isbn'], 'inventory.lookup_by_isbn returned wrong isbn for invalid isbn13')
+        self.assertEqual(random_item.isbn, result['isbn'], 'inventory.lookup_by_isbn returned wrong isbn for invalid orig_isbn')
     def test_lookup_by_isbn_is_reg(self):
         random_item=random.sample(list(Title.select('isbn RLIKE \'reg [0-9]{3,5}\'')), 1)[0]
         result=inventory.lookup_by_isbn(random_item.isbn)

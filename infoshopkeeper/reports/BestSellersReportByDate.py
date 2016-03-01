@@ -2,7 +2,7 @@ from Report import Report
 
 from objects.kind import Kind
 
-class BestSellersReportByDate(Report):
+class BestSellersReport(Report):
     metadata={'name':'Best Sellers Report By Date','action':'bestsellersreportbydate'}
     do_total=False
     def query(self,args):

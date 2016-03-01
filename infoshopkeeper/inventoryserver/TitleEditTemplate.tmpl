@@ -38,8 +38,16 @@ Editing ${title.booktitle}
 #def body
 <h1>Edit the Information for a Title</h1>
 
+##if configured to show image we show an image of the title
+#if $should_show_images
+#if $title.images
+<div id="main_image"><img src='$title.images.retrieve_image_url("large")'><br></div>
+#end if
+#end if
+
+
 ##show the title info as editable form
-<form class='editform' method="get" action="/titleedit">
+<form class='editform' method="get" action="/titleedit"
 $title.object_to_form
 </form>
 

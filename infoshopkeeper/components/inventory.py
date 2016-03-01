@@ -7,6 +7,7 @@ from objects.title import Title
 from objects.book import Book
 from objects.author import Author
 from objects.category import Category
+from objects.images import Images
 from objects.kind import Kind
 from objects.location import Location
 from objects.title import Title
@@ -32,7 +33,7 @@ class inventory(object):
         if re.match('^wsr|^reg|^\d{2,4}-\d{1,4}$|n/a|none', isbn, re.I):
             isbn = re.sub('[\'\"]', '', isbn)
             price = None
-        #strip quotes and whitespace. convert isbn10 to isbn13.
+        #strip quotes and whitespace. convert isbn10 to orig_isbn.
         #split isbn and price if it's an extended isbn
         else:
             isbn=re.sub('[\s\'\"\-]', '', isbn)
@@ -78,6 +79,14 @@ class inventory(object):
                 Manufacturer = the_titles[0].publisher.format()
                 Format=the_titles[0].type.format()
                 Kind=the_titles[0].kind.kindName
+                orig_isbn=the_titles[0].origIsbn.format()
+                if the_titles[0].images:
+                     large_url = the_titles[0].images.largeUrl
+                     med_url = the_titles[0].images.medUrl
+                     small_url = the_titles[0].images.smallUrl
+                else:
+                     large_url = med_url = small_url = ''
+
                 SpecialOrders=[tso.id for tso in Title.selectBy(isbn=isbn).throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON ORDER')]
                 return {"title":ProductName,
                     "authors":authors,
@@ -86,6 +95,10 @@ class inventory(object):
                     "list_price":ListPrice,
                     "publisher":Manufacturer,
                     "isbn":isbn,
+                    "orig_isbn":orig_isbn,
+                    "large_url":large_url,
+                    "med_url":med_url,
+                    "small_url":small_url,
                     "format":Format,
                     "kind":Kind,
                     "known_title": self.known_title,
@@ -106,7 +119,7 @@ class inventory(object):
                 elif len(isbn)==13:
                         idType='EAN'
                 try:
-                        pythonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes")
+                        pythonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
                 except ecs.InvalidParameterValue:
                         pass
  
@@ -186,6 +199,21 @@ class inventory(object):
                         Kind='music'
                     elif b.ProductGroup in ('DVD', 'Video'):
                         Kind='film'
+                        
+                    if hasattr(b, "LargeImage"):
+                        large_url=b.LargeImage.URL
+                    else:
+                        large_url=''
+
+                    if hasattr(b, "MediumImage"):
+                        med_url=b.MediumImage.URL
+                    else:
+                        med_url=''
+
+                    if hasattr(b, "SmallImage"):
+                        small_url=b.SmallImage.URL
+                    else:
+                        small_url=''
                      
                     return {"title":ProductName,
                         "authors":authors,
@@ -194,6 +222,10 @@ class inventory(object):
                         "list_price":ListPrice,
                         "publisher":Manufacturer,
                         "isbn":isbn,
+                        "orig_isbn":isbn,
+                        "large_url":large_url,
+                        "med_url":med_url,
+                        "small_url":small_url,
                         "format":Format,
                         "kind":Kind,
                         "known_title": self.known_title,
@@ -365,7 +397,7 @@ class inventory(object):
                         print err
                         yield
                      
-    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location='', location_id='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
+    def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
         print>>sys.stderr, "GOT to addToInventory"
         if known_title:
             print>>sys.stderr, "known_title ", known_title
@@ -389,8 +421,10 @@ class inventory(object):
             title=title.encode('utf8', "backslashreplace")
             publisher=publisher
             #print>>sys.stderr, title, publisher
-            known_title=Title(isbn=isbn, booktitle=title, publisher=publisher,tag=" ",type=types, kindID=kind_id)
+            known_title=Title(isbn=isbn, origIsbn=orig_isbn, booktitle=title, publisher=publisher,tag=" ",type=types, kindID=kind_id)
             print>>sys.stderr, known_title
+            
+            im=Images(titleID=title.id, largeUrl=large_url, med_url=medUrl, smallUrl=small-url)
             for rawAuthor in authors:
                 author = rawAuthor.encode("utf8", "backslashreplace")
             theAuthors = Author.selectBy(authorName=author)

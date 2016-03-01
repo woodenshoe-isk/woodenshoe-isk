@@ -242,6 +242,14 @@ clear: left;
 /*tr {
 background-color: #ccc;
 }*/
+div#main_image {
+background-color:#eee;
+padding: 15px;
+color: #eee;
+/*border-width:2px;
+border-color:#000;
+border-style:solid;*/
+}
 div.showhide {
 float:right;
 display:block;
