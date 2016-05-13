@@ -14,7 +14,7 @@ Special Orders
     //Make lesser used fields hideable
     jQuery(document).ready( function(){
         
-        jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
+        jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
 
         //hide special order id column 
         jQuery('#results_table td:nth-child(5), #results_table th:nth-child(5)').hide();

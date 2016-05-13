@@ -3,6 +3,9 @@ from reportlab.lib import colors
 from Report import Report
 from PdfReport import PdfReport
 from reportlab.lib.units import inch
+import sys
+
+from objects.kind import Kind
 
 
 class SalesReport(Report, PdfReport):
@@ -14,11 +17,17 @@ class SalesReport(Report, PdfReport):
         
     def query(self,args):
         self.cursor=self.conn.cursor()
-        what="%%%s%%" % args['what']
-        begin_date=args.get('begin_date','1990-01-01')
-        end_date=args.get('end_date','2030-01-01')
+        kind="%s" % args.get('kind', '1')
+        print>>sys.stderr, kind
+        print>>sys.stderr, args
+        begin_date=args.get('begin_date','1990-01-01') or  '1990-01-01'
+        end_date=args.get('end_date','2030-01-01') or '2030-01-01'
+        print>>sys.stderr, begin_date, end_date
+        print>>sys.stderr,  """SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) as copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) as copies_sold FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN book b2 ON b1.title_id=b2.title_id JOIN kind k1 ON t1.kind_id=k1.id WHERE (b1.status='SOLD' AND k1.id=%s AND (b1.sold_when>=%s AND b1.sold_when<=ADDDATE(%s,INTERVAL 1 DAY)))   GROUP BY b1.id ORDER BY b1.sold_when""" % (kind, begin_date, end_date)
+
 #        self.cursor.execute("""SELECT * FROM transactionLog WHERE action='SALE' AND info LIKE %s AND date>=%s AND date<=ADDDATE(%s,INTERVAL 1 DAY) order by date""",(what,begin_date,end_date ))
-        self.cursor.execute("""SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) as copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) as copies_sold FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN book b2 ON b1.title_id=b2.title_id JOIN kind k1 ON t1.kind_id=k1.id WHERE (b1.status='SOLD' AND (k1.kind_name LIKE %s OR t1.booktitle LIKE %s) AND (b1.sold_when>=%s AND b1.sold_when<=ADDDATE(%s,INTERVAL 1 DAY)))   GROUP BY b1.id ORDER BY b1.sold_when""", (what, what, begin_date, end_date))
+        self.cursor.execute("""
+        SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) AS copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) AS copies_sold FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN kind k1 ON t1.kind_id=k1.id  JOIN book b2 ON b2.title_id=t1.id WHERE k1.id=%s AND b1.status='SOLD' AND b1.sold_when>='%s' AND b1.sold_when<=ADDDATE('%s',INTERVAL 1 DAY) GROUP BY b1.id  ORDER BY b1.sold_when""" % (kind, begin_date, end_date))
         results= self.cursor.fetchall()
         self.cursor.close()
         return results
@@ -56,13 +65,18 @@ class SalesReport(Report, PdfReport):
 
      
     def _queryForm(self):
-        return """<label class='textbox' for='what'>What</label> <input type='text' class='textbox' name='what' id='what' value='%s'/><br>
-        <label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value='%s'/><br>
-        <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
-        <script type="text/javascript">                                         
-            jQuery(document).ready( function(){
-                jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
-            });
-        </script>        
-        """ % (self.args.get("what",""),self.args.get("begin_date",""),self.args.get("end_date",""))
+        val="<label class='textbox' for='kind'>Kind</label><select class='textbox' id='kind' name='kind'>"
+        for k in list(Kind.select()):
+            val = val+"<option value='%s'>%s</option>" % (k.id,k.kindName)
+        val=val+"</select><br>"
+        val =val+"""
+            <label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value='%s'/><br>
+            <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
+            <script type="text/javascript">                                         
+                jQuery(document).ready( function(){
+                    jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
+                });
+            </script>        
+        """ % (self.args.get("begin_date",""),self.args.get("end_date",""))
+        return val
 

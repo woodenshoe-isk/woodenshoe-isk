@@ -24,7 +24,7 @@ class Images(SQLObjectWithFormGlue):
     def retrieve_image(self, size='small'):
          isbn = self.title.origIsbn
          image_dir = image_directory_root = self._cfg.get('image_directory_root')
-         default_image = self._cfg('image_default_small')
+         default_image = self._cfg.get('image_default_small')
 
          for dirname in [isbn[i:i+3] for i in range(3, 12, 3)]:
              image_dir = os.path.join(image_dir, dirname)
@@ -66,7 +66,8 @@ class Images(SQLObjectWithFormGlue):
     def retrieve_image_url(self, size='small'):
          isbn = self.title.origIsbn
          image_dir = image_directory_root = self._cfg.get('image_directory_root')
-
+         default_image = self._cfg.get('image_default_small')
+         
          for dirname in [isbn[i:i+3] for i in range(3, 12, 3)]:
              image_dir = os.path.join(image_dir, dirname)
  

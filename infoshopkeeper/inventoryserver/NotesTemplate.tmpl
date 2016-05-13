@@ -21,7 +21,7 @@
         //dataTable does pagination, etc, for free
         jQuery.getJSON('/notes/get_notes', null, function( json ) {
             jQuery('#message_table').dataTable({    'aaData':json,
-                                                    'aaSorting':[],
+                                                    'aSorting':[],
                                                     'bProcessing':true,
                                                     'oSearch': {'sSearch':'', bRegex:false, bSmart:true},
                                                     'iDisplayLength': 50,

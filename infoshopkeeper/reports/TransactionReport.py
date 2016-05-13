@@ -72,7 +72,7 @@ class TransactionReport(Report, PdfReport):
         <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
         <script type="text/javascript">                                         
             jQuery(document).ready( function(){
-                jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
+                jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
             });
         </script>        
         """) % (self.args.get("what",""),self.args.get("begin_date",""),self.args.get("end_date",""))

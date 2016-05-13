@@ -17,15 +17,17 @@
         //jQuery('#void-toggle').button();
         
         //make sure keypress goes to default dialog
-//         jQuery(document).keypress(function(event) {
-//             if (  jQuery('input:focus').length == 0 ) {
-//                 jQuery('#book').click();
-//                 jQuery('#my-form-book .isbnfield').focus();
-//                 jQuery('#my-form-book .isbnfield').trigger(event);
+        jQuery(document).keypress(function(event) {
+            if (  jQuery('input:focus').length == 0 ) {
+//                 event.preventDefault();
+                 jQuery('#book').click();
+                 console.log(event);
+                 jQuery('#my-form-book .isbnfield').focus();
+//                 jQuery('#my-form-book .isbnfield').trigger({type:'keypress', which:event.which, keyCode:event.keyCode});
 //                 return false;
-//             }            
-//         });
-        
+            }            
+       });
+    
         //add remove this row button from every row
         jQuery('.remove_item').live('click', function(){
             table_row_index=jQuery(this).parent().parent().index();

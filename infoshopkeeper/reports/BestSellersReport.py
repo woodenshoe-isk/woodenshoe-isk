@@ -17,7 +17,7 @@ class BestSellersReport(Report):
             end_date='2030-01-01'
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
-        select booktitle,count(book.id) as blah  from book,title where book.title_id=title.id and book.status='SOLD' and title.kind_id=%s and sold_when>=%s and sold_when<=ADDDATE(%s,INTERVAL 1 DAY)  group by title_id order by blah desc limit 100
+        SELECT booktitle,count(book.id) AS blah FROM book JOIN title ON book.title_id=title.id WHERE book.status='SOLD' AND title.kind_id=%s AND sold_when>=%s AND sold_when<=ADDDATE(%s,INTERVAL 1 DAY)  GROUP BY title_id ORDER BY blah DESC LIMIT 100
         """,(args['kind'],begin_date,end_date))
         
         results= self.cursor.fetchall()
@@ -25,7 +25,7 @@ class BestSellersReport(Report):
         return results
 
     def format_header(self):
-	    return "<tr><th>Title</th><th>Date Sold</th><th>Count</th></tr>"
+	    return "<tr><th>Title</th><th>Count</th></tr>"
 
     def format_results(self,results):
         return ["<tr><td>%s</td><td>%s</td></tr>" % (r[0],r[1])  for r in results]
@@ -41,7 +41,7 @@ class BestSellersReport(Report):
             <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
             <script type="text/javascript">                                         
                 jQuery(document).ready( function(){
-                    jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
+                    jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
                 });
             </script>        
         """ % (self.args.get("begin_date",""),self.args.get("end_date",""))

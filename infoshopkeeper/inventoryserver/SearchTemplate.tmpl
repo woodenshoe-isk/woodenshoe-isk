@@ -12,7 +12,7 @@ Search the inventory
 <script type="text/javascript">
     //Make lesser used fields hideable
     jQuery(document).ready( function(){
-        jQuery('#sold_begin_date,#sold_end_date,#inv_begin_date,#inv_end_date').datepicker({dateFormat:'yy-mm-dd'});
+        jQuery('#sold_begin_date,#sold_end_date,#inv_begin_date,#inv_end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
         jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
                                                 'sPaginationType':'full_numbers',
                                                 "iDisplayLength": 50});

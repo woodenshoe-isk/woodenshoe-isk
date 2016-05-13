@@ -37,6 +37,7 @@ class MenuData:
 
 from components import db
 from components import inventory
+
 from objects.author import Author
 from objects.book import Book
 from objects.category import Category
@@ -47,8 +48,9 @@ from objects.special_order import SpecialOrder
 from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 from objects.transaction import Transaction
-from tools.isbn import checkI13, convert
-import tools.isbn as isbnlib
+
+from tools import isbn
+
 from IndexTemplate import IndexTemplate
 from SearchTemplate import SearchTemplate
 from BookEditTemplate import BookEditTemplate
@@ -75,9 +77,8 @@ from SpecialOrderEditTemplate import SpecialOrderEditTemplate
 from SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
 from SpecialOrderListTemplate import SpecialOrderListTemplate
 from SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
-from config import configuration
-from upc import upc2isbn
 
+from config import configuration
 import etc
 
 import barcode_monkeypatch
@@ -420,8 +421,8 @@ class Register:
             isbn=isbn[:-5]
         if len(isbn) in (15,17,18) and isbn[-5] != '5':
                     isbn=isbn[:-5]
-        if ( len(isbn)==10 and isbnlib.isValid(isbn)):
-            isbn=isbnlib.convert(isbn)
+        if ( len(isbn)==10 and isbn.isValid(isbn)):
+            isbn=isbn.convert(isbn)
         #search for isbn
         titlelist=list(Title.selectBy(isbn=isbn))
         b=[]
@@ -588,7 +589,7 @@ class Admin:
             result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
             result= '199' + '0'*10
-        result= unicode(int(result[:-1])+1) + checkI13(result[:12])
+        result= unicode(int(result[:-1])+1) + isbn.checkI13(result[:12])
         return result
 
     #wrapper to inventory.addToInventory to be added
@@ -1014,8 +1015,8 @@ class InventoryServer:
         self._titleedittemplate.should_show_images = cfg.get('should_show_images')
         
         print>>sys.stderr, args
+        title=Title.get(args.get('id')) 
         if args.get('remove_author'):
-            title=Title.get(args.get('id'))
             title.removeAuthor(args.get('author_id'))
         self._titleedittemplate.title=Title.form_to_object(Title,args)
         return self._titleedittemplate.respond()

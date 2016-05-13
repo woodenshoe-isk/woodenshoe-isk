@@ -33,7 +33,7 @@ Search the inventory
             return false
         });
         
-        jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'});
+        jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
 
         //hide book id column 
         jQuery('#results_table td:nth-child(9), #results_table th:nth-child(9)').hide();
