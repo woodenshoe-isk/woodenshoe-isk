@@ -1,0 +1,18 @@
+##edit book information
+#from EditTemplate import EditTemplate
+#extends EditTemplate
+
+#def headscripts
+$EditTemplate.headscripts($self)
+#end def
+
+#def pagetitle
+Editing a copy of ${book.title.booktitle}
+#end def
+
+#def body
+<h1>$book.title.booktitle</h1>
+<form class='editform' method="get" action="/bookedit">
+$book.object_to_form
+</form>
+#end def

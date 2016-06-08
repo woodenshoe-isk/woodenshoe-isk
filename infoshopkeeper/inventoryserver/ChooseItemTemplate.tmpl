@@ -36,10 +36,15 @@ Search the inventory
         jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
 
         //hide book id column 
-        jQuery('#results_table td:nth-child(9), #results_table th:nth-child(9)').hide();
+        //jQuery('#results_table td:nth-child(9), #results_table th:nth-child(9)').hide();
         
         //dataTable gives us pagination, etc for free
-        jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
+        var resultsTable = jQuery('#results_table').dataTable({    
+                                                'aSorting':[[1, 'asc']],
+                                                'order':[[1, 'asc']],
+                                                'columnDefs': [
+                                                    { targets: [0], visible: false},
+                                                ],
                                                 'sPaginationType':'full_numbers',
                                                 "iDisplayLength": 50});
         
@@ -48,7 +53,8 @@ Search the inventory
         if (navigator.userAgent.match(/ipad|iphone|ios|android/i) == null) {
             jQuery('#results_table tr').dblclick(function(event) {
                 event.preventDefault();
-                titleID=jQuery(this).children().last()[0].innerHTML
+                var position = resultsTable.fnGetPosition(this); // getting the clicked row position
+                var titleID = resultsTable.fnGetData(position)[0];
                 jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
                     document.location.href= "http://" + document.location.host + '/register/build_cart';
                 });
@@ -57,7 +63,9 @@ Search the inventory
         } else {
             jQuery('#results_table tr').click(function(event) {
                 event.preventDefault();
-                titleID=jQuery(this).children().last()[0].innerHTML
+                var position = resultsTable.fnGetPosition(this); // getting the clicked row position
+                var titleID = resultsTable.fnGetData(position)[0];
+                console.log(titleID);
                 jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
                     document.location.href= "http://" + document.location.host + '/register/build_cart';
                 });
@@ -137,6 +145,7 @@ selected="true"
 <colgroup class="title_id">
 <thead>
   <tr>
+    <th>ID</th>
     #if $should_show_images
     <th>Image</th>
     #end if
@@ -148,13 +157,13 @@ selected="true"
     <th>Distributor</th>
     <th>Publisher</th>
     <th>Last Sold</th>
-    <th>ID</th>
     ##<th>Keyword</th>
   </tr>
 </thead>
 <tbody>
 #for $t in $titles
   <tr>
+    <td>$t.id</td>
     #if $should_show_images
     <td>
         #if $t.images
@@ -170,7 +179,6 @@ selected="true"
     <td>${t.distributors_as_string()}</td>
     <td>${t.safe('publisher')}</td>
     <td>${t.last_book_sold.sold_when}</td>
-    <td>$t.id</td>
     ##<td>$t.categories_as_string</td>
 </tr>
 #end for

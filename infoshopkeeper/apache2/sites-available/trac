@@ -1,0 +1,33 @@
+<Directory /home/tech/Developer/git_repos/infoshopkeeper-trac/chi-bin/trac.wsgi>
+        WSGIApplicationGroup %{GLOBAL}
+        Order deny,allow
+        Allow from all
+</Directory>
+
+<VirtualHost *:8050>
+        ServerName localhost 
+        DocumentRoot /home/tech/Developer/git_repos/infoshopkeeper-trac/htdocs/ 
+
+        WSGIScriptAlias /trac /home/tech/Developer/git_repos/infoshopkeeper-trac/cgi-bin/trac.wsgi
+
+        <Location "/trac">
+                AuthType None 
+                Order deny,allow
+                Allow from all
+        </Location>
+</VirtualHost>
+
+
+<VirtualHost *:8050>
+        ServerName woodenshoebooks.dyndns.org
+        DocumentRoot /home/tech/Developer/git_repos/infoshopkeeper-trac/htdocs/ 
+
+        WSGIScriptAlias /trac /home/tech/Developer/git_repos/infoshopkeeper-trac/cgi-bin/trac.wsgi
+
+        <Location "/trac">
+                AuthType Basic
+                AuthName "woodenshoe"
+                AuthUserFile /home/tech/Developer/git_repos/infoshopkeeper-trac/trac.htpasswd
+                Require valid-user
+        </Location>
+</VirtualHost>

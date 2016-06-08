@@ -17,19 +17,18 @@
         //jQuery('#void-toggle').button();
         
         //make sure keypress goes to default dialog
-        jQuery(document).keypress(function(event) {
+        jQuery(document).keydown(function(event) {
             if (  jQuery('input:focus').length == 0 ) {
-//                 event.preventDefault();
+                 //event.preventDefault();
                  jQuery('#book').click();
-                 console.log(event);
                  jQuery('#my-form-book .isbnfield').focus();
-//                 jQuery('#my-form-book .isbnfield').trigger({type:'keypress', which:event.which, keyCode:event.keyCode});
-//                 return false;
+                 jQuery('#my-form-book .isbnfield').trigger(jQuery.Event({type:'keydown', which:event.which, keyCode:event.keyCode, charCode:event.charCode}));
+//               return false;
             }            
        });
     
         //add remove this row button from every row
-        jQuery('.remove_item').live('click', function(){
+        jQuery( document ).on('click', '.remove_item', function(){
             table_row_index=jQuery(this).parent().parent().index();
             jQuery.post('/register/remove_item_from_cart', {index:table_row_index}, function() {
                 jQuery('table tr:eq('+table_row_index+')').remove();
@@ -125,7 +124,7 @@
                 }
             });
             //connect the dialog and the button
-            jQuery(this).parent().siblings('.main').find('.department_button:#'+jQuery(this).attr('data-name')).click( function() {
+            jQuery(this).parent().siblings('.main').find('#'+jQuery(this).attr('data-name')).click( function() {
                 dlg.dialog('open');
                 return false;
             });
@@ -218,12 +217,14 @@
         //prevent return from triggering submit.
         //we want to actually approve the data before we submit.
         jQuery('.isbnfield').keypress( function(evt) {
-            if (evt.keyCode == 13) {
+            if (evt.keyCode == 13 || evt.charCode == 13) {
+                evt.preventDefault();
+
                 console.log('in key press traps return');
-                jQuery(this).closest('.ui-dialog').find('.ui-button')[1].focus();
+                console.log(jQuery(this).closest('.ui-dialog').find('.ui-button'));
+                jQuery(this).closest('.ui-dialog').find('.ui-button')[2].focus();
 
                 isbn_listener(evt);
-                evt.preventDefault();
             }
         });
         

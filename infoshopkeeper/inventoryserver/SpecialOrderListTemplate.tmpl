@@ -21,7 +21,8 @@ Special Orders
         
         //dataTable gives us pagination, etc for free
         jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
-                                                'sPaginationType':'full_numbers',
+                                                'order':[[1, 'asc']],
+                                                'sPaginationType':'simple_numbers',
                                                 "iDisplayLength": 50,
                                                 'sDom': '<"H"lfr><"#new_special_order">t<"F"ip>'
                                             });

@@ -34,10 +34,19 @@ Search the inventory
         });
         
         jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
-        jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
-                                                'sPaginationType':'full_numbers',
-						"iDisplayLength": 50});
-        
+        var resultsTable = jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
+                                                'sPaginationType':'simple_numbers',
+                                                'columnDefs': [
+                                                    {},
+                                                ],
+                                                "bJQueryUI": true,
+                                                "bAutoWidth":true,
+                                                "order":[[1, 'asc']],
+                                                "iDisplayLength": 50,
+                                                "scrollX": 100,
+                                                "sDom": '<"top"lf>rt<"bottom"ip><"clear">'
+                                                });
+
 	});
 </script>
 #end def

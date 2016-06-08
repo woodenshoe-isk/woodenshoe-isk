@@ -92,7 +92,8 @@ class Images(SQLObjectWithFormGlue):
                        image_dir = image_directory_root
                        for dirname in [isbn[i:i+3] for i in range(3, 12, 3)]:
                            image_dir = os.path.join(image_dir, dirname)
-                           os.path.mkdir(image_dir)
+                           if not os.path.exists(image_dir):
+                               os.mkdir(image_dir)
  
                    with open(image_filename, 'wb') as image_file:
                        image_file.write(imagedata)

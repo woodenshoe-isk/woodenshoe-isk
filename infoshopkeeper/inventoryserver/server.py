@@ -49,7 +49,7 @@ from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 from objects.transaction import Transaction
 
-from tools import isbn
+from tools import isbn as isbnlib
 
 from IndexTemplate import IndexTemplate
 from SearchTemplate import SearchTemplate
@@ -421,8 +421,8 @@ class Register:
             isbn=isbn[:-5]
         if len(isbn) in (15,17,18) and isbn[-5] != '5':
                     isbn=isbn[:-5]
-        if ( len(isbn)==10 and isbn.isValid(isbn)):
-            isbn=isbn.convert(isbn)
+        if ( len(isbn)==10 and isbnlib.isValid(isbn)):
+            isbn=isbnlib.convert(isbn)
         #search for isbn
         titlelist=list(Title.selectBy(isbn=isbn))
         b=[]
@@ -589,7 +589,7 @@ class Admin:
             result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
             result= '199' + '0'*10
-        result= unicode(int(result[:-1])+1) + isbn.checkI13(result[:12])
+        result= unicode(int(result[:-1])+1) + isbnlib.checkI13(result[:12])
         return result
 
     #wrapper to inventory.addToInventory to be added
@@ -1497,7 +1497,7 @@ class InventoryServer:
     def test(self):
         return '''
                 <link type="text/css" href="/javascript/css/smoothness/jquery-ui-1.8.13.custom.css" rel="Stylesheet" />	
-                <script type='text/javascript' src='/javascript/jquery-1.6.1.min.js'></script>
+                <script type='text/javascript' src='/javascript/jquery-1.12.3.min.js'></script>
                 <script type='text/javascript' src='/javascript/jquery.dataTables.js'></script>
                 <script type='text/javascript' src='/javascript/FixedHeader.js'></script>
                 <script type='text/javascript' src='/javascript/jquery-ui-1.9.1.custom/js/jquery-ui-1.9.1.custom.js'></script>

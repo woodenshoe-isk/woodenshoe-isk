@@ -1,0 +1,50 @@
+<VirtualHost localhost:8015>
+    LogLevel debug
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    ServerName localhost
+    ServerAlias localhost
+    ServerAdmin woodenshoe.tech@gmail.com
+
+    WSGIScriptAlias / /home/tech/Developer/isk-production/infoshopkeeper/myapp_local.wsgi
+    WSGIDaemonProcess isk.local user=www-data group=www-data processes=2 display-name=%{GROUP}
+    WSGIProcessGroup isk.local
+
+    Alias /style/ /home/tech/Developer/isk-production/infoshopkeeper/inventoryserver/style/
+    <Directory /home/tech/Developer/isk-production/infoshopkeeper/inventoryserver/style>
+    #Order deny,allow
+    #Allow from all
+      Require all granted
+    </Directory>
+
+    Alias /javascript/ /home/tech/Developer/isk-production/infoshopkeeper/inventoryserver/javascript/
+    <Directory /home/tech/Developer/isk-production/infoshopkeeper/inventoryserver/javascript>
+    #Order deny,allow
+    #Allow from all
+      Require all granted
+    </Directory>
+
+    Alias /images/ /home/tech/Developer/isk-production/infoshopkeeper/inventoryserver/images/
+    <Directory /home/tech/Developer/isk-production/infoshopkeeper/inventoryserver/images>
+          #Order deny,allow
+           #Allow from all
+         Require all granted
+    </Directory>
+
+    Alias /favicon.ico /home/tech/Developer/isk-production/infoshopkeeper/logo_favicon.png
+    <Files /home/tech/Developer/isk-production/infoshopkeeper/logo_favicon.png>
+    #Order deny,allow
+    #Allow from all
+      Require all granted
+    </Files>
+
+    <Directory /home/tech/Developer/isk-production/infoshopkeeper>
+      #Deny from all
+      #Allow from 127.0.0.1
+      Require host localhost
+    </Directory>
+
+</VirtualHost>
+

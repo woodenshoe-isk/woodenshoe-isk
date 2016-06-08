@@ -13,9 +13,19 @@ Search the inventory
     //Make lesser used fields hideable
     jQuery(document).ready( function(){
         jQuery('#sold_begin_date,#sold_end_date,#inv_begin_date,#inv_end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
-        jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
-                                                'sPaginationType':'full_numbers',
-                                                "iDisplayLength": 50});
+        var resultsTable = jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
+                                                'sPaginationType':'simple_numbers',
+                                                'columnDefs': [
+                                                    { targets: [0], visible: false},
+                                                ],
+                                                "bJQueryUI": true,
+                                                "bAutoWidth":true,
+                                                "order":[[1, 'asc']],
+                                                "iDisplayLength": 50,
+                                                "scrollX": 100,
+                                                "sDom": '<"top"lf>rt<"bottom"ip><"clear">'
+                                                });
+        
         //.showHideSearchForm hidden 
         jQuery(".showHideSearchForm").hide();
         
@@ -37,21 +47,23 @@ Search the inventory
         });
 
         //hide book id column 
-        jQuery('#results_table td:last-child, #results_table th:last-child').hide();
+        //jQuery('#results_table td:last-child, #results_table th:last-child').hide();
         
         //open title edit. Desktops open on doubleclick.
         //IOS & android use single click.
         if (navigator.userAgent.match(/ipad|iphone|ios|android/i) == null) {
             jQuery('#results_table tr').dblclick(function(event) {
                     event.preventDefault();
-                    titleID=jQuery(this).children().last()[0].innerHTML;
+                    var position = resultsTable.fnGetPosition(this); // getting the clicked row position
+                    var titleID = resultsTable.fnGetData(position)[0];
                     document.location.href= "http://" + document.location.host + '/titleedit?id=' + titleID;
                     return false;
             });
         } else {
             jQuery('#results_table tr').click(function(event) {
                     event.preventDefault();
-                    titleID=jQuery(this).children().last()[0].innerHTML;
+                    var position = resultsTable.fnGetPosition(this); // getting the clicked row position
+                    var titleID = resultsTable.fnGetData(position)[0];
                     document.location.href= "http://" + document.location.host + '/titleedit?id=' + titleID;
                     return false;
             });
@@ -179,6 +191,7 @@ selected="true"
 <table class="sortable" id="results_table" >
 <thead>
   <tr>
+    <th>ID</th>
     <th>Mark</th>
     #if $should_show_images
     <th>Image</th>
@@ -194,14 +207,14 @@ selected="true"
     <th>Latest Inventoried</th>
     <th>First Sold</th>
     <th>Last Sold</th>
-    <th>ID</th>
   </tr>
 </thead>
 <tbody>
 #for $t in $titles
     #try
       <tr>
-        <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
+      <td>$t.id</td>
+      <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
                    event.stopPropagation();
                }
                else if(window.event){
@@ -227,7 +240,6 @@ selected="true"
         <td>${t.last_book_inventoried.inventoried_when}</td>
         <td>${t.first_book_sold.sold_when}</td>
         <td>${t.last_book_sold.sold_when}</td>
-        <td>$t.id</td>
       </tr>
     #except
       <tr>

@@ -1,0 +1,19 @@
+##List all locations. Each location is linkded
+##to a location edit page for it to be edited
+
+#from Skeleton import Skeleton
+#extends Skeleton
+
+#def pagetitle
+Locations
+#end def
+
+#def body
+<h1>Locations</h1>
+<ul>
+#for $l in $locations
+<li><a href="/admin/locationedit?id=$l.id">$l.locationName</></li>
+#end for
+</ul>
+<a href="/admin/locationedit">Add a new location</a>
+#end def

@@ -34,17 +34,26 @@ Search the inventory
         });
         
         //hide book id column 
-        jQuery('#results_table td:nth-child(9), #results_table th:nth-child(9)').hide();
+        //jQuery('#results_table td:nth-child(9), #results_table th:nth-child(9)').hide();
         
         //dataTable gives us pagination, etc for free
-        jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
-                                                'sPaginationType':'full_numbers',
-                                                "iDisplayLength": 50});
+        var resultsTable = jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
+                                                "order":[[1, 'asc']],
+                                                'sPaginationType':'simple_numbers',
+                                                'columnDefs': [
+                                                    { targets: [0], visible: false},
+                                                ],
+                                                "bJQueryUI": true,
+                                                "bAutoWidth":true,
+                                                "iDisplayLength": 50,
+                                                "scrollX": 100,
+                                                "sDom": '<"top"lf>rt<"bottom"ip><"clear">'});
         
         //doubleclick adds item to cart
         jQuery('#results_table tr').dblclick(function(event) {
             event.preventDefault();
-            titleID=jQuery(this).children().last()[0].innerHTML
+            var position = resultsTable.fnGetPosition(this); // getting the clicked row position
+            var titleID = resultsTable.fnGetData(position)[0];
             jQuery.get('/admin/search_id', {titleid:titleID}, function(data) {
                 console.log(data);
                 autofill_dict=data[0];
@@ -132,6 +141,7 @@ selected="true"
 <colgroup class="title_id">
 <thead>
   <tr>
+    <th>ID</th>
     #if $should_show_images
     <th>Image</th>
     #end if  
@@ -143,13 +153,13 @@ selected="true"
     <th>Distributor</th>
     <th>Publisher</th>
     <th>Last Sold</th>
-    <th>ID</th>
     ##<th>Keyword</th>
   </tr>
 </thead>
 <tbody>
 #for $t in $titles
   <tr>
+    <td>$t.id</td>
     #if $should_show_images
     <td>
         #if $t.images
@@ -165,7 +175,6 @@ selected="true"
     <td>${t.distributors_as_string()}</td>
     <td>${t.safe('publisher')}</td>
     <td>${t.last_book_sold.sold_when}</td>
-    <td>$t.id</td>
     ##<td>$t.categories_as_string</td>
 </tr>
 #end for

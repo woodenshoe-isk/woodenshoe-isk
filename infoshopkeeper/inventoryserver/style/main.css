@@ -94,12 +94,15 @@ border-color:#000;
 border-style:solid;
 background-color:white;
 table-layout:auto;
+autowidth:false;
 width:100%;
 }
 table.sortable th {
 border-width:2px;
 border-color:#000;
+background-color:#c44;
 border-style:solid;
+color:#000;
 }
 table.sortable td {
 border-width: 1px;
@@ -353,7 +356,6 @@ border: 1px solid #aaa;
 padding: 2px 5px;
 margin: 0 3px;
 cursor: pointer;
-*cursor: hand;
 }
 div.dataTables_paginate span.paginate_button {
 background-color: #ddd;

@@ -165,5 +165,12 @@ class Title(SQLObjectWithFormGlue):
         except:
             pass
         return first_book
-
-
+        
+#     def _get_images(self):
+#         #return self._SO_get_images()
+#         if self._SO_get_images==True:
+#             print>>sys.stderr, "got images"
+#             return self._SO_get_images()
+#         else:
+#             print>>sys.stderr, "no image"
+#             return image_default_small_url

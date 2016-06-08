@@ -9,15 +9,18 @@
 <script type="text/javascript">
     jQuery(document).ready( function(){
         jQuery('form:first input:first').focus();    
-        jQuery('#report_results_table').dataTable({
+        var resultsTable = jQuery('#report_results_table').dataTable({
             "aaSorting":[],
             "bJQueryUI": true,
-            "bAutoWidth":false,
-            "sPaginationType": "full_numbers",
+            "bAutoWidth":true,
+            'sPaginationType':'simple_numbers',
+            'columnDefs': [
+                {},
+            ],
             "iDisplayLength": 50,
-            //"aoColumnDefs": [{ "sWidth": "50%", "aTargets": [ "_all" ] },]
-       });
-       jQuery("#report_results_table").width('100%');
+            "order":[],
+            "sDom": '<"top"lf>rt<"bottom"ip><"clear">'});
+       resultsTable.width('100%');
     });
 </script>
 #end def
@@ -39,9 +42,9 @@ $header
 $r
 #end for
 </tbody>
-</table>
 #if $report.do_total
-<b>Total: $total</b>
+<tfoot><td><b>Total: $total</b></td></tfoot>
 #end if
+</table>
 #end if
 #end def

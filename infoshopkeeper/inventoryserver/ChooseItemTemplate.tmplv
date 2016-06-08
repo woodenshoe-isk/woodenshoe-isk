@@ -1,0 +1,181 @@
+##Choose item from inventory using usual search criteria
+##and add it to cart
+
+#from Skeleton import Skeleton
+#extends Skeleton
+
+#def pagetitle
+Search the inventory
+#end def
+
+#def headscripts
+<script src="/javascript/jquery.fixedheadertable.js"></script>
+<script type="text/javascript">                                         
+    //Make lesser used fields hideable
+    jQuery(document).ready( function(){
+        //.showHideSearchForm hidden 
+        jQuery(".showHideSearchForm").hide();
+        
+        //this is where we open/close disclosure triangle
+        //array is open/closed options for span class
+        var disclosureTriContent = ['<span class="show_hide_disc_triangle ui-state-default ui-corner-all" data-subscript="0"><span class="ui-icon ui-icon-triangle-1-e"></span><span class="text" style="display: block; ">More options...</span></span>',
+            '<span class="show_hide_disc_triangle ui-state-default ui-corner-all" data-subscript="1"><span class="ui-icon ui-icon-triangle-1-s"></span><span class="text" style="display: block; ">Fewer options...</span></span>'];
+
+        //start out with .slidingDiv hidden
+        jQuery(".slidingDiv").hide();
+        jQuery(".show_hide_disc_triangle").show();
+        jQuery('.show_hide_div').click(function(){
+            //slidetoggle hides/shows div
+            jQuery(".slidingDiv").slideToggle();
+            //swap out label on show/hide fields button
+            jQuery(this).html(disclosureTriContent[(jQuery(this).find('.show_hide_disc_triangle').data('subscript') + 1) % 2]);
+            jQuery(this).find('.show_hide_disc_triangle').show();
+            return false
+        });
+        
+        jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
+
+        //hide book id column 
+        jQuery('#results_table td:nth-child(9), #results_table th:nth-child(9)').hide();
+        
+        //dataTable gives us pagination, etc for free
+        jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
+                                                'order':[[1, 'asc']],
+                                                'sPaginationType':'full_numbers',
+                                                "iDisplayLength": 50});
+        
+        //doubleclick adds item to cart, except for iOS/Android
+        //where we use a single click
+        if (navigator.userAgent.match(/ipad|iphone|ios|android/i) == null) {
+            jQuery('#results_table tr').dblclick(function(event) {
+                event.preventDefault();
+                titleID=jQuery(this).children().last()[0].innerHTML
+                jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
+                    document.location.href= "http://" + document.location.host + '/register/build_cart';
+                });
+                return false;
+            });
+        } else {
+            jQuery('#results_table tr').click(function(event) {
+                event.preventDefault();
+                titleID=jQuery(this).children().last()[0].innerHTML
+                jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
+                    document.location.href= "http://" + document.location.host + '/register/build_cart';
+                });
+                return false;
+            });
+        }
+	});
+</script>
+#end def
+
+#def body
+<h1>Inventory</h1>
+<div class="showhide"><a  href="javascript:show_hide('search_form')">Show/hide search form</a></div>
+<br />
+<form id="search_form" method="get" action="/register/select_item_search"
+#if not($empty)
+style="visibility:hidden;display:none"
+#end if
+>
+
+<label class="textbox" for="title">Title</label> 
+<input class="textbox" type="text" id="title" name="title" value="$title" /><br />
+
+<label class="textbox" for="author">Author</label> 
+<input class="textbox" type="text" name="author" id="author" value="$author" /><br />
+
+<label class="textbox" for="category">Keyword</label> 
+<input class="textbox" type="text" name="category" id="category" value="$category" /><br />
+
+<div class='show_hide_div'>
+<span class="show_hide_disc_triangle ui-state-default ui-corner-all" data-subscript="0"><span class="ui-icon ui-icon-triangle-1-e"></span><span class="text" style="display: block; ">More options...</span></span>
+</div>
+<div class="slidingDiv">
+
+<label class="textbox" for="location">Location</label> 
+<select class="textbox" id="location" name="location">
+#set $i=0
+#for $loc in $locations
+<option id=$i value='$loc.id' 
+#if "%s" %($loc.id)==$location
+selected="true" 
+#end if 
+>$loc.locationName</option>
+#set $i=$i+1
+#end for
+</select><br />
+
+<label class="textbox" for="publisher">Publisher</label> 
+<input class="textbox" type="text" name="publisher" id="publisher" value="$publisher" /><br />
+
+<label class="textbox" for="distributor">Distributor</label> 
+<input class="textbox" type="text" name="distributor" id="distributor" value="$distributor" /><br />
+
+<label class="textbox" for="owner">Owner</label> 
+<input class="textbox" type="text" name="owner" id="owner" value="$owner" /><br />
+
+<label class="textbox" for="tag">Tag</label> 
+<input class="textbox" type="text" id="tag" name="tag" value="$tag" /><br />
+</div>
+
+<label class="textbox" for="kind">Kind</label> 
+<select class="textbox" id="kind" name="kind">
+#for $k in $kinds
+<option value='$k.id' 
+#if "%s" %($k.id)==$kind  
+selected="true" 
+#end if 
+>$k.kindName</option>
+#end for
+</select><br />
+
+<input class="submit" type="submit">
+
+<br />
+</form>
+<table class="sortable" id="results_table" >
+<colgroup class="title_id">
+<thead>
+  <tr>
+    #if $should_show_images
+    <th>Image</th>
+    #end if
+    <th>Title</th>
+    <th>Author</th>
+    <th>ISBN</th>
+    <th>Format</th>
+    <th>Copies in Stock</th>
+    <th>Distributor</th>
+    <th>Publisher</th>
+    <th>Last Sold</th>
+    <th>ID</th>
+    ##<th>Keyword</th>
+  </tr>
+</thead>
+<tbody>
+#for $t in $titles
+  <tr>
+    #if $should_show_images
+    <td>
+        #if $t.images
+        <img src='$t.images.retrieve_image_url("small")'>
+        #end if
+    </td>
+    #end if   
+    <td>$t.safe('booktitle')</td>
+    <td>$t.authors_as_string</td>
+    <td>$t.isbn</td>
+    <td>$t.type</td>
+    <td>${t.copies_in_status("STOCK")}</td>
+    <td>${t.distributors_as_string()}</td>
+    <td>${t.safe('publisher')}</td>
+    <td>${t.last_book_sold.sold_when}</td>
+    <td>$t.id</td>
+    ##<td>$t.categories_as_string</td>
+</tr>
+#end for
+</tbody>
+</table>
+
+#end def

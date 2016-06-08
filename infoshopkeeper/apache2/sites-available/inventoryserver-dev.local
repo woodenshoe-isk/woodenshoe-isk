@@ -1,0 +1,42 @@
+<VirtualHost *:8040>
+
+    ServerName localhost
+    ServerAlias localhost
+    ServerAdmin mkapes@gmail.com
+
+#    DocumentRoot /home/tech/Developer/git_repos/development/infoshopkeeper
+
+#    <Directory /home/tech/Developer/git_repos/development/infoshopkeeper>
+#    Order allow,deny
+#    Allow from all
+#    </Directory>
+    
+    WSGIScriptAlias / /home/tech/Developer/git_repos/development/infoshopkeeper/myapp_local.wsgi
+    WSGIDaemonProcess localhost processes=4 threads=25 display-name=%{GROUP}
+   WSGIProcessGroup localhost
+
+    Alias /style/ /home/tech/Developer/git_repos/development/infoshopkeeper/inventoryserver/style/
+    <Directory /home/tech/Developer/git_repos/development/infoshopkeeper/inventoryserver/style>
+    Order deny,allow
+    Allow from all
+    </Directory>
+
+    Alias /javascript/ /home/tech/Developer/git_repos/development/infoshopkeeper/inventoryserver/javascript/
+    <Directory /home/tech/Developer/git_repos/development/infoshopkeeper/inventoryserver/javascript>
+    Order deny,allow
+    Allow from all
+    </Directory>
+
+    Alias /favicon.ico /usr/lib/pymodules/python2.6/cherrypy/favicon.ico
+    <Files /usr/lib/pymodules/python2.6/cherrypy/favicon.ico>
+    Order deny,allow
+    Allow from all
+    </Files>
+
+    <Directory /home/tech/Developer/git_repos/development/infoshopkeeper>
+    Order allow,deny
+    Allow from all
+    </Directory>
+
+</VirtualHost>
+

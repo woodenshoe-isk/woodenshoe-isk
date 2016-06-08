@@ -3,6 +3,7 @@ import types,string
  
 import ecs
 from etc import amazon_license_key,amazon_secret_key, amazon_associate_tag, default_kind
+
 from objects.title import Title
 from objects.book import Book
 from objects.author import Author
@@ -13,7 +14,8 @@ from objects.location import Location
 from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 
-import tools.isbn as isbnlib
+import tools.isbn
+
 from upc import upc2isbn
 
 import sys
@@ -45,11 +47,11 @@ class inventory(object):
                 if isbn[-5] == '5':
                     price = float(isbn[-4:])/100
                 isbn=isbn[:-5]
-            if ( len(isbn)==10 and isbnlib.isValid(isbn)):
-                isbn=isbnlib.convert(isbn)
+            if ( len(isbn)==10 and tools.isbn.isValid(isbn)):
+                isbn=tools.isbn.convert(isbn)
         return isbn, price
  
-    def lookup_by_isbn(self,number):
+    def lookup_by_isbn(self,number, forceUpdate=False):
         isbn, price = self.process_isbn(number)
         print>>sys.stderr, isbn, price
         if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
@@ -58,7 +60,7 @@ class inventory(object):
             #print titles #debug
             self.known_title= False
             the_titles=list(titles)
-            if len(the_titles) > 0:
+            if (len(the_titles) > 0) and ( not forceUpdate ):
                 #print "in titles"
                 self.known_title= the_titles[0]
                 ProductName = the_titles[0].booktitle.format()
@@ -115,9 +117,13 @@ class inventory(object):
                  
                 idType=''
                 if len(isbn)==12:
-                        idType='UPC'
+                    idType='UPC'
                 elif len(isbn)==13:
+                    if isbn.startswith('978') or isbn.startswith('979'):
+                        idType='ISBN'
+                    else:
                         idType='EAN'
+                
                 try:
                         pythonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
                 except ecs.InvalidParameterValue:
@@ -128,20 +134,27 @@ class inventory(object):
                     result={}
                     authors=[]
                     categories=[]
-                    b=pythonBooks[0]
+                    
+                    len_largest = 0
+                    index_largest = 0
+                    for i, book in enumerate(pythonBooks):
+                        if len_largest < len(dir(book)):
+                            len_largest = len(dir(book))
+                            index_largest = i
+                    book_for_info = pythonBooks[index_largest]
  
                     for x in ['Author','Creator', 'Artist', 'Director']:
-                        if hasattr(b,x):
-                            if type(getattr(b,x))==type([]):
-                                authors.extend(getattr(b,x))
+                        if hasattr(book_for_info,x):
+                            if type(getattr(book_for_info,x))==type([]):
+                                authors.extend(getattr(book_for_info,x))
                             else:
-                                authors.append(getattr(b,x))
-                     
- 
+                                authors.append(getattr(book_for_info,x))
+                 
+
                     authors_as_string = ', '.join(authors)
-  
+
                     categories_as_string =""
-                     
+                 
                     # a bit more complicated of a tree walk than it needs be.
                     # set up to still have the option of category strings like "history -- us"
                     # switched to sets to quickly remove redundancies.
@@ -169,52 +182,52 @@ class inventory(object):
                         for n in nodeslist:
                             nodes = nodes.union(n)
                         return nodes
-        
- 
-                    categories=parseBrowseNodes(b.BrowseNodes)
+    
+
+                    categories=parseBrowseNodes(book_for_info.BrowseNodes)
                     categories_as_string = ', '.join(categories)
- 
- 
+
+
                     ProductName=""
-                    if hasattr(b,'Title'):
-                        ProductName=b.Title
- 
-                         
-                    Manufacturer=""
-                    if hasattr(b,'Manufacturer'):
-                        Manufacturer=b.Manufacturer
- 
-                    ListPrice=""
-                    if hasattr(b,'ListPrice'):
-                        ListPrice=b.ListPrice.FormattedPrice.replace("$",'')
- 
-                    Format=''
-                    if hasattr(b, "Binding"):
-                        Format=b.Binding
+                    if hasattr(book_for_info,'Title'):
+                        ProductName=book_for_info.Title
+
                      
+                    Manufacturer=""
+                    if hasattr(book_for_info,'Manufacturer'):
+                        Manufacturer=book_for_info.Manufacturer
+
+                    ListPrice=""
+                    if hasattr(book_for_info,'ListPrice'):
+                        ListPrice=book_for_info.ListPrice.FormattedPrice.replace("$",'')
+
+                    Format=''
+                    if hasattr(book_for_info, "Binding"):
+                        Format=book_for_info.Binding
+                 
                     Kind=''
-                    if b.ProductGroup=='Book':
+                    if book_for_info.ProductGroup=='Book':
                         Kind='books'
-                    elif b.ProductGroup=='Music':
+                    elif book_for_info.ProductGroup=='Music':
                         Kind='music'
-                    elif b.ProductGroup in ('DVD', 'Video'):
+                    elif book_for_info.ProductGroup in ('DVD', 'Video'):
                         Kind='film'
-                        
-                    if hasattr(b, "LargeImage"):
-                        large_url=b.LargeImage.URL
+                    
+                    if hasattr(book_for_info, "LargeImage"):
+                        large_url=book_for_info.LargeImage.URL
                     else:
                         large_url=''
 
-                    if hasattr(b, "MediumImage"):
-                        med_url=b.MediumImage.URL
+                    if hasattr(book_for_info, "MediumImage"):
+                        med_url=book_for_info.MediumImage.URL
                     else:
                         med_url=''
 
-                    if hasattr(b, "SmallImage"):
-                        small_url=b.SmallImage.URL
+                    if hasattr(book_for_info, "SmallImage"):
+                        small_url=book_for_info.SmallImage.URL
                     else:
                         small_url=''
-                     
+                 
                     return {"title":ProductName,
                         "authors":authors,
                         "authors_as_string":authors_as_string,
@@ -232,7 +245,7 @@ class inventory(object):
                         "special_orders": []}
                 else:
                     return []
-                 
+             
         
         else:
             return []
@@ -424,7 +437,9 @@ class inventory(object):
             known_title=Title(isbn=isbn, origIsbn=orig_isbn, booktitle=title, publisher=publisher,tag=" ",type=types, kindID=kind_id)
             print>>sys.stderr, known_title
             
-            im=Images(titleID=title.id, largeUrl=large_url, med_url=medUrl, smallUrl=small-url)
+            im=Images(titleID=known_title.id, largeUrl=large_url, medUrl=med_url, smallUrl=small_url)
+            print>>sys.stderr, im
+            
             for rawAuthor in authors:
                 author = rawAuthor.encode("utf8", "backslashreplace")
             theAuthors = Author.selectBy(authorName=author)
@@ -451,9 +466,9 @@ class inventory(object):
         for i in range(int(quantity)): 
             print>>sys.stderr, "book loop"
             b=Book(title=known_title,status=status.encode("utf8", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"),listprice=listprice, ourprice=ourprice, location=int(location_id),owner=owner.encode("utf8", "backslashreplace"),notes=notes.encode("utf8", "backslashreplace"),consignmentStatus="")
-#               b.extracolumns()
+#               book_for_info.extracolumns()
 #~ #               for mp in extra_prices.keys():
-#                   setattr(b,string.replace(mp," ",""),extra_prices[mp])
+#                   setattr(book_for_info,string.replace(mp," ",""),extra_prices[mp])
  
                  
     def getInventory(self,queryTerms):
@@ -522,22 +537,27 @@ class inventory(object):
         results={}
         i=1
         for b in books:
-            theTitle=b.title.booktitle
-            authorString=string.join([a.authorName for a in b.title.author],",")
-            categoryString=string.join([c.categoryName for c in b.title.categorys],",")
+            theTitle=book_for_info.title.booktitle
+            authorString=string.join([a.authorName for a in book_for_info.title.author],",")
+            categoryString=string.join([c.categoryName for c in book_for_info.title.categorys],",")
             results[i]=(string.capitalize(theTitle),
                         authorString, 
-                        b.listprice  if b.listprice is not None else '',
-                        b.title.publisher if b.title.publisher is not None else '',
-                        b.status if b.status is not None else'',
-                        b.title.isbn,
-                        b.distributor if b.distributor is not None else '',
-                        b.location.locationName if b.location is not None else '',
-                        b.notes if b.notes is not None else '',
-                        b.id,
-                        b.title.kind and b.title.kind.kindName if b.title.kind is not None else '',
+                        book_for_info.listprice  if book_for_info.listprice is not None else '',
+                        book_for_info.title.publisher if book_for_info.title.publisher is not None else '',
+                        book_for_info.status if book_for_info.status is not None else'',
+                        book_for_info.title.isbn,
+                        book_for_info.distributor if book_for_info.distributor is not None else '',
+                        book_for_info.location.locationName if book_for_info.location is not None else '',
+                        book_for_info.notes if book_for_info.notes is not None else '',
+                        book_for_info.id,
+                        book_for_info.title.kind and book_for_info.title.kind.kindName if book_for_info.title.kind is not None else '',
             categoryString,
-            b.title.type if b.title.type is not None else '')
+            book_for_info.title.type if book_for_info.title.type is not None else '')
         return results
- 
+        
+        def updateItem(self, id):
+            title = Title.get(id)
+            title_info = self.lookup_by_isbn( title.orig_isbn, forceUpdate=True)
+            
+            
     
