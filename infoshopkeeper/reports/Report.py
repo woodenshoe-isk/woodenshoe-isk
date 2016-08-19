@@ -27,7 +27,7 @@ class Report:
         for r in results:
             total=total+r[self.total_index]
         return total
-    
+   
     #override to do actual query
     def query(self,args):
         self.cursor=self.conn.cursor()
@@ -42,6 +42,10 @@ class Report:
         parser.close()
         html=top+self._queryForm()+parser.text()
         return html
+     
+    #override to add to html header
+    def headscripts(self):
+        return ""
     
     #override to do return actual form for query
     def _queryForm(self):

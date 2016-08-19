@@ -2,6 +2,7 @@
 # coding: UTF-8
 import cherrypy
 import os
+import re
 import string
 import subprocess
 import sys
@@ -12,8 +13,15 @@ from mx.DateTime import now
 
 from Cheetah.Template import Template
 from simplejson import JSONEncoder
+
 import turbojson
 import json
+
+from MySQLdb import escape_string
+
+import os.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 from sqlobject.sqlbuilder import *
 from sqlobject.dberrors import DuplicateEntryError
 
@@ -86,15 +94,6 @@ import barcodeLabel
 import specialOrderLabel
 
 cfg = configuration()
-
-from MySQLdb import escape_string
-
-import string
-import re
-
-import os.path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
 
 #decorator function to return json
 turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
@@ -310,7 +309,10 @@ class Register:
                             shouldRaiseException=True
             #it should be zero but just in case
             #there was an error, items with error are still kept
-            print>>sys.stderr, 'cart length is now ', len(cart['items'])
+            try:
+                print>>sys.stderr, 'cart length is now ', len(cart['items'])
+            except KeyError:
+                print>>sys.stderr, 'cart is now', cart
             if cart['items'].__len__()==0:
                 cherrypy.session['cart']={}
             else:
@@ -322,7 +324,7 @@ class Register:
             hooks[:] = [h for h in hooks if h.callback is not forbidden]
             #raise the delayed exception
             if shouldRaiseException:
-                raise SQLObjectNotFound
+                raise sqlobject.SQLObjectNotFound
                                     
     @cherrypy.expose
     @cherrypy.tools.jsonify()

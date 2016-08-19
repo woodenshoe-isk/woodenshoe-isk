@@ -14,6 +14,17 @@ class SalesReport(Report, PdfReport):
     total_index=3
     do_total=True
     show_header=True
+    
+    def headscripts(self):
+        return '''
+            <script type="text/javascript">                                         
+                jQuery(document).ready( function(){
+                    jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
+                    jQuery('td.status:contains("NOT FOUND")').parent().children('td').css({'color':'red'});
+                });
+           </script>
+        '''      
+
         
     def query(self,args):
         self.cursor=self.conn.cursor()
@@ -22,12 +33,16 @@ class SalesReport(Report, PdfReport):
         print>>sys.stderr, args
         begin_date=args.get('begin_date','1990-01-01') or  '1990-01-01'
         end_date=args.get('end_date','2030-01-01') or '2030-01-01'
-        print>>sys.stderr, begin_date, end_date
-        print>>sys.stderr,  """SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) as copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) as copies_sold FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN book b2 ON b1.title_id=b2.title_id JOIN kind k1 ON t1.kind_id=k1.id WHERE (b1.status='SOLD' AND k1.id=%s AND (b1.sold_when>=%s AND b1.sold_when<=ADDDATE(%s,INTERVAL 1 DAY)))   GROUP BY b1.id ORDER BY b1.sold_when""" % (kind, begin_date, end_date)
-
+        with_notfound = args.get('with_notfound',False) or False
+        print>>sys.stderr, begin_date, end_date, with_notfound
+        if with_notfound:
+            status_string = '\'SOLD|NOT FOUND\''
+        else:
+            status_string= '\'SOLD\''
+        sql_query = """SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) AS copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) AS copies_sold, b1.status FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN kind k1 ON t1.kind_id=k1.id  JOIN book b2 ON b2.title_id=t1.id WHERE k1.id=%s AND b1.status RLIKE %s AND b1.sold_when>='%s' AND b1.sold_when<=ADDDATE('%s',INTERVAL 1 DAY) GROUP BY b1.id  ORDER BY b1.sold_when""" % (kind, status_string, begin_date, end_date)
+        print>>sys.stderr, sql_query
 #        self.cursor.execute("""SELECT * FROM transactionLog WHERE action='SALE' AND info LIKE %s AND date>=%s AND date<=ADDDATE(%s,INTERVAL 1 DAY) order by date""",(what,begin_date,end_date ))
-        self.cursor.execute("""
-        SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) AS copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) AS copies_sold FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN kind k1 ON t1.kind_id=k1.id  JOIN book b2 ON b2.title_id=t1.id WHERE k1.id=%s AND b1.status='SOLD' AND b1.sold_when>='%s' AND b1.sold_when<=ADDDATE('%s',INTERVAL 1 DAY) GROUP BY b1.id  ORDER BY b1.sold_when""" % (kind, begin_date, end_date))
+        self.cursor.execute( sql_query )
         results= self.cursor.fetchall()
         self.cursor.close()
         return results
@@ -36,10 +51,10 @@ class SalesReport(Report, PdfReport):
     # 11/10/2008 john fixed this manually
     #        return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4].tostring(),r[1])  for r in results]
     #   return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4],r[1])  for r in results]
-        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[0],r[1],r[2],r[3],r[4], r[5])  for r in results]
+        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class='status'>%s</td></tr>" % (r[0],r[1],r[2],r[3],r[4], r[5], r[6])  for r in results]
     
     def format_header(self):
-	return "<tr><th>Title</th><th>Date Sold</th><th>Price</th><th>Copies In Stock</th><th>Copies Sold</th></tr>"
+	return "<tr><th>Title</th><th>Date Sold</th><th>Price</th><th>Copies In Stock</th><th>Copies Sold</th><th>Status</th></tr>"
 
     def format_results_as_pdf(self,results):
         self.defineConstants()
@@ -72,11 +87,7 @@ class SalesReport(Report, PdfReport):
         val =val+"""
             <label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value='%s'/><br>
             <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
-            <script type="text/javascript">                                         
-                jQuery(document).ready( function(){
-                    jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
-                });
-            </script>        
+            <label class='textbox' for='with_notfound'>Include \"NOT FOUND\" records?</label><input type='checkbox' class='textbox' name='with_notfound' id='with_notfound'/><br>
         """ % (self.args.get("begin_date",""),self.args.get("end_date",""))
         return val
 

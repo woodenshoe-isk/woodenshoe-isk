@@ -19,13 +19,57 @@
         //make sure keypress goes to default dialog
         jQuery(document).keydown(function(event) {
             if (  jQuery('input:focus').length == 0 ) {
-                 //event.preventDefault();
-                 jQuery('#book').click();
-                 jQuery('#my-form-book .isbnfield').focus();
-                 jQuery('#my-form-book .isbnfield').trigger(jQuery.Event({type:'keydown', which:event.which, keyCode:event.keyCode, charCode:event.charCode}));
-//               return false;
+                //at some point switch to values -- keycodes are not good across all layouts 
+                if ((event.keyCode > 47) && (event.keyCode < 58 )) {
+                    //event.preventDefault();
+                    jQuery('#book').click();
+                    jQuery('#my-form-book .isbnfield').focus();
+                    jQuery('#my-form-book .isbnfield').trigger(jQuery.Event({type:'keydown', which:event.which, keyCode:event.keyCode, charCode:event.charCode}));
+                    //return false;
+                }
             }            
-       });
+        
+            console.log("event.target.value: ", event.target.value);
+            console.log(jQuery(this).siblings());
+            
+            var charPos = event.target.selectionStart;
+            var prevPos = jQuery(this).data('prevPos');
+
+            if (typeof event.target.value !== "undefined") {
+                var strLength = event.target.value.length;
+            } else {
+                var strLength = 0;
+            }
+
+            if(event.which==39){
+                        //only go right if we really reached the end, that means the prev pos is the same then the current pos
+                if(charPos==strLength && (prevPos ==null || prevPos == charPos)){
+                    jQuery(this).next().focus();
+                    jQuery(this).data('prevPos',null);
+                }else{
+                    jQuery(this).data('prevPos',charPos);
+                }
+            }else if(event.which==37){
+            //only go left if we really reached the beginning, that means the prev pos is the same then the current pos
+                if(charPos == 0 && (prevPos ==null || prevPos == charPos)){
+                    jQuery(this).prev().focus();
+                    jQuery(this).data('prevPos',null);
+                }else{
+                    jQuery(this).data('prevPos',charPos);
+                }
+            }else if(event.which==40){
+                jQuery(this).next().focus();
+                jQuery(this).data('prevPos',null);
+
+            }else if(event.which==38){
+                jQuery(this).prev().focus();
+                jQuery(this).data('prevPos',null);
+            }
+
+        
+        
+        
+        });
     
         //add remove this row button from every row
         jQuery( document ).on('click', '.remove_item', function(){

@@ -15,6 +15,7 @@ from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 
 import tools.isbn
+import isbnlib
 
 from upc import upc2isbn
 
@@ -113,7 +114,7 @@ class inventory(object):
                 ecs.setAssociateTag(amazon_associate_tag)
                  
                 #print "about to search", isbn, isbn[0]
-                pythonBooks=[]
+                amazonBooks=[]
                  
                 idType=''
                 if len(isbn)==12:
@@ -125,23 +126,21 @@ class inventory(object):
                         idType='EAN'
                 
                 try:
-                        pythonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
+                        amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
                 except ecs.InvalidParameterValue:
                         pass
  
                 #print pythonBooks
-                if pythonBooks:
+                if amazonBooks:
                     result={}
                     authors=[]
                     categories=[]
                     
                     len_largest = 0
-                    index_largest = 0
-                    for i, book in enumerate(pythonBooks):
+                    for book in amazonBooks:
                         if len_largest < len(dir(book)):
                             len_largest = len(dir(book))
-                            index_largest = i
-                    book_for_info = pythonBooks[index_largest]
+                            book_for_info = book 
  
                     for x in ['Author','Creator', 'Artist', 'Director']:
                         if hasattr(book_for_info,x):
@@ -244,7 +243,25 @@ class inventory(object):
                         "known_title": self.known_title,
                         "special_orders": []}
                 else:
-                    return []
+                    isbnlibBooks = isbnlib.meta('isbn')
+                    if isbnlibbooks:
+                        return {"title":isbnlibBooks.Title,
+                            "authors":isbnlibBooks.Authors,
+                            "authors_as_string":','.join(isbnlibBooks.Authors),
+                            "categories_as_string":None,
+                            "list_price":0.00,
+                            "publisher":isbnlibBooks.Publisher,
+                            "isbn":isbn,
+                            "orig_isbn":isbn,
+                            "large_url":None,
+                            "med_url":None,
+                            "small_url":None,
+                            "format":None,
+                            "kind":'book',
+                            "known_title": self.known_title,
+                            "special_orders": []}  
+                    else:
+                        return []
              
         
         else:
@@ -442,16 +459,16 @@ class inventory(object):
             
             for rawAuthor in authors:
                 author = rawAuthor.encode("utf8", "backslashreplace")
-            theAuthors = Author.selectBy(authorName=author)
-            theAuthorsList = list(theAuthors)
-            if len(theAuthorsList) == 1:
-                known_title.addAuthor(theAuthorsList[0])
-            elif len(theAuthorsList) == 0:
-                a = Author(authorName=author)
-                known_title.addAuthor(a)
-            else:
-                # We should SQLDataCoherenceLost here
-                print>>sys.stderr, "mmm... looks like you have multiple author of the sama name in your database..."
+                theAuthors = Author.selectBy(authorName=author)
+                theAuthorsList = list(theAuthors)
+                if len(theAuthorsList) == 1:
+                    known_title.addAuthor(theAuthorsList[0])
+                elif len(theAuthorsList) == 0:
+                    a = Author(authorName=author)
+                    known_title.addAuthor(a)
+                else:
+                    # We should SQLDataCoherenceLost here
+                    print>>sys.stderr, "mmm... looks like you have multiple author of the sama name in your database..."
             for category in categories:
                 Category(categoryName=category.encode("utf8", "backslashreplace"),title=known_title)
         #the_locations=list(Location.select(Location.q.locationName==location))
