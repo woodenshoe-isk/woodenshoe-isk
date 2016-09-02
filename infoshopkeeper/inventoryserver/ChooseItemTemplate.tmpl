@@ -33,6 +33,25 @@ Search the inventory
             return false
         });
         
+        var price;
+        var titleID;
+        
+        jQuery( "#price_dialog" ).dialog({
+               autoOpen: false, 
+               modal: true,
+               buttons: {
+                  OK: function() {
+                        if ( !isNaN(jQuery('#price_select option:selected').text()) ) {
+                            price = jQuery('#price_select option:selected').text();
+                            jQuery.get('/register/add_item_to_cart', {titleid:titleID, ourprice:price}, function() {
+                                    document.location.href= "http://" + document.location.host + '/register/build_cart';
+                            });                                
+                            jQuery(this).dialog("close");
+                        }
+                }
+            },
+        });
+        
         jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
 
         //hide book id column 
@@ -43,7 +62,7 @@ Search the inventory
                                                 'aSorting':[[1, 'asc']],
                                                 'order':[[1, 'asc']],
                                                 'columnDefs': [
-                                                    { targets: [0], visible: false},
+                                                    { targets: [0, 1], visible: false},
                                                 ],
                                                 'sPaginationType':'full_numbers',
                                                 "iDisplayLength": 50});
@@ -53,22 +72,41 @@ Search the inventory
         if (navigator.userAgent.match(/ipad|iphone|ios|android/i) == null) {
             jQuery('#results_table tr').dblclick(function(event) {
                 event.preventDefault();
-                var position = resultsTable.fnGetPosition(this); // getting the clicked row position
-                var titleID = resultsTable.fnGetData(position)[0];
-                jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
-                    document.location.href= "http://" + document.location.host + '/register/build_cart';
-                });
+                position = resultsTable.fnGetPosition(this); // getting the clicked row position
+                titleID = resultsTable.fnGetData(position)[0];
+                var price_array = eval(resultsTable.fnGetData(position)[1]);
+                if (price_array.length==1) {
+                    price = price_array[0];
+                    jQuery.get('/register/add_item_to_cart', {titleid:titleID, ourprice:price}, function() {
+                        document.location.href= "http://" + document.location.host + '/register/build_cart';
+                    });
+                } else {
+                    jQuery('#price_select').find('option:gt(0)').remove();
+                    jQuery.each(price_array, function(val, text) {
+                        jQuery('#price_select').append( jQuery('<option></option>').val(val).html(text) )
+                    });
+                    jQuery('#price_dialog').dialog('open');
+                }
                 return false;
             });
         } else {
-            jQuery('#results_table tr').click(function(event) {
+            jQuery('#results_table tr').dblclick(function(event) {
                 event.preventDefault();
-                var position = resultsTable.fnGetPosition(this); // getting the clicked row position
-                var titleID = resultsTable.fnGetData(position)[0];
-                console.log(titleID);
-                jQuery.get('/register/add_item_to_cart', {titleid:titleID}, function() {
-                    document.location.href= "http://" + document.location.host + '/register/build_cart';
-                });
+                position = resultsTable.fnGetPosition(this); // getting the clicked row position
+                titleID = resultsTable.fnGetData(position)[0];
+                var price_array = eval(resultsTable.fnGetData(position)[1]);
+                if (price_array.length==1) {
+                    price = price_array[0];
+                    jQuery.get('/register/add_item_to_cart', {titleid:titleID, ourprice:price}, function() {
+                        document.location.href= "http://" + document.location.host + '/register/build_cart';
+                    });
+                } else {
+                    jQuery('#price_select').find('option:gt(0)').remove();
+                    jQuery.each(price_array, function(val, text) {
+                        jQuery('#price_select').append( jQuery('<option></option>').val(val).html(text) )
+                    });
+                    jQuery('#price_dialog').dialog('open');
+                }
                 return false;
             });
         }
@@ -146,6 +184,7 @@ selected="true"
 <thead>
   <tr>
     <th>ID</th>
+    <th>Prices</th>
     #if $should_show_images
     <th>Image</th>
     #end if
@@ -164,6 +203,7 @@ selected="true"
 #for $t in $titles
   <tr>
     <td>$t.id</td>
+    <td><%=list({x.ourprice for x in t.books if x.status=='STOCK'})%></td>
     #if $should_show_images
     <td>
         #if $t.images
@@ -185,4 +225,10 @@ selected="true"
 </tbody>
 </table>
 
+<div id='price_dialog' class='query_dialog' title='Query'>
+        Select price of item:
+        <select id='price_select'>
+            <option value="" disabled="disabled" selected="selected"></option>
+        </select>
+</div>
 #end def

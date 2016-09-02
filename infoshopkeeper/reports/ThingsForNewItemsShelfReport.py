@@ -11,7 +11,7 @@ class ThingsForNewItemsShelfReport(Report):
     def query(self,args):
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
-            SELECT title.id, title.booktitle, subq1.author_string, MIN(book.inventoried_when) AS max_inv_when FROM title JOIN book ON title.id=book.title_id JOIN (SELECT t2.id AS subid, GROUP_CONCAT(author.author_name) AS author_string FROM title t2 JOIN author_title ON t2.id=author_title.title_id JOIN author ON author.id=author_title.author_id GROUP BY t2.id) AS subq1 ON subq1.subid=title.id WHERE title.kind_id=%s AND book.status='STOCK' GROUP BY title.id ORDER BY max_inv_when DESC LIMIT 100
+SELECT DISTINCT(subq2.id), subq2.booktitle, subq2.author_string FROM (SELECT t2.id id, t2.booktitle booktitle, subq1.author_string author_string, subq1.min_b_inventoried_when  FROM (SELECT t1.isbn isbn, MIN(t1.id), MIN(b1.inventoried_when) min_b_inventoried_when, GROUP_CONCAT(DISTINCT(a1.author_name)) author_string FROM book b1 JOIN title t1 ON b1.title_id=t1.id  JOIN author_title at1 ON at1.title_id=t1.id JOIN author a1 ON at1.author_id=a1.id  WHERE t1.kind_id=%s GROUP BY t1.isbn) AS subq1 JOIN title t2 ON t2.isbn=subq1.isbn JOIN book b2 ON b2.title_id=t2.id) AS subq2 ORDER BY subq2.min_b_inventoried_when DESC LIMIT 100
         """, (args['kind']))
         results= self.cursor.fetchall()
         self.cursor.close()

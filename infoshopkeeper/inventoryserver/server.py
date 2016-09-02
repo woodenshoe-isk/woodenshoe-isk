@@ -195,8 +195,12 @@ class Register:
             for previous_item in cart['items']:
                 if str(previous_item['titleID'])==args['titleid']:
                     prev_same_title.append(previous_item['bookID'])
-            b=Book.select('title_id=%s' % args['titleid'] ).filter(Book.q.status=='STOCK')
+            b=Book.select(Book.q.titleID==args['titleid'] ).filter(Book.q.status=='STOCK')
+            if args.has_key('ourprice'):
+                print>>sys.stderr, "filtering by price"
+                b=b.filter(Book.q.ourprice==float(args['ourprice']))
             if prev_same_title:
+                print>>sys.stderr, "filtering by not same copy"
                 b=b.filter(NOT(IN(Book.q.id, prev_same_title)))
             if b.count()>0:
                 b=b[0]       
@@ -426,25 +430,34 @@ class Register:
         if ( len(isbn)==10 and isbnlib.isValid(isbn)):
             isbn=isbnlib.convert(isbn)
         #search for isbn
-        titlelist=list(Title.selectBy(isbn=isbn))
-        b=[]
+        titlelist = Title.selectBy(isbn=isbn)
+        
         #if we find it search for associated books in stock
-        if titlelist:
-            b1=Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').orderBy([-Book.q.ourprice, Book.q.inventoried_when])
+        if titlelist.count():
+            booklist = titlelist.throughTo.books.filter(Book.q.status=='STOCK').orderBy([-Book.q.ourprice, Book.q.inventoried_when])
 
             #search for book that has the proper price if price is given.
             #otherwise, fall back to just returning the oldest book.
-            b2=[]
             if price:
-                b2 =Title.selectBy(isbn=isbn).throughTo.books.filter(Book.q.status=='STOCK').filter(Book.q.ourprice==price).orderBy([-Book.q.ourprice, Book.q.inventoried_when])
-            if b2 and b2.count():
-                b=b2
-            elif b1.count():
-                b=b1
-            if b:
-                so=[[tso.id, tso.specialOrder.customerName] for tso in b.throughTo.title.throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON HOLD SHELF')]
-                print>>sys.stderr, b, so
-                return [{'titleID':b[0].title.id, 'booktitle':b[0].title.booktitle, 'isbn':b[0].title.isbn, 'bookID':b[0].id, 'ourprice':b[0].ourprice, 'special_orders':so}]
+                booklist = booklist.filter(Book.q.ourprice==price)
+
+            if booklist.count():
+         
+                so=[[tso.id, tso.specialOrder.customerName] for tso in booklist.throughTo.title.throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON HOLD SHELF')]
+
+                result_dict = {}
+                for b in booklist:
+                        if result_dict.has_key(b.ourprice):
+                            if result_dict[b.ourprice]['inventoried_when'] > b.inventoried_when:
+                                result_dict[b.ourprice] = {'titleID':b.title.id, 'booktitle':b.title.booktitle, 'isbn':b.title.isbn, 'bookID':b.id, 'ourprice':b.ourprice, 'inventoried_when':b.inventoried_when, 'special_orders':so}
+                        else:
+                            result_dict[b.ourprice] = {'titleID':b.title.id, 'booktitle':b.title.booktitle, 'isbn':b.title.isbn, 'bookID':b.id, 'ourprice':b.ourprice, 'inventoried_when':b.inventoried_when, 'special_orders':so}
+           
+                        print>>sys.stderr, booklist, result_dict, so
+                #oldest_b = min(result_dict.itervalues(), key=lambda x: x["inventoried_when"])
+                #return [oldest_b]
+                print>>sys.stderr, result_dict
+                return [result_dict]
             #if there's no in stock books 
             else:
                 return []
@@ -634,12 +647,12 @@ class Admin:
         most_freq_location=''
         if (data and data['known_title']):
             most_freq_location = data['known_title']._connection.queryAll(
-            '''SELECT book.location_id FROM book WHERE book.title_id=%s AND book.location_id !=1 GROUP BY book.title_id, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].id
+            '''SELECT book.location_id FROM title JOIN book ON book.title_id=title.id WHERE title.isbn=%s AND book.location_id !=1 GROUP BY title.isbn, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].isbn
             )
             if most_freq_location:            
                 data['most_freq_location'] = most_freq_location[0][0]
             max_price=list(data['known_title']._connection.queryAll(
-            '''SELECT MAX(book.listprice) FROM book WHERE book.title_id=%s GROUP BY book.title_id''' % data['known_title'].id
+            '''SELECT MAX(book.listprice) FROM title JOIN book ON book.title_id=title.id WHERE title.isbn=%s GROUP BY title.isbn''' % data['known_title'].isbn
             ))
             if max_price:
                 max_price='{0:.2f}'.format(max_price[0][0])
@@ -811,6 +824,10 @@ class SpecialOrder:
         self._special_order_list_template.orders=orders
         return self._special_order_list_template.respond()
 
+    def common(self):
+        for x in [getattr(self,x) for x in dir(self) if 'template' in x]:
+            x.lastsearch=cherrypy.session.get('lastsearch',False)
+
     #hook to special order edit template
     @cherrypy.expose
     def special_order_edit(self,**args):
@@ -831,7 +848,7 @@ class SpecialOrder:
     #Hope to figure out how to do a paged ajax call.
     @cherrypy.expose
     def select_special_order_search(self, authorOrTitle='', special_order='', **args):
-        #self.common()
+        self.common()
         self._select_special_order_template.authorOrTitle = authorOrTitle
         self._select_special_order_template.specialOrderID = special_order
         resultset = self._select_special_order_template.resultset = {}

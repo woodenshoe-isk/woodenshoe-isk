@@ -4,7 +4,13 @@
 <script type='text/javascript'>                                         
     jQuery(document).ready( function(){
         var inventory_data={};
-        
+        var inventory_data1={};
+        var price;
+        var price_array;
+        var titleID;
+        var inventory_data_dict;
+        var isbn_dialog;
+                
         //set up ajax error handling
 //         jQuery.ajaxSetup({  'cache':false,
 //                             'error':function(XMLHttpRequest,textStatus, errorThrown) {   
@@ -29,8 +35,6 @@
                 }
             }            
         
-            console.log("event.target.value: ", event.target.value);
-            console.log(jQuery(this).siblings());
             
             var charPos = event.target.selectionStart;
             var prevPos = jQuery(this).data('prevPos');
@@ -49,7 +53,7 @@
                 }else{
                     jQuery(this).data('prevPos',charPos);
                 }
-            }else if(event.which==37){
+            } else if (event.which==37){
             //only go left if we really reached the beginning, that means the prev pos is the same then the current pos
                 if(charPos == 0 && (prevPos ==null || prevPos == charPos)){
                     jQuery(this).prev().focus();
@@ -57,7 +61,7 @@
                 }else{
                     jQuery(this).data('prevPos',charPos);
                 }
-            }else if(event.which==40){
+            } else if (event.which==40){
                 jQuery(this).next().focus();
                 jQuery(this).data('prevPos',null);
 
@@ -65,10 +69,6 @@
                 jQuery(this).prev().focus();
                 jQuery(this).data('prevPos',null);
             }
-
-        
-        
-        
         });
     
         //add remove this row button from every row
@@ -112,7 +112,54 @@
                 }
             }
         });
-        
+                
+        jQuery( "#price_dialog" ).dialog({
+               autoOpen: false, 
+               modal: true,
+               buttons: {
+                  OK: function() {
+                        if ( !isNaN(jQuery('#price_select').val()) ) {
+                            price = jQuery('#price_select option:selected').text();
+                            console.log(price);
+                            console.log(inventory_data_dict);
+                            inventory_data1=inventory_data_dict[price];
+                            console.log(inventory_data1);
+                            
+                            var title_list=isbn_dialog.find('.title_list');
+                            var outer_div=isbn_dialog.find('.special_order_div');
+                            var selectbox = outer_div.find('select');   
+                                                    
+                            //if item is an inventoried item and there's a real result
+                            //add all item info to dialog so user can approve add
+                            //to inventory or not. If no results, open isbn error alert.
+                            if (inventory_data1.isInventoried ) {
+                                if ((inventory_data1 !== undefined) && (inventory_data1.booktitle !==undefined)) {
+                                    console.log(isbn_dialog);
+                                    title_list.empty();
+                                    title_list.append('<li>'+inventory_data1.department+'</li><li>'+inventory_data1.booktitle+'</li><li>'+ inventory_data1.ourprice+'</li>');
+                                    jQuery.extend(inventory_data, inventory_data1);
+
+                                    outer_div.css('display', 'none');
+                                    if (inventory_data1.special_orders != undefined) {
+                                        if (inventory_data1.special_orders.length > 0) {
+                                              outer_div.css('display', 'block');
+                                              selectbox.empty();
+                                              selectbox.append('<option selected value="0"></option>');
+                                              jQuery.each(inventory_data1.special_orders, function() {
+                                                  selectbox.append('<option value="' + this[0] + '">' + this[1] + '</option>');
+                                              });
+                                        }
+                                    }
+                                } else {
+                                    isbn_error_alert.dialog('open');
+                                }
+                            }
+                            jQuery(this).dialog("close");
+                        }
+                }
+            },
+        });
+                
         //There is a button for every kind of product (books, etc)
         //This dialog adds a dialog to each of them
         //For inventoried items, check isbn. Otherwise, just
@@ -123,6 +170,7 @@
                 autoOpen: false,
                 modal: true,
                 open: function(event, ui) {
+                    isbn_dialog=jQuery(this);
                 },
                 //void isbn field
                 //void list of attributes (title, price, etc)
@@ -198,41 +246,67 @@
                 isbnstring=isbnstring.replace(/[\s-]/g, '');
             }
             
+            
             //if there's an isbn and the category is an inventoried item (book, music, film)
             //search database for it.
             if (isbnstring.length>0 && category_data.is_inventoried_item == 'True') {
 
                 if (isbnstring.match( /\d{13}|\d{12}|\d{9}[0-9xX]{1}/ )) {
-
-                   jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':isbnstring}, function(inventory_data1){
-                        inventory_data1=inventory_data1[0];
-                        //add category data to inventory data that was found... keeping one dict is easier.
-                        jQuery.extend(inventory_data, {'department':category_data.label, 'isInventoried':category_data.is_inventoried_item, 'isTaxable':category_data.is_taxable});
+                    
+                    //temporarily truncate price until we sticker all sale books
+                    if (isbnstring.length == 15 || isbnstring.length==18) {
+                        isbnstring=isbnstring.slice(0,-5);
+                    }
                         
-                        //if item is an inventoried item and there's a real result
-                        //add all item info to dialog so user can approve add
-                        //to inventory or not. If no results, open isbn error alert.
-                        if (category_data.is_inventoried_item ) {
-                            if ((inventory_data1 !== undefined) && (inventory_data1.booktitle !==undefined)) {
-                                title_list.empty();
-                                title_list.append('<li>'+category_data.label+'</li><li>'+inventory_data1.booktitle+'</li><li>'+ inventory_data1.ourprice+'</li>');
-                                jQuery.extend(inventory_data, inventory_data1);
 
-                                outer_div.css('display', 'none');
-                                if (inventory_data1.special_orders != undefined) {
-                                    if (inventory_data1.special_orders.length > 0) {
-                                          outer_div.css('display', 'block');
-                                          selectbox.empty();
-                                          selectbox.append('<option selected value="0"></option>');
-                                          jQuery.each(inventory_data1.special_orders, function() {
-                                              selectbox.append('<option value="' + this[0] + '">' + this[1] + '</option>');
-                                          });
+                    jQuery.getJSON( '/register/get_item_by_isbn', {'isbn':isbnstring}, function(inventory_data_result){
+                        if (category_data.is_inventoried_item && inventory_data_result.length==0){
+                            isbn_error_alert.dialog('open');
+                            return;
+                        }
+                        
+                        inventory_data_dict=inventory_data_result[0];
+                        price_array= jQuery.map(inventory_data_dict, function(value, key) { return key });
+                        jQuery.map(inventory_data_dict, function(value, key) {
+                            //add category data to inventory data that was found... keeping one dict is easier.
+                            jQuery.extend(value, {'department':category_data.label, 'isInventoried':category_data.is_inventoried_item, 'isTaxable':category_data.is_taxable});
+                        });
+                        if (price_array.length==1) {
+                            //just get first key's value
+                            inventory_data1=inventory_data_dict[price_array[0]];
+                            
+                        
+                            //if item is an inventoried item and there's a real result
+                            //add all item info to dialog so user can approve add
+                            //to inventory or not. If no results, open isbn error alert.
+                            if (category_data.is_inventoried_item ) {
+                                if ((inventory_data1 !== undefined) && (inventory_data1.booktitle !==undefined)) {
+                                    title_list.empty();
+                                    title_list.append('<li>'+category_data.label+'</li><li>'+inventory_data1.booktitle+'</li><li>'+ inventory_data1.ourprice+'</li>');
+                                    jQuery.extend(inventory_data, inventory_data1);
+
+                                    outer_div.css('display', 'none');
+                                    if (inventory_data1.special_orders != undefined) {
+                                        if (inventory_data1.special_orders.length > 0) {
+                                              outer_div.css('display', 'block');
+                                              selectbox.empty();
+                                              selectbox.append('<option selected value="0"></option>');
+                                              jQuery.each(inventory_data1.special_orders, function() {
+                                                  selectbox.append('<option value="' + this[0] + '">' + this[1] + '</option>');
+                                              });
+                                        }
                                     }
+                                } else {
+                                    isbn_error_alert.dialog('open');
                                 }
-                            } else {
-                                isbn_error_alert.dialog('open');
                             }
-                        } 
+                        } else {
+                            jQuery('#price_select').find('option:gt(0)').remove();
+                            jQuery.each(price_array, function(val, text) {
+                                jQuery('#price_select').append( jQuery('<option></option>').val(val).html(text) )
+                            });
+                            jQuery('#price_dialog').dialog('open');
+                        }
                     });
                 } else {
                     window.open('/register/select_item_search?authorOrTitle='+escape(isbnstring), '_self');
@@ -344,5 +418,11 @@
     <div id='isbn_not_found_error' class='error_dialog' title='Error: ISBN not found'>
         Check the ISBN again or use the search button to search the inventory by attributes.
     </div>
-
+    
+    <div id='price_dialog' class='query_dialog' title='Query'>
+        Select price of item:
+        <select id='price_select'>
+            <option value="" disabled="disabled" selected="selected"></option>
+        </select>
+    </div>
 #end def
