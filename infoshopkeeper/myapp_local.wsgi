@@ -14,7 +14,7 @@ from inventoryserver.server import Register
 from inventoryserver.server import Admin
 from inventoryserver.server import Staffing
 from inventoryserver.server import Noteboard
-from inventoryserver.server import SpecialOrder
+from inventoryserver.server import SpecialOrders
 
 cherrypy.config.update({'environment': 'embedded'})
 
@@ -32,7 +32,7 @@ root.admin=Admin()
 root.staffing=Staffing()
 root.notes=Noteboard()
 root.register=Register()
-root.specialOrder=SpecialOrder()
+root.specialorder=SpecialOrders()
 
 application = cherrypy.Application(root, script_name=None, config=cherrypy_local_config_file)
 
