@@ -50,6 +50,7 @@ class inventory(object):
                 isbn=tools.isbn.convert(isbn)
         return isbn, price
  
+    @staticmethod
     def lookup_by_isbn(self,number, forceUpdate=False):
         isbn, price = self.process_isbn(number)
         print>>sys.stderr, isbn, price
@@ -155,7 +156,9 @@ class inventory(object):
                     # a bit more complicated of a tree walk than it needs be.
                     # set up to still have the option of category strings like "history -- us"
                     # switched to sets to quickly remove redundancies.
+                    @staticmethod
                     def parseBrowseNodes(bNodes):
+                        @staticmethod
                         def parseBrowseNodesInner(item):
                             bn=set()
                             if hasattr(item, 'Name'):
@@ -265,7 +268,9 @@ class inventory(object):
         else:
             return []
          
+    @staticmethod
     def search_by_keyword(self, authorOrTitle=''):
+        @staticmethod
         def database_gen(authorOrTitle=''):
             titles=[]
              
@@ -294,6 +299,7 @@ class inventory(object):
                         'kind':t1.kind.kindName,
                         'known_title':t1}
                          
+        @staticmethod
         def amazon_gen(authorOrTitle=''):
             sleep(1) # so amazon doesn't get huffy 
             ecs.setLicenseKey(amazon_license_key)
@@ -302,6 +308,7 @@ class inventory(object):
              
             iter1 = ecs.ItemSearch(Keywords='python', SearchIndex='Books', ResponseGroup="ItemAttributes,BrowseNodes")
             #iter1=xrange(0,20)
+            @staticmethod
             def process_data(data):
                 result={}
                 authors=[]
@@ -322,7 +329,9 @@ class inventory(object):
                 # a bit more complicated of a tree walk than it needs be.
                 # set up to still have the option of category strings like "history -- us"
                 # switched to sets to quickly remove redundancies.
+                @staticmethod
                 def parseBrowseNodes(bNodes):
+                    @staticmethod
                     def parseBrowseNodesInner(item):
                         bn=set()
                         if hasattr(item, 'Name'):
@@ -425,6 +434,7 @@ class inventory(object):
                         print err
                         yield
                      
+    @staticmethod
     def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
         print>>sys.stderr, "GOT to addToInventory"
         if known_title:
@@ -486,6 +496,7 @@ class inventory(object):
 #                   setattr(book_for_info,string.replace(mp," ",""),extra_prices[mp])
  
                  
+    @staticmethod
     def getInventory(self,queryTerms):
         #print queryTerms
         keys=queryTerms.keys()
@@ -570,6 +581,7 @@ class inventory(object):
             book_for_info.title.type if book_for_info.title.type is not None else '')
         return results
         
+        @staticmethod
         def updateItem(self, id):
             title = Title.get(id)
             title_info = self.lookup_by_isbn( title.orig_isbn, forceUpdate=True)
