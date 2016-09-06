@@ -4,9 +4,6 @@ import cherrypy
 import os
 import re
 import string
-import subprocess
-import sys
-import tempfile
 import uuid
 
 from mx.DateTime import now
@@ -43,8 +40,8 @@ class MenuData:
      
 
 
-from components import db
-from components import inventory
+from tools import db
+from tools import inventory
 
 from objects.author import Author
 from objects.book import Book
@@ -86,12 +83,12 @@ from SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
 from SpecialOrderListTemplate import SpecialOrderListTemplate
 from SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
 
-from config import configuration
-import etc
+from config.config import configuration
+from config import etc
 
-import barcode_monkeypatch
-import barcodeLabel
-import specialOrderLabel
+from printing import barcode_monkeypatch
+from printing import barcodeLabel
+from printing import specialOrderLabel
 
 cfg = configuration()
 
@@ -604,7 +601,7 @@ class Admin:
             result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
             result= '199' + '0'*10
-        result= unicode(int(result[:-1])+1) + isbnlib.checkI13(result[:12])
+        result= unicode(int(result[:-1])+1) + isbnlib.checkI13(result[:12]+1)
         return result
 
     #wrapper to inventory.addToInventory to be added

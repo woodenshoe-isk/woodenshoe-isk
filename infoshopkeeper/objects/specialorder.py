@@ -1,9 +1,9 @@
 from sqlobject import *
-from components import db
+from tools import db
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx import DateTime
 from Crypto.Cipher import AES
-from etc import db_col_password as password
+from config.etc import db_col_password as password
 
 class SpecialOrder(SQLObjectWithFormGlue):
     _connection = db.conn()

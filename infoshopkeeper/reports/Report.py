@@ -1,5 +1,5 @@
 # a base class for all reports
-from components import db
+from tools import db
 from formencode import htmlfill
 
 

@@ -1,5 +1,5 @@
 from sqlobject import *
-from components import db
+from tools import db
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx import DateTime
 

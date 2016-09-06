@@ -7,8 +7,8 @@ from sqlobject import *
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx.DateTime import now
 
-from components import db
-from config import configuration
+from tools import db
+from config.config import configuration
 cfg = configuration()
 
 #_connection = db.SQLObjconnect()

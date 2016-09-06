@@ -2,7 +2,7 @@ import sys
 sys.path.append("/home/john/infoshopkeeper/")
 
 from sqlobject import *
-from components import db
+from tools import db
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
 #_connection = db.SQLObjconnect()

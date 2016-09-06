@@ -6,12 +6,14 @@ sys.path.append(os.path.dirname(__file__))
 import atexit
 import threading
 import cherrypy
-from etc import cherrypy_global_config_file, cherrypy_nonlocal_config_file, cherrypy_local_config_file, cherrypy_config_file
+from config.etc import cherrypy_nonlocal_config_file
+
 from inventoryserver.server import InventoryServer
 from inventoryserver.server import Register
 from inventoryserver.server import Staffing
 from inventoryserver.server import Admin
 from inventoryserver.server import Noteboard
+from inventoryserver.server import SpecialOrder
 
 cherrypy.config.update({'environment': 'embedded'})
 
@@ -29,7 +31,8 @@ root.admin=Admin()
 root.staffing=Staffing()
 root.notes=Noteboard()
 root.register=Register()
+root.specialOrder=SpecialOrder()
 
-application = cherrypy.Application(root, script_name=None, config=cherrypy_local_config_file)
+application = cherrypy.Application(root, script_name=None, config=cherrypy_nonlocal_config_file)
 
 

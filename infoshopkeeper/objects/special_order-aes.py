@@ -3,9 +3,9 @@ from sqlobject import *
 from objects.title import Title
 from mx.DateTime import now
 
-from components import db
+from tools import db
 from Crypto.Cipher import AES
-from etc import db_col_password as password
+from config.etc import db_col_password as password
 
 class SpecialOrder( SQLObjectWithFormGlue ):
     _connection = db.conn()

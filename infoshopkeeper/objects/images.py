@@ -3,8 +3,8 @@ import os
 import urllib2
 
 from sqlobject import *
-from components import db
-from config import configuration
+from tools import db
+from config.config import configuration
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx.DateTime import now
 

@@ -14,8 +14,8 @@ from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx.DateTime import now
 from objects.book import Book
 from objects.member import Member
-from components import db
-import etc
+from tools import db
+from config import etc
 
 #_connection = db.SQLObjconnect()
 

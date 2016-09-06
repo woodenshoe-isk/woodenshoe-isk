@@ -2,7 +2,7 @@ import sys
 sys.path.append("/home/woodenshoe/infoshopkeeper/")
 
 from sqlobject import *
-from components import db
+from tools import db
 from objects.title import Title
 
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue

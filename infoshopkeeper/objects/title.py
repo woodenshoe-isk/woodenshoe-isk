@@ -3,10 +3,10 @@ import string
 import sets
 import datetime
 
-from etc import *
+from config.etc import *
 
 from sqlobject import *
-from components import db
+from tools import db
 from objects.kind import Kind
 from objects.images import Images
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue

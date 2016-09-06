@@ -31,7 +31,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from time import *
-from config import configuration
+from config.config import configuration
 cfg = configuration()
 addr = cfg.get("infoshopaddress")
 name = cfg.get("infoshopname")

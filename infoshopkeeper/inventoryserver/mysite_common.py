@@ -1,4 +1,4 @@
-from config import configuration
+from config.config import configuration
 
 cfg=configuration()
 

@@ -7,8 +7,8 @@ from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 import datetime
 now=datetime.datetime.now   
 
-from components import db
-import etc
+from tools import db
+from config import etc
 
 #_connection = db.SQLObjconnect()
 
