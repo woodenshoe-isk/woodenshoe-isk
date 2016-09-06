@@ -3,4 +3,7 @@
 *.bak
 *.swp
 *.swo
+*.swn
 *.wsgi
+*Template.py
+index.py
