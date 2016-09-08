@@ -1,6 +1,3 @@
-import sys
-sys.path.append("/home/john/infoshopkeeper/")
-
 from sqlobject import *
 from tools import db
 from objects.title import Title

@@ -19,7 +19,7 @@ from inventoryserver.server import InventoryServer
 
 from tools.run_sql_select import run_sql_select
 
-from wsgiapp_local import application
+from myapp_local import application
 
 #class MenuData:
     #def getMenuData(cls):
@@ -283,6 +283,7 @@ class Test_Admin(unittest.TestCase ):
     def test_search_isbn_that_we_dont_have_unit(self):
         random_item=random.sample(list(Title.select()), 1)[0]
         result=self._my_class.search_isbn(**{'isbn':random_item.isbn})[0]
+        print result
         self.assertEqual(result['isbn'], random_item.isbn, "method search_isbn doesn't return proper item for isbn10")
 
     def test_search_isbn_that_we_dont_have_functional(self):

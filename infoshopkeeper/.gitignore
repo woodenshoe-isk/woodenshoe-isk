@@ -3,5 +3,6 @@
 *.bak
 *.swp
 *.swo
-*.wsgi
-index.py
+*.swn
+htmlcov/*
+.coverage
