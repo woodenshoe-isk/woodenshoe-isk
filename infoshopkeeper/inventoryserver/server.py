@@ -485,9 +485,7 @@ class Admin:
         self._locationlisttemplate = LocationListTemplate()
         self._add_to_inventory_template=AddToInventoryTemplate()
         self._chooseitemforisbntemplate=ChooseItemForISBNTemplate()
-    
-        self.inventory=inventory.inventory()
-         
+             
         #set flag to true. 
         #currently, we use this to enable printing.
         admin_loaded = True
@@ -628,7 +626,7 @@ class Admin:
         kwargs['kind_name']=kwargs['kind']
         print kwargs
         try:
-            self.inventory.addToInventory(**kwargs)
+            inventory.addToInventory(**kwargs)
         except Exception as e:
             print>>sys.stderr, e
                  
@@ -639,18 +637,18 @@ class Admin:
     @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
         print>>sys.stderr, 'search_isbn args ', args
-        data=self.inventory.lookup_by_isbn(args['isbn'])
+        data=inventory.lookup_by_isbn(args['isbn'])
         print>>sys.stderr, 'data', data
 
         most_freq_location=''
         if (data and data['known_title']):
             most_freq_location = data['known_title']._connection.queryAll(
-            '''SELECT book.location_id FROM title JOIN book ON book.title_id=title.id WHERE title.isbn=%s AND book.location_id !=1 GROUP BY title.isbn, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].isbn
+            '''SELECT book.location_id FROM title JOIN book ON book.title_id=title.id WHERE title.isbn='%s' AND book.location_id !=1 GROUP BY title.isbn, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].isbn
             )
             if most_freq_location:            
                 data['most_freq_location'] = most_freq_location[0][0]
             max_price=list(data['known_title']._connection.queryAll(
-            '''SELECT MAX(book.listprice) FROM title JOIN book ON book.title_id=title.id WHERE title.isbn=%s GROUP BY title.isbn''' % data['known_title'].isbn
+            '''SELECT MAX(book.listprice) FROM title JOIN book ON book.title_id=title.id WHERE title.isbn='%s' GROUP BY title.isbn''' % data['known_title'].isbn
             ))
             if max_price:
                 max_price='{0:.2f}'.format(max_price[0][0])
@@ -761,7 +759,6 @@ class SpecialOrders:
         self._special_order_list_template = SpecialOrderListTemplate()
         self._special_order_item_edit_template =  SpecialOrderItemEditTemplate()
         self._select_special_order_template = SelectSpecialOrderTemplate()
-        self.inventory=inventory.inventory()
         self.conn=db.connect()
         
         #let package know special order is loaded
@@ -850,7 +847,7 @@ class SpecialOrders:
         self._select_special_order_template.authorOrTitle = authorOrTitle
         self._select_special_order_template.specialOrderID = special_order
         resultset = self._select_special_order_template.resultset = {}
-        keyword_search_iter = self.inventory.search_by_keyword(authorOrTitle=authorOrTitle)
+        keyword_search_iter = inventory.search_by_keyword(authorOrTitle=authorOrTitle)
         while len(resultset) <20:
             try:
                 search_result = keyword_search_iter.next()
@@ -881,7 +878,7 @@ class SpecialOrders:
             elif item.get('known_title'):
                 known_title=Title.get(int(item.get('known_title')['id']))
             else:
-                self.inventory.addToInventory(title=item['booktitle'], authors=item['authors'], isbn=item['isbn'], categories=item['categories'], quantity=0, known_title=known_title, kind_name='kind', types=item['types'])
+                inventory.addToInventory(title=item['booktitle'], authors=item['authors'], isbn=item['isbn'], categories=item['categories'], quantity=0, known_title=known_title, kind_name='kind', types=item['types'])
                 known_title=Title.selectBy(isbn=item['isbn'])
             TitleSpecialOrder(titleID=known_title.id, specialOrderID=args.get('specialOrderID'))
         return
@@ -921,7 +918,6 @@ class InventoryServer:
         self._special_order_list_template = SpecialOrderListTemplate()
         self._special_order_item_edit_template =  SpecialOrderItemEditTemplate()  
         self._select_special_order_template = SelectSpecialOrderTemplate()
-        self.inventory=inventory.inventory()
         self.conn=db.connect()
          
         MenuData.setMenuData({'2': ('Search the Inventory', '/search', [])})
@@ -1080,7 +1076,7 @@ class InventoryServer:
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def search_isbn(self, **args):
-        data=self.inventory.lookup_by_isbn(args['isbn'])
+        data=inventory.lookup_by_isbn(args['isbn'])
         
         copies_in_stock = 0
         if data:
@@ -1275,7 +1271,7 @@ class InventoryServer:
         if tag:
             where_clause_list.append("title.tag RLIKE '%s'" % escape_string(tag.strip()))
         if isbn:
-            isbn, price=inventory.inventory.process_isbn(isbn)
+            isbn, price=inventory.process_isbn(isbn)
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
         if formatType:
             where_clause_list.append("title.type RLIKE '%s'" % escape_string(formatType.strip()))
