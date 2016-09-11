@@ -20,7 +20,7 @@ for t in titles:
     if len(t.isbn)!=13:
         continue
     try:
-    	titleinfo=inv.lookup_by_isbn(t.isbn)
+    	titleinfo=inventory.lookup_by_isbn(t.isbn)
     except Exception as e:
         #print "isbn %s seems to be invalid" % t.isbn
         raise e
@@ -36,6 +36,6 @@ for t in titles:
         else:
 	    correctedprice=float(titleinfo['list_price'])
         #print correctedprice
-        inv.addToInventory(authors=titleinfo['authors'], categories=','.split(titleinfo['categories_as_string']), types=titleinfo['format'], isbn=titleinfo['isbn'], known_title=titleinfo['known_title'], listprice=correctedprice, ourprice=correctedprice, publisher=titleinfo['publisher'], title=titleinfo['title'], location_id=t.locationID, quantity=t.count, kind_name='books')
+        inventory.addToInventory(authors=titleinfo['authors'], categories=','.split(titleinfo['categories_as_string']), types=titleinfo['format'], isbn=titleinfo['isbn'], known_title=titleinfo['known_title'], listprice=correctedprice, ourprice=correctedprice, publisher=titleinfo['publisher'], title=titleinfo['title'], location_id=t.locationID, quantity=t.count, kind_name='books')
 
 
