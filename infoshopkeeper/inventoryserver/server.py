@@ -6,6 +6,8 @@ import sys
 import re
 import string
 import uuid
+import logging
+import logging.handlers
 
 from mx.DateTime import now
 
@@ -895,6 +897,29 @@ class SpecialOrders:
             for so in special_orders:
                 TitleSpecialOrder.get(int(so)).orderStatus=args['status']
 
+class CSLogging:
+    def __init__(self):
+        self.client_side_logger = logging.getLogger('ClientSideLogger')
+        self.client_side_logger.setLevel(logging.DEBUG)
+        handler = logging.handlers.RotatingFileHandler("/var/log/infoshopkeeper/ClientSideError.log", maxBytes=100000, backupCount=5)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.client_side_logger.addHandler(handler)
+
+    @cherrypy.expose
+    def logger(self, url='', message='', linenumber=0, counter=0, level='', sid=''):
+        log_command=self.client_side_logger.error
+        if level=="Error":
+            log_command=self.client_side_logger.error
+        elif level=='Warn':
+            log_command=self.client_side_logger.warning
+        elif level=='info':
+            log_command=self.client_side_logger.info
+        elif level=='debug':
+            log_command=self.client_side_logger.debug
+        log_command('{url}\tline {line}\t {message}'.format(**{'url':url, 'line':linenumber, 'message':message}))
+
+  
 class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
