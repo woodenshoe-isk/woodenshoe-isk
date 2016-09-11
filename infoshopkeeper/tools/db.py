@@ -1,4 +1,9 @@
+import logging
+import logging.handlers
+
 from config.config import configuration
+from config.etc import should_log_SQLObject
+
 cfg = configuration()
 dbtype = cfg.get("dbtype")
 dbname = cfg.get("dbname")
@@ -13,13 +18,22 @@ if dbtype in ('mysql', 'postgres'):
         import MySQLdb as dbmodule
     elif dbtype is 'postgres':
         import psycopg as dbmodule
+
+    if should_log_SQLObject:
+        my_logger = logging.getLogger('SQLObhectLogger')
+        my_logger.setLevel(logging.DEBUG)
+
+        # Add the log message handler to the logger
+        handler = logging.handlers.RotatingFileHandler("/var/log/infoshopkeeper/SQLObject.log", maxBytes=100000, backupCount=5)
+        my_logger.addHandler(handler)
+        
     #deprecate
     def connect():
         return dbmodule.connect(host=dbhost,db=dbname,user=dbuser,passwd=dbpass)
 
 
     def conn():
-        return u'%s://%s:%s@%s/%s?debug=1&logger=MyLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype,dbuser,dbpass,dbhost,dbname)
+        return u'%s://%s:%s@%s/%s?debug=1&logger=SQLObhectLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype,dbuser,dbpass,dbhost,dbname)
 
 elif dbtype is 'sqlite':
     import os, time, re

@@ -1,0 +1,65 @@
+class MenuData:
+    def getMenuData(cls):
+    def setMenuData(cls, dictionaryOfMenuLists):
+def jsonify_tool_callback(*args, **kwargs):
+class Noteboard:
+    def __init__(self):
+    def noteboard(self):
+    def get_notes(self, **kwargs):
+    def post_note(self, author='', message='', **kwargs):
+class Register:
+    def __init__(self):
+    def build_cart(self, **args):
+    def add_item_to_cart(self, **args):
+    def remove_item_from_cart(self, **args):
+    def void_cart(self):
+    def check_out(self, **args):
+    def get_cart(self):
+    def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location="", authorOrTitle=""):
+    def get_item_by_isbn(self,   **kwargs):
+class Staffing:
+    def __init__(self):
+    def calendar(self, **args):
+class Admin:
+    def __init__(self):
+    def kindedit(self,**args):
+    def kindlist(self,**args):
+    def locationedit(self,**args):
+    def locationlist(self,**args):
+    def add_to_inventory(self, isbn="", orig_isbn='', large_url='', med_url='', small_url='', quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False, printlabel=False, num_copies=1):
+    def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', listprice='0.00', num_copies=1):
+    def get_next_unused_local_isbn(self):
+    def add_item_to_inventory(self, **kwargs):
+    def search_isbn(self, **args):
+    def search_id(self, titleid):
+    def select_item_for_isbn_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
+class SpecialOrders:
+    def __init__(self):
+    def special_order_list(self, customer_name="", customer_phone_number='', customer_email='', title="",sortby="customer_name",isbn="",author="", kind=""):
+    def common(self):
+    def special_order_edit(self,**args):
+    def special_order_item_edit(self, **args):
+    def select_special_order_search(self, authorOrTitle='', special_order='', **args):
+    def add_to_special_order(self, **args):
+    def set_special_order_item_status(self, **args):
+class InventoryServer:
+    def __init__(self):
+    def loadUserByUsername(self, login):
+    def checkLoginAndPassword(self, login, password):
+    def common(self):
+    def index(self,**args):
+    def bookedit(self,**args):
+    def author_autocomplete(self, **args):
+    def title_autocomplete(self, **args):
+    def authoredit(self,**args):
+    def categoryedit(self,**args):
+    def titleedit(self,**args):
+    def titlelist(self,**args):
+    def search_isbn(self, **args):
+    def checkout(self,**args):
+    def addtocart(self,**args):
+    def search(self,id='', title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", sold_begin_date="",sold_end_date="",inv_begin_date='',inv_end_date='', tag="",kind="",location="", formatType=""):
+    def transactions(self,**args):
+    def reports(self,**args):
+    def report(self,**args):
+    def test(self):

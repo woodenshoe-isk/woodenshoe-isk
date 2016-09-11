@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(__file__))
 import atexit
 import threading
 import cherrypy
-from config.etc import cherrypy_nonlocal_config_file
+from config.etc import cherrypy_nonlocal_config_file, client_side_logging_enabled
 
 from inventoryserver.server import InventoryServer
 from inventoryserver.server import Register
@@ -14,6 +14,7 @@ from inventoryserver.server import Staffing
 from inventoryserver.server import Admin
 from inventoryserver.server import Noteboard
 from inventoryserver.server import SpecialOrders
+from inventoryserver.server import CSLogging 
 
 cherrypy.config.update({'environment': 'embedded'})
 
@@ -32,7 +33,8 @@ root.staffing=Staffing()
 root.notes=Noteboard()
 root.register=Register()
 root.specialorder=SpecialOrders()
-
+if client_side_logging_enabled:
+    root.logging=CSLogging()
 application = cherrypy.Application(root, script_name=None, config=cherrypy_nonlocal_config_file)
 
 
