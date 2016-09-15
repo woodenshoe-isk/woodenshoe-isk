@@ -7,3 +7,5 @@
 *.wsgi
 *Template.py
 index.py
+htmlcov/*
+.coverage
