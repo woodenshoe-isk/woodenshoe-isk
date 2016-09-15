@@ -907,7 +907,7 @@ class CSLogging:
         self.client_side_logger.addHandler(handler)
 
     @cherrypy.expose
-    def logger(self, url='', message='', linenumber=0, counter=0, level='', sid=''):
+    def logger(self, url='', message='', linenumber=0, browser='', counter=0, level='', sid=''):
         log_command=self.client_side_logger.error
         if level=="Error":
             log_command=self.client_side_logger.error
@@ -917,7 +917,9 @@ class CSLogging:
             log_command=self.client_side_logger.info
         elif level=='debug':
             log_command=self.client_side_logger.debug
-        log_command('{url}\tline {line}\t {message}'.format(**{'url':url, 'line':linenumber, 'message':message}))
+        log_command('{url}\t{line}{message} {browser}'.
+              format(**{'url':url, 'line':(
+                       'line {linenumber}\t'.format(linenumber=linenumber) if linenumber else ''), 'message':message, 'browser':browser}))
 
   
 class InventoryServer:
