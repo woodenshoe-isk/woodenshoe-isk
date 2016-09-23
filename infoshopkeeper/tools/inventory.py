@@ -14,7 +14,6 @@ from objects.location import Location
 from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 
-import tools.isbn
 import isbnlib
 
 import sys
@@ -42,8 +41,8 @@ def process_isbn(isbn):
                 price = float(isbn[-4:])/100
             isbn=isbn[:-5]
         if len(isbn)==10:
-            if tools.isbn.isValid(isbn):
-                isbn=tools.isbn.convert(isbn)
+            if isbnlib.is_isbn10(isbn):
+                isbn=isbnlib.to_isbn13(isbn)
             else:
                 #Fix this -- shouldn't be here.
                 #investigate why amazon gives InvalidParameterCombination ins

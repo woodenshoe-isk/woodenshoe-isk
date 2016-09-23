@@ -8,10 +8,6 @@ from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx.DateTime import now
 
 from tools import db
-from config.config import configuration
-cfg = configuration()
-
-#_connection = db.SQLObjconnect()
 
 class Book(SQLObjectWithFormGlue):
     _connection = db.conn() 
@@ -30,30 +26,9 @@ class Book(SQLObjectWithFormGlue):
     listTheseKeys=('location')
     sortTheseKeys='locationName'
  
-
     title = ForeignKey('Title')
-    multiplied=False
 
-    def getTitle(self):
-                return self.title
-    
-    def object_to_form(self):
-        self.extracolumns()
-        return SQLObjectWithFormGlue.object_to_form(self)
-
-    def extracolumns(self):
-        if not(self.multiplied):
-            for mp in cfg.get("multiple_prices"):
-                self.sqlmeta.addColumn(FloatCol(string.replace(mp[0]," ",""),default=0))
-            self.multiplied=True
-    
-    def sellme(self):
-        self.status="SOLD"
-        self.sold_when=now()
-
-    def change_status(self,new_status):
-        self.status=new_status
-
+    #we link changes of status to change in sold_when date
     def _set_status(self, value):
         if value in ('SOLD', 'NOT FOUND'):
             self.sold_when=now()

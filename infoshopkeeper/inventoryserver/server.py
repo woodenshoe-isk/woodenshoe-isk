@@ -17,6 +17,8 @@ from simplejson import JSONEncoder
 import turbojson
 import json
 
+import isbnlib
+
 from MySQLdb import escape_string
 
 import os.path
@@ -56,8 +58,6 @@ from objects.special_order import SpecialOrder
 from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 from objects.transaction import Transaction
-
-from tools import isbn as isbnlib
 
 from IndexTemplate import IndexTemplate
 from SearchTemplate import SearchTemplate
@@ -427,8 +427,8 @@ class Register:
             isbn=isbn[:-5]
         if len(isbn) in (15,17,18) and isbn[-5] != '5':
                     isbn=isbn[:-5]
-        if ( len(isbn)==10 and isbnlib.isValid(isbn)):
-            isbn=isbnlib.convert(isbn)
+        if ( len(isbn)==10 and isbnlib.is_isbn10(isbn)):
+            isbn=isbnlib.to_isbn13(isbn)
         #search for isbn
         titlelist = Title.selectBy(isbn=isbn)
         
@@ -602,7 +602,7 @@ class Admin:
             result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
             result= '199' + '0'*10
-        result= unicode(int(result[:-1])+1) + isbnlib.checkI13(result[:12]+1)
+        result= unicode(int(result[:-1])+1) + isbnlib._check_digit13(result[:12]+1)
         return result
 
     #wrapper to inventory.addToInventory to be added

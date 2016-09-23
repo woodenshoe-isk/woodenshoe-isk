@@ -64,14 +64,10 @@ class SQLObjectWithFormGlue(SQLObject):
             else:
                 readOnlyFragment = ""
             colName=col.joinName
-            # eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
-            #print "passed eval"
-            #colClass=eval(colName.capitalize())
             
             colClass = getattr( import_module('objects.%s'%colName), colName.capitalize())
             
             toObjects=list(colClass.select())
-            print toObjects
             if self.sortTheseKeys:
                 #pass
                 toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
@@ -195,14 +191,10 @@ class SQLObjectWithFormGlue(SQLObject):
     def class_to_form(cls, **associatedObjects):
         def handleForeignKey(col):
             colName=col.joinName
-            # eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
-            #print "passed eval"
-            #colClass=eval(colName.capitalize())
             
             colClass = getattr( import_module('objects.%s'%colName), colName.capitalize())
             
             toObjects=list(colClass.select())
-            print toObjects
             if cls.sortTheseKeys:
                 #pass
                 toObjects.sort(key=operator.attrgetter(cls.sortTheseKeys))
