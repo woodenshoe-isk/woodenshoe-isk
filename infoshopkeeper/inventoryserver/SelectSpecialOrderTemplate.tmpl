@@ -78,15 +78,15 @@
          #for r in $resultset.itervalues()
               <tr>
                     #try              
-                        <td>$r['isbn']</td>
-                        <td>$r['title']</td>
-                        <td>$r['authors_as_string']</td>
-                        <td>$r['publisher']</td>
-                        <td>$r['categories_as_string']</td>
-                        <td>$r['list_price']</td>
-                        <td>$r['format']</td>
-                        <td>$r['kind']</td>
-                        <td>$r.get('known_title').id</td>
+                        <td>#if $r['isbn'] then $r['isbn'] else ""#</td>
+                        <td>#if $r['title'] then $r['title'] else ""#</td>
+                        <td>#if $r['authors_as_string'] then $r['authors_as_string'] else ""#</td>
+                        <td>#if $r['publisher'] then $r['publisher'] else ""#</td>
+                        <td>#if $r['categories_as_string'] then $r['categories_as_string'] else ""#</td>
+                        <td>#if $r['list_price'] then $r['list_price'] else ""#</td>
+                        <td>#if $r['format'] then $r['format'] else ""#</td>
+                        <td>#if $r['kind'] then $r['kind'] else ""#</td>
+                        <td>#if $r.get('known_title').id then $r.get('known_title').id else ""#</td>
                     #except
                         <td</td>
                     #end try

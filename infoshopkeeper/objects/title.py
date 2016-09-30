@@ -100,7 +100,6 @@ class Title(SQLObjectWithFormGlue):
     def first_book_inventoried(self):
         try:
             first_book=None
-            last_book=None
             #get all books
             for b in self.books:
                 #if there's not a book yet
@@ -112,7 +111,10 @@ class Title(SQLObjectWithFormGlue):
                         first_book=b
         except:
             pass
-        return first_book
+        if first_book:
+           return first_book
+        else:
+           return None
 
     def highest_price_book(self):
         try:

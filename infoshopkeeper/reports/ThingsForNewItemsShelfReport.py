@@ -18,10 +18,11 @@ class ThingsForNewItemsShelfReport(Report):
                                 JOIN title t1 ON b1.title_id=t1.id  
                                 JOIN author_title at1 ON at1.title_id=t1.id 
                                 JOIN author a1 ON at1.author_id=a1.id  
-                                WHERE t1.kind_id=%s 
+                                WHERE t1.kind_id=%s AND b1.status='STOCK'
                                 GROUP BY t1.isbn) AS subq1 
                         JOIN title t2 ON t2.isbn=subq1.isbn 
-                        JOIN book b2 ON b2.title_id=t2.id) AS subq2 
+                        JOIN book b2 ON b2.title_id=t2.id
+                        WHERE b2.status='STOCK') AS subq2 
                 ORDER BY subq2.min_b_inventoried_when 
                 DESC LIMIT 100
         """, (args['kind']))

@@ -113,23 +113,23 @@ selected="true"
 <tbody>
 #for $s in $orders
     <tr>
-        <td>$s.customerName</td>
-        <td>$s.customerPhoneNumber</td>
-        <td>$s.customerEmail</td>
+        <td>#if $s.customerName then $s.customerName else ""#</td>
+        <td>#if $s.customerPhoneNumber then $s.customerPhoneNumber else ""#</td>
+        <td>#if $s.customerEmail then $s.customerEmail else ""#</td>
         <td>
             <ul class=special_order_list>
                 #for t in $s.titles
                     <li>
                         <ul>
-                            <li>$t.isbn</li>
-                            <li>$t.booktitle</li>
-                            <li>$t.authors_as_string</li>
+                            <li>#if $t.isbn then $t.isbn else ""#</li>
+                            <li>#if $t.booktitle then $t.booktitle else ""#</li>
+                            <li>#if $t.authors_as_string then $t.authors_as_string else ""#</li>
                         </ul>
                     </li>
                 #end for
             </ul>
         </td>
-        <td>$s.id</td>
+        <td>#if $s.id then $s.id else ""#</td>
     </tr>
 #end for
 </tbody>

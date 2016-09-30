@@ -2,6 +2,7 @@ import random
 import unittest
 
 from objects.book import Book
+from objects.title import Title
 from datetime import datetime
 
 #class Book:

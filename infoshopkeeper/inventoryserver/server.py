@@ -496,7 +496,7 @@ class Admin:
         #notice trac is on here but it's run out of its own wsgi script
         MenuData.setMenuData({'7':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
-                                                   ('Bug Reports/Issues', 'javascript:document.location=&#39http://&#39+document.location.hostname+&#39:8050&#39+&#39/trac/newticket&#39;', []),
+                                                   ('Bug Reports/Issues', 'javascript:document.location=&#39http://&#39+document.location.hostname+&#39:8030&#39+&#39/trac/newticket&#39;', []),
                                                  ])})
      
     #hook for kind edit template

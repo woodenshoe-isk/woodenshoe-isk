@@ -31,10 +31,10 @@ Transactions
 <tr><th>date</th><th>action</th><th>info</th><th>amount</th><th>delete</th></tr>
 #for $t in $transactions
 <tr>
-<td>${t.date}</td>
-<td>${t.action}</td>
-<td>${t.get_info()}</td>
-<td>${t.amount}</td>
+<td>#if $t.date then $t.date else ""#</td>
+<td>#if $t.action then $t.action else ""#</td>
+<td>#if $t.get_info() then $t.get_info() else ""#</td>
+<td>#if $t.amount then $t.amount else ""#</td>
 <td><input type="image" name="deleteid" value="$t.id" src="delete.png"/></td>
 </tr>
 #end for
