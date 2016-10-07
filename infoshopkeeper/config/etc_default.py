@@ -4,7 +4,7 @@ dbhost="localhost"
 dbuser="infoshopkeeper"
 dbpass="infoshopkeeper"
 
-cherrypy_config_file="/my/install/of/infoshopkeeper/cherrypy.conf"
+cherrypy_config_file="/my/install/of/infoshopkeeper/config/cherrypy.conf"
 
 title="INFOSHOPKEEPER: robot workers of the world unite!"
 taxrate=0.05

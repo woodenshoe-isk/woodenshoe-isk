@@ -8,14 +8,13 @@ import tempfile
 import subprocess
 import string
 
-from config import etc
+from config.config import configuration
 
 tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
 
 # generate a canvas (A4 in this case, size doesn"t really matter)
 canvas1=canvas.Canvas(tmpfile,(2.4*inch, 2*inch))
 canvas1.saveState()
-
 
 # create a barcode object
 # (is not displayed yet)
@@ -29,7 +28,7 @@ canvas1.showPage()
 canvas1.save()
 tmpfile.close()
 print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o media=Custom.175x120 $filename")
-pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'num_copies':1})
+pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': configuration.get('label_printer_name'), 'num_copies':1})
 result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
 tmpfile.unlink(tmpfile.name)
 

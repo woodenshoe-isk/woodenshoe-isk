@@ -8,7 +8,7 @@ import tempfile
 import subprocess
 import string
 
-from config import etc
+from config.config import configuration
 
 tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
 
@@ -28,7 +28,7 @@ canvas1.showPage()
 canvas1.save()
 tmpfile.close()
 print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o media=Custom.175x120 $filename")
-pcs_sub = print_command_string.substitute({'filename':'/tmp/ean13ext.jpg', 'printer': etc.label_printer_name, 'num_copies':1})
+pcs_sub = print_command_string.substitute({'filename':'/tmp/ean13ext.jpg', 'printer': configuration.get('label_printer_name'), 'num_copies':1})
 result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
 tmpfile.unlink(tmpfile.name)
 

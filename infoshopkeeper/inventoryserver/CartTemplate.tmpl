@@ -11,7 +11,7 @@ Your current cart:
 <form action="/addtocart">
 <table>
 #for $q in $quantities
-<tr><td><input type="text" width="3" name="select_x_like_${q[0].id}" value="${q[1]}" /></td><td>${q[0].title.booktitle}</td></tr>
+<tr><td><input type="text" width="3" name="select_x_like_${q[0].id}" value="${q[1]}" /></td><td>#if $q[0].title.booktitle then $q[0].title.booktitle else ""#</td></tr>
 #end for
 </table>
 <input type="hidden" name="reset_quantities" value="true" />

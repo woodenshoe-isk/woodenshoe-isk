@@ -8,4 +8,3 @@ class Notes(SQLObjectWithFormGlue):
 	whenEntered=DateTimeCol(dbName='whenEntered', default=datetime.now)
 	class sqlmeta:
   	    fromDatabase = True
-	_connection = db.conn()

@@ -205,11 +205,11 @@ $specialorder.object_to_form
         #for $tso in $specialorder.title_pivots
         <li class='special_order_item_list'>
             <ul>
-                <li>$tso.id</li>
-                <li>$tso.title.isbn</li>
-                <li>$tso.title.booktitle</li>
-                <li>$tso.title.authors_as_string</li>
-                <li>$tso.orderStatus</li>
+                <li>#if $tso.id then $tso.id else ""#</li>
+                <li>#if $tso.title.isbn then $tso.title.isbn else ""#</li>
+                <li>#if $tso.title.booktitle then $tso.title.booktitle else ""#</li>
+                <li>#if $tso.title.authors_as_string then $tso.title.authors_as_string else ""#</li>
+                <li>#if $tso.orderStatus then $tso.orderStatus else ""#</li>
                 <li><button onclick="window.location.href='/special_order_item_edit?id=$tso.id'">edit</button></li>
             </ul>
         #end for

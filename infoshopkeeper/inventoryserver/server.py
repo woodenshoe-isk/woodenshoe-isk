@@ -17,6 +17,8 @@ from simplejson import JSONEncoder
 import turbojson
 import json
 
+import isbnlib
+
 from MySQLdb import escape_string
 
 import os.path
@@ -57,8 +59,6 @@ from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 from objects.transaction import Transaction
 
-from tools import isbn as isbnlib
-
 from IndexTemplate import IndexTemplate
 from SearchTemplate import SearchTemplate
 from BookEditTemplate import BookEditTemplate
@@ -87,13 +87,10 @@ from SpecialOrderListTemplate import SpecialOrderListTemplate
 from SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
 
 from config.config import configuration
-from config import etc
 
 from printing import barcode_monkeypatch
 from printing import barcodeLabel
 from printing import specialOrderLabel
-
-cfg = configuration()
 
 #decorator function to return json
 turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
@@ -338,7 +335,7 @@ class Register:
     #search for in stock items by attribute
     @cherrypy.expose
     def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location="", authorOrTitle=""):
-        self._chooseitemtemplate.should_show_images = cfg.get('should_show_images')
+        self._chooseitemtemplate.should_show_images = configuration.get('should_show_images')
         self._chooseitemtemplate.empty=True
         self._chooseitemtemplate.title=title
         self._chooseitemtemplate.isbn=isbn
@@ -427,8 +424,8 @@ class Register:
             isbn=isbn[:-5]
         if len(isbn) in (15,17,18) and isbn[-5] != '5':
                     isbn=isbn[:-5]
-        if ( len(isbn)==10 and isbnlib.isValid(isbn)):
-            isbn=isbnlib.convert(isbn)
+        if ( len(isbn)==10 and isbnlib.is_isbn10(isbn)):
+            isbn=isbnlib.to_isbn13(isbn)
         #search for isbn
         titlelist = Title.selectBy(isbn=isbn)
         
@@ -496,7 +493,7 @@ class Admin:
         #notice trac is on here but it's run out of its own wsgi script
         MenuData.setMenuData({'7':('Admin', '', [  ('Edit Item Kinds', '/admin/kindlist', []),
                                                    ('Edit Item Locations', '/admin/locationlist', []),
-                                                   ('Bug Reports/Issues', 'javascript:document.location=&#39http://&#39+document.location.hostname+&#39:8050&#39+&#39/trac/newticket&#39;', []),
+                                                   ('Bug Reports/Issues', 'javascript:document.location=&#39http://&#39+document.location.hostname+&#39:8030&#39+&#39/trac/newticket&#39;', []),
                                                  ])})
      
     #hook for kind edit template
@@ -534,7 +531,7 @@ class Admin:
      
     #hook for add to inventory template
     @cherrypy.expose
-    def add_to_inventory(self, isbn="", orig_isbn='', large_url='', med_url='', small_url='', quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=etc.default_owner, status="STOCK", tag="", kind=etc.default_kind, type='', known_title=False, printlabel=False, num_copies=1):
+    def add_to_inventory(self, isbn="", orig_isbn='', large_url='', med_url='', small_url='', quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=configuration.get('default_owner'), status="STOCK", tag="", kind=configuration.get('default_kind'), type='', known_title=False, printlabel=False, num_copies=1):
         self._add_to_inventory_template.isbn=isbn
         self._add_to_inventory_template.orig_isbn=orig_isbn
         self._add_to_inventory_template.large_url=large_url
@@ -602,7 +599,7 @@ class Admin:
             result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
             result= '199' + '0'*10
-        result= unicode(int(result[:-1])+1) + isbnlib.checkI13(result[:12]+1)
+        result= unicode(int(result[:-1])+1) + isbnlib._check_digit13(result[:12]+1)
         return result
 
     #wrapper to inventory.addToInventory to be added
@@ -691,7 +688,7 @@ class Admin:
     def select_item_for_isbn_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
         self._chooseitemforisbntemplate.empty=True
         self._chooseitemforisbntemplate.title=title
-        self._chooseitemforisbntemplate.should_show_images = cfg.get('should_show_images')
+        self._chooseitemforisbntemplate.should_show_images = configuration.get('should_show_images')
         self._chooseitemforisbntemplate.isbn=isbn
         self._chooseitemforisbntemplate.author=author
         self._chooseitemforisbntemplate.category=category
@@ -926,7 +923,7 @@ class InventoryServer:
     def __init__(self):
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
   
-        self.reportlist=[getattr(__import__('reports.'+x,globals(),{},[1]),x) for x in cfg.get("reports")]
+        self.reportlist=[getattr(__import__('reports.'+x,globals(),{},[1]),x) for x in configuration.get("reports")]
  
          
         self._indextemplate = IndexTemplate()
@@ -1052,7 +1049,7 @@ class InventoryServer:
     @cherrypy.expose
     def titleedit(self,**args):
         self.common()
-        self._titleedittemplate.should_show_images = cfg.get('should_show_images')
+        self._titleedittemplate.should_show_images = configuration.get('should_show_images')
         
         print>>sys.stderr, args
         title=Title.get(args.get('id')) 
@@ -1119,16 +1116,16 @@ class InventoryServer:
         self.common()
         self._checkouttemplate.status_from=args.get("status_from","STOCK")
         self._checkouttemplate.status_to=args.get("status_to","RETURNED")
-        self._checkouttemplate.schedules = [("list price",1)]+cfg.get("multiple_prices")
+        self._checkouttemplate.schedules = [("list price",1)]+configuration.get("multiple_prices")
  
          
         if "change" in args:
             return self.addtocart(**args)
         if "finalize" in args:
             schedule_name=args["schedule"]
-            #print cfg
-            #print cfg.get("multiple_prices")
-            schedule=[x for x in cfg.get("multiple_prices")+[("list price",1)] if x[0]==schedule_name] 
+            #print configuration
+            #print configuration.get("multiple_prices")
+            schedule=[x for x in configuration.get("multiple_prices")+[("list price",1)] if x[0]==schedule_name] 
             schedule_price=schedule[0][1]
             receipt=""
             for q in cherrypy.session.get('quantities',[]):
@@ -1238,7 +1235,7 @@ class InventoryServer:
         
         self._searchtemplate.empty=True
         self._searchtemplate.title=title
-        self._searchtemplate.should_show_images = cfg.get('should_show_images')
+        self._searchtemplate.should_show_images = configuration.get('should_show_images')
         self._searchtemplate.isbn=isbn
         self._searchtemplate.author=author
         self._searchtemplate.category=category

@@ -6,7 +6,6 @@ from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 #_connection = db.SQLObjconnect()
 
 class Category(SQLObjectWithFormGlue):
-	_connection = db.conn() 
 	title = ForeignKey('Title')
 
 	class sqlmeta:

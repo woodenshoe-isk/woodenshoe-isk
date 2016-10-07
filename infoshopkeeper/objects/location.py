@@ -6,7 +6,6 @@ from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
 
 class Location(SQLObjectWithFormGlue):
-	_connection = db.conn() 
 	class sqlmeta:
 		fromDatabase = True
 
