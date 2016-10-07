@@ -2,7 +2,8 @@ from time import time,asctime,localtime,sleep
 import types,string
 
 import ecs
-from config.etc import amazon_license_key,amazon_secret_key, amazon_associate_tag, default_kind
+from config.config import configuration 
+
 
 from objects.title import Title
 from objects.book import Book
@@ -22,7 +23,11 @@ import re
 from sqlobject.sqlbuilder import Field, RLIKE, AND, LEFTJOINOn
 from MySQLdb import escape_string
 
-    
+amazon_license_key=configuration.get('amazon_license_key')
+amazon_secret_key=configuration.get('amazon_secret_key')
+amazon_associate_tag=configuration.get('amazon_associate_tag')
+default_kind=configuration.get('default_kind')
+
 def process_isbn(isbn):
     #only strip quotes if wsr, reg, or consignment number, or none
     if re.match('^wsr|^reg|^\d{2,4}-\d{1,4}$|n/a|none', isbn, re.I):

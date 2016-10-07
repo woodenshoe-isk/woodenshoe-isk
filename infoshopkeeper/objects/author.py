@@ -10,6 +10,5 @@ class Author(SQLObjectWithFormGlue):
     class sqlmeta:
         fromDatabase = True
 
-    _connection = db.conn() 
     authorName=UnicodeCol(default=None)
     title = RelatedJoin('Title', intermediateTable='author_title',createRelatedTable=True)

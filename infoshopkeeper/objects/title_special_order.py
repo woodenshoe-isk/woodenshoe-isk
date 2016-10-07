@@ -13,4 +13,3 @@ class TitleSpecialOrder(SQLObjectWithFormGlue):
 	class sqlmeta:
   	    fromDatabase = True
   	    table = 'title_special_order'
-	_connection = db.conn()

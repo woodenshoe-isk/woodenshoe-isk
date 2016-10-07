@@ -8,12 +8,10 @@ import datetime
 now=datetime.datetime.now   
 
 from tools import db
-from config import etc
 
 #_connection = db.SQLObjconnect()
 
 class Transaction(SQLObjectWithFormGlue):
-    _connection = db.conn() 
 
     class sqlmeta:
         from_database=True

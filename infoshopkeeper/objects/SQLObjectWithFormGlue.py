@@ -4,13 +4,14 @@ from importlib import import_module
 import sys
 import operator
 from sqlobject import *
-
+from tools import db
 class SQLObjectWithFormGlue(SQLObject):
     _cacheValues=False
     _cols=None
     _make_multiline_length=128
     _multiline_rows=5
-    
+    _connection=db.conn()
+
     readOnlyColumns = ()
     
     def form_to_object(myClass,formdata):

@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.pdfgen import canvas
 from time import strftime
 
-from config import etc
+from config.config import configuration
 
 import os
 import string
@@ -113,7 +113,7 @@ def print_special_order_label(isbn='', booktitle='', author='', price=0, custome
     #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
     tmpfile.close()
     print_command_string = string.Template(u"lpr -P $printer -# $numcopies -o orientation-requested=3 -o media=BrL063E078A5766 $filename")
-    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer':etc.label_printer_name, 'numcopies':copies})
+    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer':configuration.get('label_printer_name'), 'numcopies':copies})
     subprocess.check_call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
     #tmpfile.unlink(tmpfile.name)
 

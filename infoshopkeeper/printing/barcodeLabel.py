@@ -15,7 +15,7 @@ import tempfile
 import subprocess
 import string
 
-from config import etc
+from config.config import configuration
 
 isbn1='9780345497499'
 booktitle='Kraken Kraken Kraken Kraken Kraken'
@@ -101,7 +101,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     tmpfile.close()
     print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o orientation-requested=3 -o media=60x60 $filename")
     #print_command_string = string.Template(u"open $filename")
-    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': etc.label_printer_name, 'num_copies':num_copies})
+    pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': configuration.get('label_printer_name'), 'num_copies':num_copies})
     result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
 #    tmpfile.unlink(tmpfile.name)
 

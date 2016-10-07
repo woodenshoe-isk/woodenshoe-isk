@@ -11,7 +11,6 @@ from mx.DateTime import now
 
 
 class Images(SQLObjectWithFormGlue):
-    _connection = db.conn()
     _cfg = configuration()
     
     title = ForeignKey('Title') 

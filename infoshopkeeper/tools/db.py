@@ -2,7 +2,6 @@ import logging
 import logging.handlers
 
 from config.config import configuration
-from config.etc import should_log_SQLObject
 
 cfg = configuration()
 dbtype = cfg.get("dbtype")
@@ -19,7 +18,7 @@ if dbtype in ('mysql', 'postgres'):
     elif dbtype is 'postgres':
         import psycopg as dbmodule
 
-    if should_log_SQLObject:
+    if cfg.get('should_log_SQLObject'):
         my_logger = logging.getLogger('SQLObhectLogger')
         my_logger.setLevel(logging.DEBUG)
 
@@ -33,8 +32,10 @@ if dbtype in ('mysql', 'postgres'):
 
 
     def conn():
-        return u'%s://%s:%s@%s/%s?debug=1&logger=SQLObhectLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype,dbuser,dbpass,dbhost,dbname)
-
+        connection_string  = u'%s://%s:%s@%s/%s?debug=1&logger=SQLObhectLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype,dbuser,dbpass,dbhost,dbname)
+        return connection_string
+        sqlhub.process_connection = connectionForURI(connection_string)
+      
 elif dbtype is 'sqlite':
     import os, time, re
     from pysqlite2 import dbapi2 as sqlite

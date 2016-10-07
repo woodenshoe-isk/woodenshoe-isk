@@ -7,4 +7,3 @@ class ISBN_to_be_entered(SQLObjectWithFormGlue):
 	class sqlmeta:
   	    fromDatabase = True
             table = 'ISBN_to_be_entered'
-	_connection = db.conn()

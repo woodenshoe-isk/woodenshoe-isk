@@ -3,27 +3,16 @@ import string
 import sets
 import datetime
 
-from config.etc import *
-
 from sqlobject import *
 from tools import db
 from objects.kind import Kind
 from objects.images import Images
 from SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
- #Set up db connection
-connection = connectionForURI('mysql://%s:%s@%s:3306/%s?debug=1&logger=MyLogger&loglevel=debug&use_unicode=1&charset=utf8'
-% (dbuser,dbpass,dbhost,dbname))
-sqlhub.processConnection = connection
-
-
-#_connection = db.SQLObjconnect()
-        
 
 class Title(SQLObjectWithFormGlue):
     class sqlmeta:
         fromDatabase = True
-    #_connection = db.conn() 
 
     booktitle=UnicodeCol(default=None)
     books = MultipleJoin('Book')
@@ -37,15 +26,6 @@ class Title(SQLObjectWithFormGlue):
     sortTheseKeys=[]
     
     
-    #~ _connection = db.conn()
-    #~ books = MultipleJoin('Book')
-    #~ author = RelatedJoin('Author', intermediateTable='author_title',createRelatedTable=True)
-    #~ categorys = MultipleJoin('Category')
-    #~ kind = ForeignKey('Kind')
-    #~ listTheseKeys=('kind')
-
-    #~ class sqlmeta:
-        #~ fromDatabase = True
         
     def copies_in_status(self,status):
         i=0

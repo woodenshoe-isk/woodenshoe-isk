@@ -7,7 +7,7 @@ import atexit
 import threading
 import cherrypy
 
-from config.etc import cherrypy_local_config_file
+from config.config import configuration
 
 from inventoryserver.server import InventoryServer
 from inventoryserver.server import Register
@@ -34,6 +34,7 @@ root.notes=Noteboard()
 root.register=Register()
 root.specialorder=SpecialOrders()
 
+cherrypy_local_config_file=configuration.get('cherrypy_local_config_file')
 application = cherrypy.Application(root, script_name=None, config=cherrypy_local_config_file)
 
 if __name__ == '__main__':

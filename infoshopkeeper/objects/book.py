@@ -10,7 +10,6 @@ from mx.DateTime import now
 from tools import db
 
 class Book(SQLObjectWithFormGlue):
-    _connection = db.conn() 
     listprice=FloatCol()
     ourprice=FloatCol()
     inventoried_when=DateCol(default=now)
