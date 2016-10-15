@@ -228,7 +228,11 @@ class Test_Admin(unittest.TestCase ):
         response=self._my_app.get('/admin/locationlist')
         code, error=tidylib.tidy_document(response.body, options={'show-errors':1, 'show-warnings':0})
         self.assertFalse(error, '/admin/locationlist did not return valid html page')
-        
+    
+    def test_get_next_unused_local_isbn(self):
+        isbn = self._my_class.get_next_unused_local_isbn() 
+        self.assertRegexpMatches(isbn, '^199\d{10}$', "method get_next_unused_local_isbn doesn't return valid isbn")
+
     def test_add_to_inventory_unit(self):
         code, error=tidylib.tidy_document(self._my_class.add_to_inventory(), options={'show-errors':1,'show-warnings':0})
         self.assertFalse(error, "method Admin.add_to_inventory does not return valid html page")

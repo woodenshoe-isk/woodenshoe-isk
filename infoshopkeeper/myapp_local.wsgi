@@ -33,7 +33,7 @@ root.admin=Admin()
 root.staffing=Staffing()
 root.notes=Noteboard()
 root.register=Register()
-root.specialorder=SpecialOrders()
+#root.specialorder=SpecialOrders()
 if client_side_logging_enabled:
     root.logging=CSLogging()
 

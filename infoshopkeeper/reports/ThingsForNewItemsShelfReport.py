@@ -18,7 +18,7 @@ class ThingsForNewItemsShelfReport(Report):
                                 JOIN title t1 ON b1.title_id=t1.id  
                                 JOIN author_title at1 ON at1.title_id=t1.id 
                                 JOIN author a1 ON at1.author_id=a1.id  
-                                WHERE t1.kind_id=%s AND b1.status='STOCK'
+                                WHERE t1.kind_id=%s
                                 GROUP BY t1.isbn) AS subq1 
                         JOIN title t2 ON t2.isbn=subq1.isbn 
                         JOIN book b2 ON b2.title_id=t2.id

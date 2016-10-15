@@ -14,7 +14,10 @@ from inventoryserver.server import Staffing
 from inventoryserver.server import Admin
 from inventoryserver.server import Noteboard
 from inventoryserver.server import SpecialOrders
+<<<<<<< HEAD
+=======
 from inventoryserver.server import CSLogging 
+>>>>>>> origin/master
 
 cherrypy.config.update({'environment': 'embedded'})
 
@@ -32,6 +35,7 @@ root.admin=Admin()
 root.staffing=Staffing()
 root.notes=Noteboard()
 root.register=Register()
+
 root.specialorder=SpecialOrders()
 if client_side_logging_enabled:
     root.logging=CSLogging()
