@@ -123,6 +123,7 @@ def lookup_by_isbn(number, forceUpdate=False):
                 else:
                     idType='EAN'
             
+            print>>sys.stderr, "idtype ",  idType
             try:
                     amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
             except ecs.InvalidParameterValue:
@@ -241,7 +242,9 @@ def lookup_by_isbn(number, forceUpdate=False):
                     "known_title": known_title,
                     "special_orders": []}
             else:
-                isbnlibBooks = isbnlib.meta('isbn')
+                isbnlibbooks=[]
+                isbnlibbooks = isbnlib.meta('isbn')
+                
                 if isbnlibbooks:
                     return {"title":isbnlibBooks.Title,
                         "authors":isbnlibBooks.Authors,
