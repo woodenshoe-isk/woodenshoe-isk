@@ -213,7 +213,7 @@ selected="true"
 #for $t in $titles
     #try
       <tr>
-      <td>#if $t.id then $t.id else ""#</td>
+      <td>$t.id </td>
       <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
                    event.stopPropagation();
                }
@@ -232,8 +232,8 @@ selected="true"
         <td>#if $t.safe('booktitle') then $t.safe('booktitle') else ""#</td>
         <td>#if $t.authors_as_string() then $t.authors_as_string() else ""#</td>
         <td>#if $t.type then $t.type else ""#</td>
-        <td>#if $t.copies_in_status("STOCK") then $t.copies_in_status("STOCK") else ""#</td>
-        <td>#if $t.copies_in_status("SOLD") then $t.copies_in_status("SOLD") else ""#</td>
+        <td>#if $t.copies_in_status("STOCK") then $t.copies_in_status("STOCK") else '0'#</td>
+        <td>#if $t.copies_in_status("SOLD") then $t.copies_in_status("SOLD") else "0"#</td>
         <td>#if $t.distributors_as_string() then $t.distributors_as_string() else ""#</td>
         <td>#if $t.safe('publisher') then $t.safe('publisher') else ""#</td>
         <td>#if $t.first_book_inventoried then $t.first_book_inventoried.inventoried_when else "blank placeholder"#</td>
@@ -242,15 +242,7 @@ selected="true"
         <td>#if $t.last_book_sold then $t.last_book_sold.sold_when else ""#</td>
       </tr>
     #except
-      <tr>
-            <td><input type="checkbox" name="titles" value="$t.id" onclick='if (event.stopPropagation){
-                       event.stopPropagation();
-                   }
-                   else if(window.event){
-                      window.event.cancelBubble=true;
-                   }'/>
-            </td>
-        </tr>
+        pass
     #end try
 #end for
 </tbody>

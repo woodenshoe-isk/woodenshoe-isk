@@ -63,86 +63,32 @@ class Title(SQLObjectWithFormGlue):
     
     def last_book_inventoried(self):
         try:
-            last_book=None
-            #get all books
-            for b in self.books:
-                #if there's not a book yet
-                if not isinstance(objects.Book, last_book):
-                   last_book=b 
-                else:
-                    #make last_book the newest book inventoried
-                    if b.inventoried_when > last_book.inventoried_when:
-                        last_book=b
+            return sorted(self.books, key=lambda x:  x.inventoried_when, reverse=True)[0]
         except:
-            pass
-        return last_book
-        
+            return ''
+
+    
     def first_book_inventoried(self):
         try:
-            first_book=None
-            #get all books
-            for b in self.books:
-                #if there's not a book yet
-                if not isinstance(objects.Book, first_book):
-                   first_book=b 
-                else:
-                    #make first_book the newest book inventoried
-                    if b.inventoried_when < first_book.inventoried_when:
-                        first_book=b
+            return sorted(self.books, key=lambda x:  x.inventoried_when, reverse=False)[0]
         except:
-            pass
-        if first_book:
-           return first_book
-        else:
-           return None
+            return ''
+
 
     def highest_price_book(self):
-        try:
-            high_book=None
-            #get all books
-            for b in self.books:
-                #if there's not a book yet
-                if not isinstance(objects.Book, high_book):
-                   high_book=b 
-                else:
-                    #make high_book the higest-priced book
-                    if b.listprice > high_book.listprice:
-                        high_book=b
-        except:
-            pass
-        return high_book
-
+         try:
+            return sorted(self.books, key=lambda x:  x.ourprice, reverse=True)[0]
+         except:
+            return ''
+                                       
     def first_book_sold(self):
         try:
-            first_book=None
-            #get all books
-            for b in self.books:
-                #if there's not a book yet that's 'SOLD'
-                if b.status=="SOLD":
-                    if not isinstance(objects.Book, first_book):
-                       first_book=b 
-                    else:
-                        #make first_book oldest sold book
-                        if b.sold_when < first_book.sold_when:
-                            first_book=b
+            return sorted([x for x in self.books if x.status=='SOLD'], key=lambda x:  x.inventoried_when, reverse=False)[0]
         except:
-            pass
-        return first_book
-        
+            return ''
+
     def last_book_sold(self):
         try:
-            last_book=None
-            #get all books
-            for b in self.books:
-                #if there's not a book yet that's 'SOLD'
-               if b.status=="SOLD":
-                    if not isinstance(objects.Book, last_book):
-                       last_book=b 
-                    else:
-                        #make last_book newest sold book
-                        if b.sold_when > last_book.sold_when:
-                            last_book=b
+            return sorted([x for x in self.books if x.status=='SOLD'], key=lambda x:  x.inventoried_when, reverse=True)[0]
         except:
-            pass
-        return last_book
-        
+            return ''
