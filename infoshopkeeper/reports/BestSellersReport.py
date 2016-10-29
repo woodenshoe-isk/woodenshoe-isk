@@ -17,7 +17,18 @@ class BestSellersReport(Report):
             end_date='2030-01-01'
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
-        SELECT booktitle,count(book.id) AS blah FROM book JOIN title ON book.title_id=title.id WHERE book.status='SOLD' AND title.kind_id=%s AND sold_when>=%s AND sold_when<=ADDDATE(%s,INTERVAL 1 DAY)  GROUP BY title_id ORDER BY blah DESC LIMIT 100
+            SELECT 
+                booktitle,count(book.id) AS num_books
+            FROM  book
+            JOIN  title
+              ON  book.title_id=title.id
+            WHERE book.status='SOLD'
+              AND title.kind_id=%s 
+              AND sold_when>=%s 
+              AND sold_when<=ADDDATE(%s,INTERVAL 1 DAY)  
+            GROUP BY book.title_id 
+            ORDER BY num_books
+            DESC LIMIT 100
         """,(args['kind'],begin_date,end_date))
         
         results= self.cursor.fetchall()

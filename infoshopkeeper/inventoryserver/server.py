@@ -640,14 +640,33 @@ class Admin:
         print>>sys.stderr, 'data', data
 
         most_freq_location=''
+        #if it's a known ismb
         if (data and data['known_title']):
             most_freq_location = data['known_title']._connection.queryAll(
-            '''SELECT book.location_id FROM title JOIN book ON book.title_id=title.id WHERE title.isbn='%s' AND book.location_id !=1 GROUP BY title.isbn, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].isbn
+                    '''SELECT
+                             book.location_id
+                       FROM  title
+                       JOIN  book
+                         ON  book.title_id=title.id
+                       WHERE title.isbn='%s'
+                         AND book.location_id !=1
+                       GROUP BY title.isbn, book.location_id 
+                       ORDER BY count(book.location_id) 
+                       DESC LIMIT 1''' % data['known_title'].isbn
             )
             if most_freq_location:            
                 data['most_freq_location'] = most_freq_location[0][0]
-            max_price=list(data['known_title']._connection.queryAll(
-            '''SELECT MAX(book.listprice) FROM title JOIN book ON book.title_id=title.id WHERE title.isbn='%s' GROUP BY title.isbn''' % data['known_title'].isbn
+            max_price=
+                list(data['known_title']._connection.queryAll(
+                    '''SELECT 
+                             MAX(book.listprice)
+                       FROM 
+                             title
+                       JOIN  book
+                         ON  book.title_id=title.id
+                       WHERE title.isbn='%s' 
+                       GROUP BY title.isbn'''
+                    % data['known_title'].isbn
             ))
             if max_price:
                 max_price='{0:.2f}'.format(max_price[0][0])
@@ -666,14 +685,25 @@ class Admin:
         if title:
             #queryAll returns lists of lists for results
             most_freq_location=title._connection.queryAll(
-            '''SELECT book.location_id FROM book WHERE book.title_id=%s AND book.location_id !=1 GROUP BY book.title_id, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % title.id
+            '''SELECT 
+                     book.location_id
+               FROM  book
+               WHERE book.title_id=%s 
+                 AND book.location_id !=1
+               GROUP BY book.title_id, book.location_id 
+               ORDER BY count(book.location_id) DESC 
+               LIMIT 1''' % title.id
             )
             if most_freq_location:
                 most_freq_location=most_freq_location[0][0]
             else:
                 most_freq_location=''
             max_price=list(title._connection.queryAll(
-            '''SELECT MAX(book.listprice) FROM book WHERE book.title_id=%s GROUP BY book.title_id''' % title.id
+            '''SELECT 
+                   MAX(book.listprice) 
+               FROM  book
+               WHERE book.title_id=%s 
+               GROUP BY book.title_id''' % title.id
             ))
             if max_price:
                 max_price='{0:.2f}'.format(max_price[0][0])

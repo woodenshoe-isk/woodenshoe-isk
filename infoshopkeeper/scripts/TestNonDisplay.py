@@ -5,7 +5,7 @@ import lxml
 from lxml import html, cssselect
 
 import webtest
-from wsgiapp_local import application
+from myapp_local import application
 
 
 try:
