@@ -170,6 +170,8 @@ class Register:
         if cherrypy.session.has_key('cart'):
             print>>sys.stderr, "CART EXISTS"         
             cart = cherrypy.session.pop('cart')
+            if 'uuid' not in cart:
+                cart['uuid']= cart['uuid']=uuid.uuid1().hex
         #or make a cart. id is hes uuid
         else:
             print>>sys.stderr, "MAKE CART" 
