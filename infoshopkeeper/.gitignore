@@ -6,6 +6,6 @@
 *.swn
 *.wsgi
 *Template.py
-*/index.py
+index.py
 htmlcov/*
 .coverage
