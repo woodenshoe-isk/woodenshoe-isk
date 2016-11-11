@@ -2,7 +2,7 @@
 
 from robobrowser import RoboBrowser
 
-browser=RoboBrowser()
+browser=RoboBrowser(parser='html.parser')
 browser.open("https://www.noip.com/members/dns/host.php?host_id=48545720")
 browser.get_form(id='clogs')
 form=browser.get_form(id='clogs')

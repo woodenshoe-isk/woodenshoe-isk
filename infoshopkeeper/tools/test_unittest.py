@@ -11,6 +11,8 @@ from objects.title import Title
 from tools import inventory
 from tools import isbn
 
+globals()['UNIT_TEST']=True
+
 #class inventory:
     #def __init__(self):
     #def lookup_by_isbn(self,number):
