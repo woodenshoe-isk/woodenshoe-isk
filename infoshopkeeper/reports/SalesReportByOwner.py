@@ -10,7 +10,16 @@ class SalesReportByOwner(SalesReport):
         begin_date=args.get('begin_date','1990-01-01')
         end_date=args.get('end_date','2030-01-01')
         owner=args.get('owner','')
-        self.cursor.execute("SELECT * FROM transactionLog WHERE action='SALE' AND info LIKE %s AND date>=%s AND date<=ADDDATE(%s,INTERVAL 1 DAY) and owner=%s order by date" ,("%%%s%%" % (args['what']),begin_date,end_date,owner ))
+        self.cursor.execute("""
+            SELECT * 
+            FROM transactionLog 
+            WHERE   action='SALE'
+                AND info LIKE %s 
+                AND date>=%s 
+                AND date<=ADDDATE(%s,INTERVAL 1 DAY) 
+                AND owner=%s order by date""" ,
+           ("%%%s%%" % (args['what']),begin_date,end_date,owner
+        )
         results= self.cursor.fetchall()
         self.cursor.close()
         return results
