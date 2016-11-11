@@ -5,6 +5,8 @@ from objects.book import Book
 from objects.title import Title
 from datetime import datetime
 
+UNIT_TEST=True
+
 #class Book:
     #def object_to_form(self):
     #def _set_status(self, value):
