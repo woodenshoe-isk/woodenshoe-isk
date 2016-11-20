@@ -419,17 +419,7 @@ class Register:
         print>>sys.stderr, 'kwargs are', kwargs
         isbn=kwargs.get('isbn', '')
         print>>sys.stderr, isbn
-        #strip spaces and quotes from isbn string
-        isbn=isbn.replace('\"', '')
-        price=0
-        if len(isbn) in (15,17,18) and isbn[-5] == '5':
-            price = float(isbn[-4:])/100
-            isbn=isbn[:-5]
-        if len(isbn) in (15,17,18) and isbn[-5] != '5':
-                    isbn=isbn[:-5]
-        if ( len(isbn)==10 and isbnlib.isValid(isbn)):
-            isbn=isbnlib.convert(isbn)
-        #search for isbn
+        isbn = inventory.process_isbn(isbn)
         titlelist = Title.selectBy(isbn=isbn)
         
         #if we find it search for associated books in stock
