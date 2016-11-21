@@ -640,7 +640,7 @@ class Admin:
         print>>sys.stderr, 'data', data
 
         most_freq_location=''
-        #if it's a known ismb
+        #if it's a known isbn
         if (data and data['known_title']):
             most_freq_location = data['known_title']._connection.queryAll(
                     '''SELECT
@@ -650,7 +650,7 @@ class Admin:
                          ON  book.title_id=title.id
                        WHERE title.isbn='%s'
                          AND book.location_id !=1
-                       GROUP BY title.isbn, book.location_id 
+                       GROUP BY title.isbn, book.location_id
                        ORDER BY count(book.location_id) 
                        DESC LIMIT 1''' % data['known_title'].isbn
             )
