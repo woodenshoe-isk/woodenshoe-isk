@@ -16,7 +16,7 @@ from tools import isbn
     #def lookup_by_isbn(self,number):
     #def parseBrowseNodes(bNodes):
     #def parseBrowseNodesInner(item):
-    #def addToInventory(self,title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",extra_prices={}, tag=''):
+    #def addToInventory(self,title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="",categories=[],distributor="",location="",owner="",notes="",quantity=1,known_title=False,types='',kind_name="",extra_prices={}, tag=''):
     #def getInventory(self,queryTerms):
 class test_inventory(unittest.TestCase):
     def test_lookup_by_isbn10_have_it(self):
