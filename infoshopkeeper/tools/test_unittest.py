@@ -9,7 +9,7 @@ from objects.book import Book
 from objects.title import Title
 
 from tools import inventory
-from tools import isbn
+
 
 globals()['UNIT_TEST']=True
 
@@ -28,7 +28,7 @@ class test_inventory(unittest.TestCase):
     def test_lookup_by_isbn10_dont_have(self):
         isbn_we_will_never_have='0060723467'      #Dick Cheney's autobiography
         result= inventory.lookup_by_isbn( isbn_we_will_never_have )
-        isbn_we_will_never_have = isbn.toI13(isbn_we_will_never_have)
+        isbn_we_will_never_have = isbnlib.to_isbn13(isbn_we_will_never_have)
         self.assertEqual(isbn_we_will_never_have, result['isbn'] )
     def test_lookup_by_isbn10_is_invalid(self):
         #translation table of checkdigits to wrong ones (digit plus 1)
