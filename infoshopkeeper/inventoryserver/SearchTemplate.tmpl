@@ -236,7 +236,7 @@ selected="true"
         <td>#if $t.copies_in_status("SOLD") then $t.copies_in_status("SOLD") else "0"#</td>
         <td>#if $t.distributors_as_string() then $t.distributors_as_string() else ""#</td>
         <td>#if $t.safe('publisher') then $t.safe('publisher') else ""#</td>
-        <td>#if $t.first_book_inventoried then $t.first_book_inventoried.inventoried_when else "blank placeholder"#</td>
+        <td>#if $t.first_book_inventoried then $t.first_book_inventoried.inventoried_when else ""#</td>
         <td>#if $t.last_book_inventoried then $t.last_book_inventoried.inventoried_when else ""#</td>
         <td>#if $t.first_book_sold then $t.first_book_sold.sold_when else ""#</td>
         <td>#if $t.last_book_sold then $t.last_book_sold.sold_when else ""#</td>
