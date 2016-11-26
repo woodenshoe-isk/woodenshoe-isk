@@ -5,11 +5,8 @@ from objects.book import Book
 from objects.title import Title
 from datetime import datetime
 
-<<<<<<< HEAD
-=======
 globals()['UNIT_TEST']=True
 
->>>>>>> hotfix
 #class Book:
     #def object_to_form(self):
     #def _set_status(self, value):
