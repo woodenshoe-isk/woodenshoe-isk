@@ -7,7 +7,7 @@ import webtest
 
 from objects.book import Book
 
-from myapp_local import application
+from wsgiapp_local import application
 
 try:
     _my_app=webtest.TestApp(application)

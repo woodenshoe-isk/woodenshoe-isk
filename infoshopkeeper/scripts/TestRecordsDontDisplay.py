@@ -6,7 +6,7 @@ import lxml
 from lxml import html, cssselect
 
 import webtest
-from myapp_local import application
+from wsgiapp_local import application
 
 from etc import *
 from ecs import *
