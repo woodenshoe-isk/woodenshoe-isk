@@ -416,8 +416,7 @@ class Register:
         print>>sys.stderr, 'kwargs are', kwargs
         isbn=kwargs.get('isbn', '')
         print>>sys.stderr, isbn
-        isbn, price = inventory.process_isbn(isbn)
-        print>>sys.stderr, type(isbn), isbn
+        isbn = inventory.process_isbn(isbn)
         titlelist = Title.selectBy(isbn=isbn)
         
         #if we find it search for associated books in stock
