@@ -42,7 +42,8 @@ def process_isbn(isbn):
         #note the checking for the first character of ean5 extension
         #if it's 5, it means price is in us dollars 0-99.99
         #otherwise, we need to do price ourself.
-        if len(isbn) in (15,17,18):
+#        if len(isbn) in (15,17,18):
+        if len(isbn)==18:
             if isbn[-5] == '5':
                 price = float(isbn[-4:])/100
             isbn=isbn[:-5]
