@@ -6,18 +6,15 @@ sys.path.append(os.path.dirname(__file__))
 import atexit
 import threading
 import cherrypy
-from config.etc import cherrypy_nonlocal_config_file, client_side_logging_enabled
+from .config.etc import cherrypy_nonlocal_config_file, client_side_logging_enabled
 
-from inventoryserver.server import InventoryServer
-from inventoryserver.server import Register
-from inventoryserver.server import Staffing
-from inventoryserver.server import Admin
-from inventoryserver.server import Noteboard
-from inventoryserver.server import SpecialOrders
-<<<<<<< HEAD
-=======
-from inventoryserver.server import CSLogging 
->>>>>>> origin/master
+from .inventoryserver.server import InventoryServer
+from .inventoryserver.server import Register
+from .inventoryserver.server import Staffing
+from .inventoryserver.server import Admin
+from .inventoryserver.server import Noteboard
+from .inventoryserver.server import SpecialOrders
+from .inventoryserver.server import CSLogging 
 
 cherrypy.config.update({'environment': 'embedded'})
 

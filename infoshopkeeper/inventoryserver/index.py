@@ -8,10 +8,11 @@
 import sys
 import os
 import os.path
+import collections
 try:
     import builtins as builtin
 except ImportError:
-    import __builtin__ as builtin
+    import builtins as builtin
 from os.path import getmtime, exists
 import time
 import types
@@ -59,7 +60,7 @@ class index(Template):
         if not self._CHEETAH__instanceInitialized:
             cheetahKWArgs = {}
             allowedKWs = 'searchList namespaces filter filtersLib errorCatcher'.split()
-            for k,v in KWs.items():
+            for k, v in list(KWs.items()):
                 if k in allowedKWs: cheetahKWArgs[k] = v
             self._initCheetahInstance(**cheetahKWArgs)
         
@@ -69,7 +70,7 @@ class index(Template):
 
 
         ## CHEETAH: main method generated for this template
-        if (not trans and not self._CHEETAH__isBuffering and not callable(self.transaction)):
+        if (not trans and not self._CHEETAH__isBuffering and not isinstance(self.transaction, collections.Callable)):
             trans = self.transaction # is None unless self.awake() was called
         if not trans:
             trans = DummyTransaction()

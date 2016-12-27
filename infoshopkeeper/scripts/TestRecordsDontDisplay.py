@@ -26,7 +26,7 @@ except:
     pass
 
 titles=Title.select(RLIKE(Title.q.isbn, '^[0-9]{10}[0-9xX]$|^[0-9]{13}$'))
-titles_that_display, titles_that_dont_display, titles_that_dont_even_fetch=(0,[],[])
+titles_that_display, titles_that_dont_display, titles_that_dont_even_fetch=(0, [], [])
 
 for title in titles:
     try:
@@ -38,14 +38,14 @@ for title in titles:
             titles_that_dont_display.append(title.id)
         
     except Exception as e:
-        print e
+        print(e)
         titles_that_dont_even_fetch.append(title.id)
-print "Number of titles that don't fetch: ", titles_that_dont_even_fetch.__len__()
-print "Number of titles that don't display: ", titles_that_dont_display.__len__()
-print "Number of titles that display: ", titles_that_display
+print(("Number of titles that don't fetch: ", titles_that_dont_even_fetch.__len__()))
+print(("Number of titles that don't display: ", titles_that_dont_display.__len__()))
+print(("Number of titles that display: ", titles_that_display))
 
-print "Titles that don't display are: ", titles_that_dont_display
-print "Titles that don't fetch are: ", titles_that_dont_even_fetch
+print(("Titles that don't display are: ", titles_that_dont_display))
+print(("Titles that don't fetch are: ", titles_that_dont_even_fetch))
 
 diagnostic_dict={}
 for t in titles_that_dont_display:
@@ -108,25 +108,25 @@ for t in titles_that_dont_display:
         titles_that_dont_display.remove(t)
         
 if diagnostic_dict.get('book'):
-    print "Titles that don't have books are: ", diagnostic_dict['book']
+    print(("Titles that don't have books are: ", diagnostic_dict['book']))
 if diagnostic_dict.get('author'):
-    print "Titles that don't have authors are: ", diagnostic_dict['author']
+    print(("Titles that don't have authors are: ", diagnostic_dict['author']))
 if diagnostic_dict.get('category'):
-    print "Titles that don't have categories are: ", diagnostic_dict['category']
+    print(("Titles that don't have categories are: ", diagnostic_dict['category']))
 if diagnostic_dict.get('safe_booktitle'):
-    print "Titles whose booktitle doesn't display safely are: ", diagnostic_dict['safe_booktitle']
+    print(("Titles whose booktitle doesn't display safely are: ", diagnostic_dict['safe_booktitle']))
 if diagnostic_dict.get('authors_as_string'):
-    print "Titles whose authors don't display safely as string are: ", diagnostic_dict['authors_as_string']
+    print(("Titles whose authors don't display safely as string are: ", diagnostic_dict['authors_as_string']))
 if diagnostic_dict.get('type'):
-    print "Titles without type are: ", diagnostic_dict['type']
+    print(("Titles without type are: ", diagnostic_dict['type']))
 if diagnostic_dict.get('distributors_as_string'):
-    print "Titles without distributors as string are: ", diagnostic_dict['distributors_as_string']
+    print(("Titles without distributors as string are: ", diagnostic_dict['distributors_as_string']))
 if diagnostic_dict.get('publisher'):
-    print "Titles without publisher are: ", diagnostic_dict['publisher']
+    print(("Titles without publisher are: ", diagnostic_dict['publisher']))
 if diagnostic_dict.get('kind'):
-    print 'Titles without kind are: ', diagnostic_dict['kind']
+    print(('Titles without kind are: ', diagnostic_dict['kind']))
 if titles_that_dont_display:
-    print "The remainder of problem tiles are: ", titles_that_dont_display
+    print(("The remainder of problem tiles are: ", titles_that_dont_display))
    
 sys.exit(0) 
 
@@ -137,13 +137,13 @@ def get_authors_from_amazon(auth_missing=None):
         t1=Title.get(t)
         try:
             amazonIter=ItemLookup(t1.isbn, ResponseGroup="ItemAttributes")
-            amazonResults=amazonIter.next()
-            if type( getattr(amazonResults, 'Author', False)) == type(u''):
+            amazonResults=next(amazonIter)
+            if isinstance(getattr(amazonResults, 'Author', False), type('')):
                 auth= [ getattr(amazonResuts, 'Author', None) ]
             else:
                 auth=getattr( amazonResults, 'Author', [])
-            print auth
-            if type( getattr(amazonResults,'Creator', False)) == type(u''):
+            print(auth)
+            if isinstance(getattr(amazonResults, 'Creator', False), type('')):
                 auth.extend([ getattr(amazonResuts, 'Creator', None) ])
             else:
                 auth.extend(getattr( amazonResults, 'Creator', []))
@@ -154,11 +154,11 @@ def get_authors_from_amazon(auth_missing=None):
                 except Exception: 
                     pass
                 au_rec=Author.selectBy(authorName=au)[0]
-                print au_rec
+                print(au_rec)
                 t1.addAuthor(au_rec)
-                print t1.author
+                print((t1.author))
         except Exception as e:
-            print e
+            print(e)
              
 def get_categories_from_amazon( category_missing=None):
     if not category_missing:
@@ -167,7 +167,7 @@ def get_categories_from_amazon( category_missing=None):
         t1=Title.get(t)
         try:
             amazonIter=ItemLookup(t1.isbn, ResponseGroup="ItemAttributes, BrowseNodes")
-            amazonResults=amazonIter.next()
+            amazonResults=next(amazonIter)
             def parseBrowseNodes(bNodes):
                 def parseBrowseNodesInner(item):
                     bn=set()
@@ -195,4 +195,4 @@ def get_categories_from_amazon( category_missing=None):
             
             categories=parseBrowseNodes(b.BrowseNodes)
         except Exception as e:
-            print e
+            print(e)

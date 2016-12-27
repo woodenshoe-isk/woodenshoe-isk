@@ -18,18 +18,18 @@ class Report:
     #do we want to see the header of the results table?
     show_header=False
 
-    def __init__(self,args):
+    def __init__(self, args):
         self.conn=db.connect()
         self.args=args
     
-    def get_total(self,results):
+    def get_total(self, results):
         total=0
         for r in results:
             total=total+r[self.total_index]
         return total
    
     #override to do actual query
-    def query(self,args):
+    def query(self, args):
         self.cursor=self.conn.cursor()
     
     #generally leave this alone

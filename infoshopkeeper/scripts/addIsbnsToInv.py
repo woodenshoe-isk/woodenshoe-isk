@@ -5,7 +5,7 @@ from config.etc import *
 from sqlobject import *
 
 #Set up db connection
-connection = connectionForURI('mysql://%s:%s@%s:3306/%s?debug=1&logger=MyLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbuser,dbpass,dbhost,dbname))
+connection = connectionForURI('mysql://%s:%s@%s:3306/%s?debug=1&logger=MyLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbuser, dbpass, dbhost, dbname))
 sqlhub.processConnection = connection
 
 class ISBNToBeEntered(SQLObject):
@@ -25,12 +25,12 @@ for t in titles:
         #print "isbn %s seems to be invalid" % t.isbn
         raise e
     if titleinfo:
-        print titleinfo
+        print(titleinfo)
         if titleinfo['kind'] != 'books':
             continue
         #print titleinfo
-        if isinstance(titleinfo['list_price'],unicode):
-	    correctedprice=float(titleinfo['list_price'].replace('$',''))
+        if isinstance(titleinfo['list_price'], str):
+	    correctedprice=float(titleinfo['list_price'].replace('$', ''))
         elif not titleinfo['list_price']:
             correctedprice=0.0
         else:

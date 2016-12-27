@@ -12,8 +12,8 @@ def run_sql_select( query_string):
     headers=[ h[0] for h in query.description ]
     
     results=[]
-    for i in xrange(1, query.rowcount):
+    for i in range(1, query.rowcount):
         record=query.fetchone()
-        results.append(dict(zip(headers, record)))
+        results.append(dict(list(zip(headers, record))))
     return results
     

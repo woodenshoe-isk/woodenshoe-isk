@@ -2,7 +2,7 @@ import mx.DateTime
 import random
 import unittest
 
-from ecs import InvalidParameterValue
+from .ecs import InvalidParameterValue
 import isbnlib
 
 from objects.book import Book
@@ -31,7 +31,7 @@ class test_inventory(unittest.TestCase):
         self.assertEqual(isbn_we_will_never_have, result['isbn'] )
     def test_lookup_by_isbn10_is_invalid(self):
         #translation table of checkdigits to wrong ones (digit plus 1)
-        tr_table=dict(zip( ['x', 'X'] + map(str, range(9, -1, -1)), ['0', '0', 'x'] + map(str, range(9, 0, -1)) ))
+        tr_table=dict(list(zip( ['x', 'X'] + list(map(str, list(range(9, -1, -1)))), ['0', '0', 'x'] + list(map(str, list(range(9, 0, -1)))) )))
         random_item=random.sample(list(Title.select('isbn RLIKE \'^[0-9]{13}$\'')), 1)[0]
         wrong_isbn=isbnlib.to_isbn10(random_item.isbn)
         wrong_isbn=wrong_isbn[0:9] + tr_table[wrong_isbn[9]]
@@ -66,14 +66,14 @@ class test_inventory(unittest.TestCase):
     def test_addToInventory_have_title(self):
         random_item=random.sample(list(Book.selectBy(status='STOCK')), 1)[0]
         fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location.locationName, location_id=random_item.locationID, quantity=1, known_title=random_item.title, types=random_item.title.type, kind_name=random_item.title.kind.kindName)
-        print fakeargs
+        print(fakeargs)
         inventory.addToInventory( **fakeargs )
         today=mx.DateTime.now().strftime('%Y-%m-%d')
         confirm=Book.selectBy(titleID=random_item.titleID).filter( Book.q.inventoried_when == today)
         try:
             self.assertTrue(confirm, "inventory.addToInventory of title that we have does not add item to inventory")
         finally:
-            print "confirm: ", list(confirm), confirm[-1]
+            print(("confirm: ", list(confirm), confirm[-1]))
             confirm[-1].destroySelf()
     def test_addToInventory_dont_have_title(self):
         pass

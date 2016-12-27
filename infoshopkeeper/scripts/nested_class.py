@@ -109,8 +109,8 @@ def modify_for_nested_pickle(cls, name_prefix, module):
 
     """
     import types
-    for (name, v) in cls.__dict__.iteritems():
-        if isinstance(v, (type, types.ClassType)):
+    for (name, v) in list(cls.__dict__.items()):
+        if isinstance(v, type):
             if v.__name__ == name and v.__module__ == module.__name__ and getattr(module, name, None) is not v:
                 # OK, probably this is a nested class.
                 dotted_name = name_prefix + '.' + name
@@ -201,7 +201,7 @@ class NestedClassMetaclass(type):
         nested_pickle(self)
 
 
-class MainClass(object):
+class MainClass(object, metaclass=NestedClassMetaclass):
     r"""
     A simple class to test nested_pickle.
 
@@ -211,8 +211,6 @@ class MainClass(object):
         sage: loads(dumps(MainClass()))
         <sage.misc.nested_class.MainClass object at 0x...>
     """
-
-    __metaclass__ = NestedClassMetaclass
 
     class NestedClass(object):
         r"""

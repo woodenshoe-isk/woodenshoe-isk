@@ -1,4 +1,4 @@
-from SQLObjectWithFormGlue import SQLObjectWithFormGlue
+from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from sqlobject import *
 from objects.title import Title
 from mx.DateTime import now
@@ -16,19 +16,19 @@ class SpecialOrder( SQLObjectWithFormGlue ):
         
 
     dateOrdered=DateCol(default=now)
-    titles = RelatedJoin('Title', intermediateTable='title_special_order',createRelatedTable=False)    
+    titles = RelatedJoin('Title', intermediateTable='title_special_order', createRelatedTable=False)    
     title_pivots = MultipleJoin('TitleSpecialOrder')
     
     def _get_contactInfo(self):
         return self._SO_get_contactInfo()
     
-    def _set_contactInfo(self,value):
+    def _set_contactInfo(self, value):
         self._SO_set_contactInfo(value)
     
     def _get_customerName(self):
         return self._SO_get_customerName()
     
-    def _set_customerName(self,value):
+    def _set_customerName(self, value):
         self._SO_set_customerName(value)
 
 #these are the methods for encrypted special order columns      

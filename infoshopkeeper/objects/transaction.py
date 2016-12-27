@@ -3,7 +3,7 @@ import string
 
 
 from sqlobject import *
-from SQLObjectWithFormGlue import SQLObjectWithFormGlue
+from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 import datetime
 now=datetime.datetime.now   
 

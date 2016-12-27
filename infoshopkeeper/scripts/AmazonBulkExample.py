@@ -37,12 +37,12 @@ def updateItem(t, updateTitle=False, updateImage=False, updateAuthors=False, upd
             if len_largest < len(dir(book)):
                 len_largest = len(dir(book))
                 amazon_info = book 
-        print amazon_info
+        print(amazon_info)
         if updateTitle:
-                    if hasattr(amazon_info,'Title'):
+                    if hasattr(amazon_info, 'Title'):
                         t.booktitle = amazon_info.Title
 
-                    if hasattr(amazon_info,'Manufacturer'):
+                    if hasattr(amazon_info, 'Manufacturer'):
                         t.publisher = amazon_info.Manufacturer
 
                     if hasattr(amazon_info, "Binding"):
@@ -67,28 +67,28 @@ def updateItem(t, updateTitle=False, updateImage=False, updateAuthors=False, upd
             Images(titleID=t.id, largeUrl = amazon_info.LargeImage.URL, medUrl = amazon_info.MediumImage.URL, smallUrl = amazon_info.SmallImage.URL)
    
         if updateAuthors: 
-            for x in ['Author','Creator', 'Artist', 'Director']:
-                if hasattr(amazon_info,x):
-                    if type(getattr(amazon_info,x))==type([]):
-                        amazon_authors.update(getattr(amazon_info,x))
+            for x in ['Author', 'Creator', 'Artist', 'Director']:
+                if hasattr(amazon_info, x):
+                    if isinstance(getattr(amazon_info, x), type([])):
+                        amazon_authors.update(getattr(amazon_info, x))
                     else:
-                        amazon_authors.add(getattr(amazon_info,x))
+                        amazon_authors.add(getattr(amazon_info, x))
             
             try:
                 isk_authors = {x.authorName for x in t.author}
             except:
                 isk_authors = set()
-            print amazon_authors, isk_authors
+            print((amazon_authors, isk_authors))
 
             #items that are in isk bout not in amazon info
             authors_to_remove = isk_authors - amazon_authors
-            print authors_to_remove
+            print(authors_to_remove)
             for auth in authors_to_remove:
                 auth_rec = [x for x in t.author if x.authorName==auth][0]
                 t.removeAuthor(auth_rec)
             
             authors_to_add = amazon_authors - isk_authors
-            print authors_to_add
+            print(authors_to_add)
             for auth in authors_to_add:
                 theAuthors = Author.selectBy(authorName=auth)
                 theAuthorsList = list(theAuthors)
@@ -99,7 +99,7 @@ def updateItem(t, updateTitle=False, updateImage=False, updateAuthors=False, upd
                     a = Author(authorName=auth)
                     t.addAuthor(a)
     except Exception as excep:
-            print excep
+            print(excep)
             traceback.print_exc()
             pass
 

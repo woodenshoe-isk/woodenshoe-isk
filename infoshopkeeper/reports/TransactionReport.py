@@ -1,7 +1,7 @@
 from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
-from Report import Report
-from PdfReport import PdfReport
+from .Report import Report
+from .PdfReport import PdfReport
 from reportlab.lib.units import inch
 from objects.transaction import Transaction
 import sys
@@ -12,12 +12,12 @@ class TransactionReport(Report, PdfReport):
     do_total=False
     show_header=True
      
-    def query(self,args):
+    def query(self, args):
         #print>>sys.stderr, "in query", args
         what="%%%s%%" % args.get('what', '')
         action=args.get('action', '')
-        begin_date=args.get('begin_date','1990-01-01')
-        end_date=args.get('end_date','2030-01-01')
+        begin_date=args.get('begin_date', '1990-01-01')
+        end_date=args.get('end_date', '2030-01-01')
         
         #build table of clauses for WHERE 
         clauses=[]
@@ -34,13 +34,13 @@ class TransactionReport(Report, PdfReport):
         #print>>sys.stderr, 'Results:', results
         return results
     
-    def format_results(self,results):
+    def format_results(self, results):
         return ["<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (r.date, r.action, r.info, r.amount)  for r in results]
     
     def format_header(self):
         return "<tr><th>Date</th><th>Action</th><th>Info</th><th>Amount</th></tr>"
 
-    def format_results_as_pdf(self,results):
+    def format_results_as_pdf(self, results):
         self.defineConstants()
         if len(results) == 0:
             raise TypeError
@@ -48,17 +48,17 @@ class TransactionReport(Report, PdfReport):
         rows_height = []  
         for a in range(num_rows):
             rows_height.append(None)
-        colwidths = ( None,None,None,None,None,None,None,None)
+        colwidths = ( None, None, None, None, None, None, None, None)
         
         
         #print results
         t = Table( results )
         #t = Table( results, colwidths, rows_height )
         GRID_STYLE = TableStyle(
-            [     ('GRID', (0,0), (-1,-1), 0.25, colors.black),
-                  ('FONT', (0,-1), (-1, -1), "Times-Bold"),
+            [     ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
+                  ('FONT', (0, -1), (-1, -1), "Times-Bold"),
 #                  ('FONT', (0,1), (-1, -1), "Times-Roman"),
-              ('ALIGN', (1,1), (-1,-1), 'RIGHT')]
+              ('ALIGN', (1, 1), (-1, -1), 'RIGHT')]
             )
         t.setStyle( GRID_STYLE )
         return t
@@ -75,5 +75,5 @@ class TransactionReport(Report, PdfReport):
                 jQuery('#begin_date,#end_date').datepicker({dateFormat:'yy-mm-dd'}).blur();
             });
         </script>        
-        """) % (self.args.get("what",""),self.args.get("begin_date",""),self.args.get("end_date",""))
+        """) % (self.args.get("what", ""), self.args.get("begin_date", ""), self.args.get("end_date", ""))
 

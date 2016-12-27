@@ -106,8 +106,8 @@ class Test_Register(unittest.TestCase ):
         item={"department":"Book","isInventoried":"True","isTaxable":"True","booktitle":random_item.title.booktitle,"isbn":random_item.title.isbn,"bookID":random_item.id,"titleID":random_item.titleID,"ourprice":random_item.ourprice}
         result=self._my_app.post('/register/add_item_to_cart', {'item':json.dumps(item)})
         confirm=self._my_app.get('/register/get_cart')
-        print "confirm is", confirm
-        print "test_add_inventoried", confirm.json[0]['items'][0]
+        print(("confirm is", confirm))
+        print(("test_add_inventoried", confirm.json[0]['items'][0]))
         confirm=confirm.json[0]['items'][0]
         self.assertEqual(item, confirm, '/register/add_item_to_cart returned error in function test')
 
@@ -248,7 +248,7 @@ class Test_Admin(unittest.TestCase ):
     
     def test_get_next_unused_local_isbn(self):
         isbn = self._my_class.get_next_unused_local_isbn() 
-        self.assertRegexpMatches(isbn, '^199\d{10}$', "method get_next_unused_local_isbn doesn't return valid isbn")
+        self.assertRegex(isbn, '^199\d{10}$', "method get_next_unused_local_isbn doesn't return valid isbn")
 
     def test_add_to_inventory_unit(self):
         code, error=tidylib.tidy_document(self._my_class.add_to_inventory(), options={'show-errors':1,'show-warnings':0})
@@ -304,7 +304,7 @@ class Test_Admin(unittest.TestCase ):
     def test_search_isbn_that_we_dont_have_unit(self):
         random_item=random.sample(list(Title.select()), 1)[0]
         result=self._my_class.search_isbn(**{'isbn':random_item.isbn})[0]
-        print result
+        print(result)
         self.assertEqual(result['isbn'], random_item.isbn, "method search_isbn doesn't return proper item for isbn10")
 
     def test_search_isbn_that_we_dont_have_functional(self):

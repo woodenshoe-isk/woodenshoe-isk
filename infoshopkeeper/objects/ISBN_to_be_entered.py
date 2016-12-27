@@ -1,6 +1,6 @@
 from sqlobject import *
 from tools import db
-from SQLObjectWithFormGlue import SQLObjectWithFormGlue
+from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx import DateTime
 
 class ISBN_to_be_entered(SQLObjectWithFormGlue):

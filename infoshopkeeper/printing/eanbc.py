@@ -1,5 +1,5 @@
 __all__=(
-        'Ean13BarcodeWidget','isEanString',
+        'Ean13BarcodeWidget', 'isEanString',
         )
 from reportlab.graphics.shapes import Group, String, Rect
 from reportlab.graphics.widgetbase import Widget
@@ -117,8 +117,8 @@ for (k, v) in _eanNumberSystems:
 
 def nDigits(n):
     class _ndigits(Validator):
-        def test(self,x):
-            return type(x) is str and len(x)<=n and len([c for c in x if c in "0123456789"])==n
+        def test(self, x):
+            return isinstance(x, str) and len(x)<=n and len([c for c in x if c in "0123456789"])==n
     return _ndigits()
 
 class Ean13BarcodeWidget(PlotArea):
@@ -169,16 +169,16 @@ class Ean13BarcodeWidget(PlotArea):
     _sep = "01010"
 
     _lhconvert={
-            "0": (0,0,0,0,0,0),
-            "1": (0,0,1,0,1,1),
-            "2": (0,0,1,1,0,1),
-            "3": (0,0,1,1,1,0),
-            "4": (0,1,0,0,1,1),
-            "5": (0,1,1,0,0,1),
-            "6": (0,1,1,1,0,0),
-            "7": (0,1,0,1,0,1),
-            "8": (0,1,0,1,1,0),
-            "9": (0,1,1,0,1,0)
+            "0": (0, 0, 0, 0, 0, 0),
+            "1": (0, 0, 1, 0, 1, 1),
+            "2": (0, 0, 1, 1, 0, 1),
+            "3": (0, 0, 1, 1, 1, 0),
+            "4": (0, 1, 0, 0, 1, 1),
+            "5": (0, 1, 1, 0, 0, 1),
+            "6": (0, 1, 1, 1, 0, 0),
+            "7": (0, 1, 0, 1, 0, 1),
+            "8": (0, 1, 0, 1, 1, 0),
+            "9": (0, 1, 1, 0, 1, 0)
             }
     fontSize = 8        #millimeters
     fontName = 'Helvetica'
@@ -189,32 +189,32 @@ class Ean13BarcodeWidget(PlotArea):
     y = 0
 
     def __init__(self,value='123456789012',**kw):
-        self.value=max(self._digits-len(value),0)*'0'+value[:self._digits]
-        for k, v in kw.iteritems():
+        self.value=max(self._digits-len(value), 0)*'0'+value[:self._digits]
+        for k, v in list(kw.items()):
             setattr(self, k, v)
 
     width = property(lambda self: self.barWidth*(self._nbars-18+self._calc_quiet(self.lquiet)+self._calc_quiet(self.rquiet)))
 
-    def wrap(self,aW,aH):
-        return self.width,self.barHeight
+    def wrap(self, aW, aH):
+        return self.width, self.barHeight
 
-    def _encode_left(self,s,a):
+    def _encode_left(self, s, a):
         cp = self._lhconvert[s[0]]      #convert the left hand numbers
         _left = self._left
         z = ord('0')
-        for i,c in enumerate(s[1:self._start_right]):
+        for i, c in enumerate(s[1:self._start_right]):
             a(_left[cp[i]][ord(c)-z])
 
-    def _short_bar(self,i):
+    def _short_bar(self, i):
         i += 9 - self._lquiet
         return self.humanReadable and ((12<i<55) or (57<i<101))
 
-    def _calc_quiet(self,v):
+    def _calc_quiet(self, v):
         if self.quiet:
             if v is None:
                 v = 9
             else:
-                x = float(max(v,0))/self.barWidth
+                x = float(max(v, 0))/self.barWidth
                 v = int(x)
                 if v-x>0: v += 1
         else:
@@ -229,14 +229,14 @@ class Ean13BarcodeWidget(PlotArea):
         barHeight = self.barHeight
         x = self.x
         y = self.y
-        gAdd(Rect(x,y,width,barHeight,fillColor=None,strokeColor=None,strokeWidth=0))
+        gAdd(Rect(x, y, width, barHeight, fillColor=None, strokeColor=None, strokeWidth=0))
         s = self.value+self._checkdigit(self.value)
         self._lquiet = lquiet = self._calc_quiet(self.lquiet)
         rquiet = self._calc_quiet(self.rquiet)
-        b = [lquiet*'0',self._tail] #the signal string
+        b = [lquiet*'0', self._tail] #the signal string
         a = b.append
         
-        self._encode_left(s,a)
+        self._encode_left(s, a)
         a(self._sep)
 
         z = ord('0')
@@ -255,23 +255,23 @@ class Ean13BarcodeWidget(PlotArea):
         b = ''.join(b)
 
         lrect = None
-        for i,c in enumerate(b):
+        for i, c in enumerate(b):
             if c=="1":
                 dh = self._short_bar(i) and fth or 0
                 yh = y+dh
                 if lrect and lrect.y==yh:
                     lrect.width += barWidth
                 else:
-                    lrect = Rect(x,yh,barWidth,barHeight-dh,fillColor=barFillColor,strokeWidth=barStrokeWidth,strokeColor=barStrokeColor)
+                    lrect = Rect(x, yh, barWidth, barHeight-dh, fillColor=barFillColor, strokeWidth=barStrokeWidth, strokeColor=barStrokeColor)
                     gAdd(lrect)
             else:
                 lrect = None
             x += barWidth
 
-        if self.humanReadable: self._add_human_readable(s,gAdd)
+        if self.humanReadable: self._add_human_readable(s, gAdd)
         return g
 
-    def _add_human_readable(self,s,gAdd):
+    def _add_human_readable(self, s, gAdd):
         barWidth = self.barWidth
         fontSize = self.fontSize
         textColor = self.textColor
@@ -279,21 +279,21 @@ class Ean13BarcodeWidget(PlotArea):
         fth = fontSize*1.2
         # draw the num below the line.
         c = s[0]
-        w = stringWidth(c,fontName,fontSize)
+        w = stringWidth(c, fontName, fontSize)
         x = self.x+barWidth*(self._lquiet-8)
         y = self.y + 0.2*fth
 
-        gAdd(String(x,y,c,fontName=fontName,fontSize=fontSize,fillColor=textColor))
+        gAdd(String(x, y, c, fontName=fontName, fontSize=fontSize, fillColor=textColor))
         x = self.x + (33-9+self._lquiet)*barWidth
 
         c = s[1:7]
-        gAdd(String(x,y,c,fontName=fontName,fontSize=fontSize,fillColor=textColor,textAnchor='middle'))
+        gAdd(String(x, y, c, fontName=fontName, fontSize=fontSize, fillColor=textColor, textAnchor='middle'))
 
         x += 47*barWidth
         c = s[7:]
-        gAdd(String(x,y,c,fontName=fontName,fontSize=fontSize,fillColor=textColor,textAnchor='middle'))
+        gAdd(String(x, y, c, fontName=fontName, fontSize=fontSize, fillColor=textColor, textAnchor='middle'))
 
-    def _checkdigit(cls,num):
+    def _checkdigit(cls, num):
         z = ord('0')
         iSum = cls._0csw*sum([(ord(x)-z) for x in num[::2]]) \
                  + cls._1csw*sum([(ord(x)-z) for x in num[1::2]])
@@ -311,18 +311,18 @@ class Ean8BarcodeWidget(Ean13BarcodeWidget):
     _0csw = 3
     _1csw = 1
 
-    def _encode_left(self,s,a):
+    def _encode_left(self, s, a):
         cp = self._lhconvert[s[0]]      #convert the left hand numbers
         _left = self._left[0]
         z = ord('0')
-        for i,c in enumerate(s[0:self._start_right]):
+        for i, c in enumerate(s[0:self._start_right]):
             a(_left[ord(c)-z])
 
-    def _short_bar(self,i):
+    def _short_bar(self, i):
         i += 9 - self._lquiet
         return self.humanReadable and ((12<i<41) or (43<i<73))
 
-    def _add_human_readable(self,s,gAdd):
+    def _add_human_readable(self, s, gAdd):
         barWidth = self.barWidth
         fontSize = self.fontSize
         textColor = self.textColor
@@ -334,11 +334,11 @@ class Ean8BarcodeWidget(Ean13BarcodeWidget):
         x = (26.5-9+self._lquiet)*barWidth
 
         c = s[0:4]
-        gAdd(String(x,y,c,fontName=fontName,fontSize=fontSize,fillColor=textColor,textAnchor='middle'))
+        gAdd(String(x, y, c, fontName=fontName, fontSize=fontSize, fillColor=textColor, textAnchor='middle'))
 
         x = (59.5-9+self._lquiet)*barWidth
         c = s[4:]
-        gAdd(String(x,y,c,fontName=fontName,fontSize=fontSize,fillColor=textColor,textAnchor='middle'))
+        gAdd(String(x, y, c, fontName=fontName, fontSize=fontSize, fillColor=textColor, textAnchor='middle'))
 
 class UPCA(Ean13BarcodeWidget):
     codeName = "UPCA"
@@ -400,16 +400,16 @@ class Ean5BarcodeWidget(PlotArea):
     _interdigit_sep = "01"
     
     _lhconvert={
-        "0": (1,1,0,0,0),
-        "1": (1,0,1,0,0),
-        "2": (1,0,0,1,0),
-        "3": (1,0,0,0,1),
-        "4": (0,1,1,0,0),
-        "5": (0,0,1,1,0),
-        "6": (0,0,0,1,1),
-        "7": (0,1,0,1,0),
-        "8": (0,1,0,0,1),
-        "9": (0,0,1,0,1)
+        "0": (1, 1, 0, 0, 0),
+        "1": (1, 0, 1, 0, 0),
+        "2": (1, 0, 0, 1, 0),
+        "3": (1, 0, 0, 0, 1),
+        "4": (0, 1, 1, 0, 0),
+        "5": (0, 0, 1, 1, 0),
+        "6": (0, 0, 0, 1, 1),
+        "7": (0, 1, 0, 1, 0),
+        "8": (0, 1, 0, 0, 1),
+        "9": (0, 0, 1, 0, 1)
     }
     
     fontSize = 8        #millimeters
@@ -421,35 +421,35 @@ class Ean5BarcodeWidget(PlotArea):
     y = 0
 
     def __init__(self,value='12345',**kw):    
-        value1=max(self._digits-len(value),0)*'0'+value[:self._digits]
+        value1=max(self._digits-len(value), 0)*'0'+value[:self._digits]
         self.value=value1
-        for k, v in kw.iteritems():
+        for k, v in list(kw.items()):
             setattr(self, k, v)
     
     width = property(lambda self: self.barWidth*(self._nbars-18+self._calc_quiet(self.lquiet)+self._calc_quiet(self.rquiet)))
     
-    def wrap(self,aW,aH):
-        return self.width,self.barHeight
+    def wrap(self, aW, aH):
+        return self.width, self.barHeight
     
-    def _encode_left(self,s,a):
+    def _encode_left(self, s, a):
         cp = self._lhconvert[self._checkdigit(self.value)]      #convert the left hand numbers
         _left = self._left
         z = ord('0')
 
-        for i,c in enumerate(s[0:self._start_right]):
+        for i, c in enumerate(s[0:self._start_right]):
             a(_left[cp[i]][ord(c)-z])
             if self._interdigit_sep and (i < self._digits-1):
                 a(self._interdigit_sep)            
     
-    def _short_bar(self,i):
+    def _short_bar(self, i):
         return False
     
-    def _calc_quiet(self,v):
+    def _calc_quiet(self, v):
         if self.quiet:
             if v is None:
                 v = 9
             else:
-                x = float(max(v,0))/self.barWidth
+                x = float(max(v, 0))/self.barWidth
                 v = int(x)
                 if v-x>0: v += 1
         else:
@@ -464,14 +464,14 @@ class Ean5BarcodeWidget(PlotArea):
         barHeight = self.barHeight
         x = self.x
         y = self.y
-        gAdd(Rect(x,y,width,barHeight,fillColor=None,strokeColor=None,strokeWidth=0))
+        gAdd(Rect(x, y, width, barHeight, fillColor=None, strokeColor=None, strokeWidth=0))
         s = self.value
         self._lquiet = lquiet = self._calc_quiet(self.lquiet)
         rquiet = self._calc_quiet(self.rquiet)
-        b = [lquiet*'0',self._tail] #the signal string
+        b = [lquiet*'0', self._tail] #the signal string
         a = b.append
         
-        self._encode_left(s,a)
+        self._encode_left(s, a)
 #        a(self._sep)
 #        
 #        z = ord('0')
@@ -490,23 +490,23 @@ class Ean5BarcodeWidget(PlotArea):
         b = ''.join(b)
         
         lrect = None
-        for i,c in enumerate(b):
+        for i, c in enumerate(b):
             if c=="1":
                 dh = self._short_bar(i) and fth or 0
                 yh = y+dh
                 if lrect and lrect.y==yh:
                     lrect.width += barWidth
                 else:
-                    lrect = Rect(x,yh,barWidth,barHeight-dh,fillColor=barFillColor,strokeWidth=barStrokeWidth,strokeColor=barStrokeColor)
+                    lrect = Rect(x, yh, barWidth, barHeight-dh, fillColor=barFillColor, strokeWidth=barStrokeWidth, strokeColor=barStrokeColor)
                     gAdd(lrect)
             else:
                 lrect = None
             x += barWidth
         
-        if self.humanReadable: self._add_human_readable(s,gAdd)
+        if self.humanReadable: self._add_human_readable(s, gAdd)
         return g
     
-    def _add_human_readable(self,s,gAdd):
+    def _add_human_readable(self, s, gAdd):
         barWidth = self.barWidth
         fontSize = self.fontSize
         textColor = self.textColor
@@ -514,7 +514,7 @@ class Ean5BarcodeWidget(PlotArea):
         fth = fontSize*1.2
         # draw the num below the line.
         c = s[0]
-        w = stringWidth(c,fontName,fontSize)
+        w = stringWidth(c, fontName, fontSize)
         x = self.x+barWidth*(self._lquiet-8)
         y = self.y + self.barHeight + 0.2*fth
 
@@ -522,9 +522,9 @@ class Ean5BarcodeWidget(PlotArea):
         x = self.x + (33-9+self._lquiet)*barWidth
         
         c = s[0:5]
-        gAdd(String(x,y,c,fontName=fontName,fontSize=fontSize,fillColor=textColor,textAnchor='middle'))
+        gAdd(String(x, y, c, fontName=fontName, fontSize=fontSize, fillColor=textColor, textAnchor='middle'))
         
-    def _checkdigit(cls,num):
+    def _checkdigit(cls, num):
         z = ord('0')
         iSum = cls._0csw*sum([(ord(x)-z) for x in num[::2]]) \
             + cls._1csw*sum([(ord(x)-z) for x in num[1::2]])
@@ -567,7 +567,7 @@ class Ean13Ext5BarcodeWidget(PlotArea):
     y = 0
 
     def __init__(self, value='123456789012345678', **kw):
-        for k, v in kw.iteritems():
+        for k, v in list(kw.items()):
             setattr(self, k, v)
         ean13 = value[0:12]
         

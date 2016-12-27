@@ -7,7 +7,7 @@ from sqlobject import *
 from tools import db
 from objects.kind import Kind
 from objects.images import Images
-from SQLObjectWithFormGlue import SQLObjectWithFormGlue
+from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
 
 class Title(SQLObjectWithFormGlue):
@@ -16,18 +16,18 @@ class Title(SQLObjectWithFormGlue):
 
     booktitle=UnicodeCol(default=None)
     books = MultipleJoin('Book')
-    author = RelatedJoin('Author', intermediateTable='author_title',createRelatedTable=True)
+    author = RelatedJoin('Author', intermediateTable='author_title', createRelatedTable=True)
     specialorders = RelatedJoin('SpecialOrder', intermediateTable='title_special_order', createRelatedTable=False)
     specialorder_pivots = MultipleJoin('TitleSpecialOrder')
     images = SingleJoin('Images')
     categorys = MultipleJoin('Category')
     kind = ForeignKey('Kind')
-    listTheseKeys=['kindID','kind']
+    listTheseKeys=['kindID', 'kind']
     sortTheseKeys=[]
     
     
         
-    def copies_in_status(self,status):
+    def copies_in_status(self, status):
         i=0
         try:
             for b in self.books:

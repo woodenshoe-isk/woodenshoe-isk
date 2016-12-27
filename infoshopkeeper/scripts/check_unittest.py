@@ -18,25 +18,25 @@ def get_classes_and_methods( package ):
 
     return {package.__name__:results1}   
 
-def process_file( dirName,file):
+def process_file( dirName, file):
      module_name=os.path.splitext(file)[0]
      modules={}
      try:
          if not dirName in sys.path:
               sys.path.append(dirName)
-         module1 = imp.load_source(module_name, os.path.join(dirName,file)) 
+         module1 = imp.load_source(module_name, os.path.join(dirName, file)) 
      except Exception as e:
         # print e
          pass  #rint module_name
      else:
         modules[module_name]= get_classes_and_methods(module1)
-        print "     " + module_name 
+        print(("     " + module_name)) 
         for module2 in modules:
-             print '          ', modules[module2]
+             print(('          ', modules[module2]))
 
 base_dir=os.getcwd()
 for dirName, subdirList, fileList in os.walk(base_dir):
-     print dirName
+     print(dirName)
      test_files=[]
      non_test_files=[]
      for file in fileList:
@@ -50,4 +50,4 @@ for dirName, subdirList, fileList in os.walk(base_dir):
           process_file(dirName, file)
      for file in non_test_files:
           process_file(dirName, file)
-print get_classes_and_methods(inventoryserver.server)
+print((get_classes_and_methods(inventoryserver.server)))

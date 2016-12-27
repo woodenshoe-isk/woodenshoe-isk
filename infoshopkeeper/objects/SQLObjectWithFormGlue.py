@@ -14,7 +14,7 @@ class SQLObjectWithFormGlue(SQLObject):
 
     readOnlyColumns = ()
     
-    def form_to_object(myClass,formdata):
+    def form_to_object(myClass, formdata):
         try:
             obj=myClass.get(formdata['id'])
         except:
@@ -30,27 +30,27 @@ class SQLObjectWithFormGlue(SQLObject):
             try:
                 if col.name not in obj.readOnlyColumns:
                     value=formdata[col.name]
-                    print col.name
-                    if type(col) == SODateTimeCol:
+                    print(col.name)
+                    if isinstance(col, SODateTimeCol):
                         if len(value)==10:
-                            value=date(int(value[0:4]),int(value[5:7]),int(value[8:10]))
-                            setattr(obj,col.name,value)
+                            value=date(int(value[0:4]), int(value[5:7]), int(value[8:10]))
+                            setattr(obj, col.name, value)
                         elif len(value) == 0:
                             value=None
-                            setattr(obj,col.name,value)
-                    elif type(col) == SODateCol:
+                            setattr(obj, col.name, value)
+                    elif isinstance(col, SODateCol):
                         if len(value)==10:
-                            value=date(int(value[0:4]),int(value[5:7]),int(value[8:10]))
-                            setattr(obj,col.name,value)
+                            value=date(int(value[0:4]), int(value[5:7]), int(value[8:10]))
+                            setattr(obj, col.name, value)
                         elif len(value) == 0:
                             value=None
-                            setattr(obj,col.name,value)
+                            setattr(obj, col.name, value)
                     else:
-                        if type(col) == SOFloatCol:
+                        if isinstance(col, SOFloatCol):
                             value=float(value)
-                        if type(col) == SOForeignKey or type(col) == SOIntCol:
+                        if isinstance(col, SOForeignKey) or isinstance(col, SOIntCol):
                             value=int(value)
-                        setattr(obj,col.name,value)
+                        setattr(obj, col.name, value)
             except KeyError as e:
                 pass
     
@@ -72,17 +72,17 @@ class SQLObjectWithFormGlue(SQLObject):
             if self.sortTheseKeys:
                 #pass
                 toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
-            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox' %s>" %(colName,colName, readOnlyFragment)
+            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox' %s>" %(colName, colName, readOnlyFragment)
             for o in toObjects:
                 equals_fragment=""
                 try:
-                    if o.id==getattr(self,colName+"ID"):
+                    if o.id==getattr(self, colName+"ID"):
                         equals_fragment="SELECTED='true'"
-                    form_fragment=form_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id,equals_fragment,getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
+                    form_fragment=form_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id, equals_fragment, getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
                     
                 except:
                     import sys
-                    print "Unexpected error:", sys.exc_info()[1]
+                    print("Unexpected error:", sys.exc_info()[1])
             form_fragment=form_fragment+"</SELECT><br />"
             return form_fragment
 
@@ -119,9 +119,9 @@ class SQLObjectWithFormGlue(SQLObject):
                                      %s
                                    </label>
                                    <textarea rows=%s class='textbox' type='text' name='%s' id='id_%s' %s/>
-                                   """ % (5, col.name,col.name,col.name,col.name, readOnlyFragment)
+                                   """ % (5, col.name, col.name, col.name, col.name, readOnlyFragment)
                 
-            value=getattr(self,col.name)
+            value=getattr(self, col.name)
             if 'tostring' in dir(value):
                 value=value.tostring()
             defaults =  {col.name:value}
@@ -163,21 +163,21 @@ class SQLObjectWithFormGlue(SQLObject):
                 readOnly=True
             else:
                 readOnly=False
-            if type(c)==SOStringCol:
+            if isinstance(c, SOStringCol):
                 formhtml = formhtml + handleString(c, readOnly=readOnly)
-            if type(c)==SOUnicodeCol:
+            if isinstance(c, SOUnicodeCol):
                 formhtml = formhtml + handleUnicodeStr(c, readOnly=readOnly)
-            if type(c)==SOBLOBCol:
+            if isinstance(c, SOBLOBCol):
                 formhtml = formhtml + handleBlob(c, readOnly=readOnly)
-            if type(c)==SOFloatCol:
+            if isinstance(c, SOFloatCol):
                 formhtml = formhtml + handleFloat(c, readOnly=readOnly)
-            if type(c)==SODateTimeCol:
+            if isinstance(c, SODateTimeCol):
                 formhtml = formhtml + handleDateTime(c, readOnly=readOnly)
-            if type(c)==SODateCol:
+            if isinstance(c, SODateCol):
                 formhtml = formhtml + handleDate(c, readOnly=readOnly)
-            if type(c)==SOEnumCol:
+            if isinstance(c, SOEnumCol):
                 formhtml = formhtml + handleEnum(c, readOnly=readOnly)
-            if type(c)==SOForeignKey:
+            if isinstance(c, SOForeignKey):
                 try:
                     if c.joinName in self.listTheseKeys:
                         formhtml = formhtml + handleForeignKey(c, readOnly=readOnly)
@@ -199,17 +199,17 @@ class SQLObjectWithFormGlue(SQLObject):
             if cls.sortTheseKeys:
                 #pass
                 toObjects.sort(key=operator.attrgetter(cls.sortTheseKeys))
-            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
+            form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName, colName)
             for o in toObjects:
                 equals_fragment=""
                 try:
-                    if o.id==getattr(cls,colName+"ID"):
+                    if o.id==getattr(cls, colName+"ID"):
                         equals_fragment="SELECTED='true'"
-                    form_fragment=form_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id,equals_fragment,getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
+                    form_fragment=form_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id, equals_fragment, getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
                 
                 except:
                     import sys
-                    print "Unexpected error:", sys.exc_info()[1]
+                    print("Unexpected error:", sys.exc_info()[1])
             form_fragment=form_fragment+"</SELECT><br />"
             return form_fragment
         
@@ -231,8 +231,8 @@ class SQLObjectWithFormGlue(SQLObject):
                 %s
                 </label>
                 <input class='textbox' type='text' name='%s' id='id_%s'/>
-                """ % (col.name,col.name,col.name,col.name)
-            value=getattr(cls,col.name)
+                """ % (col.name, col.name, col.name, col.name)
+            value=getattr(cls, col.name)
             if 'tostring' in dir(value):
                 value=value.tostring()
             parser = htmlfill.FillingParser({})
@@ -254,8 +254,8 @@ class SQLObjectWithFormGlue(SQLObject):
             return handleString(col)
         
         formhtml = "<input type='hidden' name='id' value='%s' />" % ('')
-        print>>sys.stderr, associatedObjects
-        for k,v in associatedObjects.items():
+        print(associatedObjects, file=sys.stderr)
+        for k, v in list(associatedObjects.items()):
             formhtml = formhtml + "<input type='hidden' name=%s value='%s' /><br>" % (k, v)
         try:
             cols=cls.sqlmeta.columns
@@ -264,20 +264,20 @@ class SQLObjectWithFormGlue(SQLObject):
                 cols=cls._columns
             except:
                 raise NameError("Class has no attribute sqlmeta.columns or _colums")
-        for c in cols.values():
-            if type(c)==SOStringCol:
+        for c in list(cols.values()):
+            if isinstance(c, SOStringCol):
                 formhtml = formhtml + handleString(c)
-            if type(c)==SOUnicodeCol:
+            if isinstance(c, SOUnicodeCol):
                 formhtml = formhtml + handleUnicodeStr(c)
-            if type(c)==SOBLOBCol:
+            if isinstance(c, SOBLOBCol):
                 formhtml = formhtml + handleBlob(c)
-            if type(c)==SOFloatCol:
+            if isinstance(c, SOFloatCol):
                 formhtml = formhtml + handleFloat(c)
-            if type(c)==SODateTimeCol:
+            if isinstance(c, SODateTimeCol):
                 formhtml = formhtml + handleDateTime(c)
-            if type(c)==SOEnumCol:
+            if isinstance(c, SOEnumCol):
                 formhtml = formhtml + handleEnum(c)
-            if type(c)==SOForeignKey:
+            if isinstance(c, SOForeignKey):
                 try:
                     if c.joinName in cls.listTheseKeys:
                         formhtml = formhtml + handleForeignKey(c)
@@ -292,7 +292,7 @@ class SQLObjectWithFormGlue(SQLObject):
         def handleForeignKey(col):
             colName=col.joinName
     
-            eval("from objects.%s import %s" %(colName,colName.capitalize()), globals())
+            eval("from objects.%s import %s" %(colName, colName.capitalize()), globals())
             
             colClass=eval(colName.capitalize())
             toObjects=list(colClass.select())
@@ -301,17 +301,17 @@ class SQLObjectWithFormGlue(SQLObject):
                 toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
     
             
-            view_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
+            view_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName, colName)
             for o in toObjects:
                 equals_fragment=""
                 try:
-                    if o.id==getattr(self,colName+"ID"):
+                    if o.id==getattr(self, colName+"ID"):
                         equals_fragment="SELECTED='true'"
-                    view_fragment=view_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id,equals_fragment,getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
+                    view_fragment=view_fragment+"<OPTION value='%s' %s>%s</OPTION>" %(o.id, equals_fragment, getattr(o, colName+"Name")) #this is a hack right now and needs to be fixed with a "primary descriptor" member
                     
                 except:
                     import sys
-                    print "Unexpected error:", sys.exc_info()[1]
+                    print("Unexpected error:", sys.exc_info()[1])
             view_fragment=view_fragment+"</SELECT><br />"
             return view_fragment
             
@@ -321,8 +321,8 @@ class SQLObjectWithFormGlue(SQLObject):
                                  %s
                                </label>
                                <input class='textbox' type='text' name='%s' id='id_%s'/>
-                               """ % (col.name,col.name,col.name,col.name)
-            value=getattr(self,col.name)
+                               """ % (col.name, col.name, col.name, col.name)
+            value=getattr(self, col.name)
             if 'tostring' in dir(value):
                 value=value.tostring()
             defaults =  {col.name:value}
@@ -353,17 +353,17 @@ class SQLObjectWithFormGlue(SQLObject):
             except:
                 raise NameError("Class has no attribute sqlmeta.columns or _colums")
         for c in cols:
-            if type(c)==SOStringCol:
+            if isinstance(c, SOStringCol):
                 viewhtml = viewhtml + handleString(c)
-            if type(c)==SOUnicodeCol:
+            if isinstance(c, SOUnicodeCol):
                 viewhtml = viewhtml + handleUnicodeStr(c)
-            if type(c)==SOBLOBCol:
+            if isinstance(c, SOBLOBCol):
                 viewhtml = viewhtml + handleBlob(c)
-            if type(c)==SOFloatCol:
+            if isinstance(c, SOFloatCol):
                 viewhtml = viewhtml + handleFloat(c)
-            if type(c)==SODateTimeCol:
+            if isinstance(c, SODateTimeCol):
                 viewhtml = viewhtml + handleDateTime(c)
-            if type(c)==SOForeignKey:
+            if isinstance(c, SOForeignKey):
                 try:
                     if c.joinName in self.listTheseKeys:
                         viewhtml = viewhtml + self.handleForeignKey(c)
@@ -373,8 +373,8 @@ class SQLObjectWithFormGlue(SQLObject):
         viewhtml=viewhtml+"<input class='submit' type='submit'><br />"
         return viewhtml
 
-    def safe(self,col):
-        value=getattr(self,col)
+    def safe(self, col):
+        value=getattr(self, col)
         try:
             value=value.tostring()
         except:
