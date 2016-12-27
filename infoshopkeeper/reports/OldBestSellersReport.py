@@ -11,7 +11,26 @@ class BestSellersReport(Report):
     def query(self,args):
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
-        SELECT title.id, title.booktitle, COUNT(CASE WHEN b1.status='STOCK' THEN 1 ELSE NULL END) number_in_stock, subq1.number_sold FROM (SELECT book.title_id AS id1, COUNT(*) AS number_sold FROM book WHERE book.status='SOLD' GROUP BY book.title_id ) AS subq1 JOIN book b1 ON subq1.id1=b1.title_id JOIN title ON title.id=subq1.id1 WHERE  title.kind_id=%s GROUP BY b1.title_id ORDER BY subq1.number_sold DESC;
+            SELECT 
+                title.id, title.booktitle, 
+                COUNT(
+                            CASE WHEN b1.status='STOCK' 
+                            THEN 1 
+                            ELSE NULL END) number_in_stock, 
+                subq1.number_sold 
+            FROM (SELECT 
+                    book.title_id AS id1, 
+                    COUNT(*) AS number_sold 
+                  FROM book 
+                  WHERE book.status='SOLD' 
+                  GROUP BY book.title_id ) AS subq1 
+            JOIN book b1 
+              ON subq1.id1=b1.title_id 
+            JOIN title 
+              ON title.id=subq1.id1 
+           WHERE title.kind_id=%s 
+           GROUP BY b1.title_id 
+           ORDER BY subq1.number_sold DESC;
         """,(args['kind']))
         results= self.cursor.fetchall()
         self.cursor.close()

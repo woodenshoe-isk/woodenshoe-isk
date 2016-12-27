@@ -124,11 +124,15 @@ def lookup_by_isbn(number, forceUpdate=False):
             if len(isbn)==12:
                 idType='UPC'
             elif len(isbn)==13:
-                if isbn.startswith('978') or isbn.startswith('979'):
+                #if we are using an internal isbn
+                if isbn.startswith('199'):
+                    return []
+                #otherwise search on amazon.
+                elif isbn.startswith('978') or isbn.startswith('979'):
                     idType='ISBN'
                 else:
-                    idType='EAN'
-            
+                     idType='EAN'
+                    
             print>>sys.stderr, "idtype ",  idType
             try:
                     amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
@@ -434,8 +438,10 @@ def search_by_keyword(authorOrTitle=''):
                     print err
                     yield
                  
-def addToInventory(title="",status="STOCK",authors=[],publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
+def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
     print>>sys.stderr, "GOT to addToInventory"
+    if not authors:
+        authors = []
     if known_title:
         print>>sys.stderr, "known_title ", known_title
         if not known_title.booktitle:

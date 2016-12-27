@@ -631,9 +631,19 @@ class Admin:
         print>>sys.stderr, 'data', data
 
         most_freq_location=''
+        #if it's a known isbn
         if (data and data['known_title']):
             most_freq_location = data['known_title']._connection.queryAll(
-            '''SELECT book.location_id FROM title JOIN book ON book.title_id=title.id WHERE title.isbn='%s' AND book.location_id !=1 GROUP BY title.isbn, book.location_id ORDER BY count(book.location_id) DESC LIMIT 1''' % data['known_title'].isbn
+                    '''SELECT
+                             book.location_id
+                       FROM  title
+                       JOIN  book
+                         ON  book.title_id=title.id
+                       WHERE title.isbn='%s'
+                         AND book.location_id !=1
+                       GROUP BY title.isbn, book.location_id
+                       ORDER BY count(book.location_id) 
+                       DESC LIMIT 1''' % data['known_title'].isbn
             )
             if most_freq_location:            
                 data['most_freq_location'] = most_freq_location[0][0]

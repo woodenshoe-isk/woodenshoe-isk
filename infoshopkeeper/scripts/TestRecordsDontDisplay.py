@@ -130,7 +130,9 @@ if titles_that_dont_display:
    
 sys.exit(0) 
 
-def get_authors_from_amazon(auth_missing=[]):
+def get_authors_from_amazon(auth_missing=None):
+    if not auth_missing:
+        auth_missing=[]
     for t in auth_missing:
         t1=Title.get(t)
         try:
@@ -158,7 +160,9 @@ def get_authors_from_amazon(auth_missing=[]):
         except Exception as e:
             print e
              
-def get_categories_from_amazon( category_missing=[]):
+def get_categories_from_amazon( category_missing=None):
+    if not category_missing:
+        category_missing = []
     for t in auth_missing:
         t1=Title.get(t)
         try:

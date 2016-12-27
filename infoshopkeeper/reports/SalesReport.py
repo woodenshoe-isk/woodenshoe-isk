@@ -39,9 +39,29 @@ class SalesReport(Report, PdfReport):
             status_string = '\'SOLD|NOT FOUND\''
         else:
             status_string= '\'SOLD\''
-        sql_query = """SELECT t1.id, t1.booktitle, b1.sold_when, b1.ourprice, COUNT(CASE WHEN b2.status='STOCK' THEN 1 ELSE NULL END) AS copies_in_stock, COUNT(CASE WHEN b2.status='SOLD' THEN 1 ELSE NULL END) AS copies_sold, b1.status FROM title t1 JOIN book b1 ON t1.id=b1.title_id JOIN kind k1 ON t1.kind_id=k1.id  JOIN book b2 ON b2.title_id=t1.id WHERE k1.id=%s AND b1.status RLIKE %s AND b1.sold_when>='%s' AND b1.sold_when<=ADDDATE('%s',INTERVAL 1 DAY) GROUP BY b1.id  ORDER BY b1.sold_when""" % (kind, status_string, begin_date, end_date)
+        sql_query = """
+            SELECT 
+                t1.id, t1.booktitle, b1.sold_when, b1.ourprice, 
+                COUNT( CASE WHEN b2.status='STOCK' 
+                       THEN 1 
+                       ELSE NULL END) AS copies_in_stock, 
+                COUNT( CASE WHEN b2.status='SOLD'
+                       THEN 1 
+                       ELSE NULL END) AS copies_sold, 
+                b1.status 
+            FROM title t1 
+            JOIN book b1 
+              ON t1.id=b1.title_id 
+            JOIN kind k1 
+              ON t1.kind_id=k1.id  
+            JOIN book b2 
+              ON b2.title_id=t1.id 
+            WHERE k1.id=%s AND b1.status 
+            RLIKE %s AND b1.sold_when>='%s' 
+              AND b1.sold_when<=ADDDATE('%s',INTERVAL 1 DAY) 
+            GROUP BY b1.id  
+            ORDER BY b1.sold_when""" % (kind, status_string, begin_date, end_date)
         print>>sys.stderr, sql_query
-#        self.cursor.execute("""SELECT * FROM transactionLog WHERE action='SALE' AND info LIKE %s AND date>=%s AND date<=ADDDATE(%s,INTERVAL 1 DAY) order by date""",(what,begin_date,end_date ))
         self.cursor.execute( sql_query )
         results= self.cursor.fetchall()
         self.cursor.close()
