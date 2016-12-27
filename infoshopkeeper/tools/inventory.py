@@ -130,9 +130,8 @@ def lookup_by_isbn(number, forceUpdate=False):
                 elif isbn.startswith('978') or isbn.startswith('979'):
                     idType='ISBN'
                 else:
-                    idType='EAN'
-        
-            
+                     idType='EAN'
+                    
             print>>sys.stderr, "idtype ",  idType
             try:
                     amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
