@@ -1,7 +1,7 @@
 from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from sqlobject import *
 from objects.title import Title
-from mx.DateTime import now
+from tools.now import Now
 
 from tools import db
 from Crypto.Cipher import AES
@@ -15,7 +15,7 @@ class SpecialOrder( SQLObjectWithFormGlue ):
         fromDatabase=True
         
 
-    dateOrdered=DateCol(default=now)
+    dateOrdered=DateCol(default=Now.now)
     titles = RelatedJoin('Title', intermediateTable='title_special_order', createRelatedTable=False)    
     title_pivots = MultipleJoin('TitleSpecialOrder')
     

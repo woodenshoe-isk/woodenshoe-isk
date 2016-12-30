@@ -6,7 +6,7 @@ from sqlobject import *
 from tools import db
 from config.config import configuration
 from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
-from mx.DateTime import now
+from tools.now import Now
 
 
 
@@ -14,8 +14,8 @@ class Images(SQLObjectWithFormGlue):
     _cfg = configuration()
     
     title = ForeignKey('Title') 
-    createdAt = DateCol(default=now)
-    updatedAt = DateCol(default=now)
+    createdAt = DateCol(default=Now.now)
+    updatedAt = DateCol(default=Now.now)
     
     class sqlmeta:
         fromDatabase = True

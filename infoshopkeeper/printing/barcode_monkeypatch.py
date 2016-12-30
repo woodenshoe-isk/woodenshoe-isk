@@ -1,6 +1,6 @@
 from reportlab.graphics import barcode
 from reportlab.graphics.barcode import eanbc, widgets
-import eanbc as eanbc1
+from printing import eanbc as eanbc1
 
 def getCodes():
     """Returns a dict mapping code names to widgets"""

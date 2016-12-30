@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import barcode_monkeypatch
+from printing import barcode_monkeypatch
 
 from reportlab import rl_config
 from reportlab.graphics import barcode, renderPDF

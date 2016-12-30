@@ -1,6 +1,6 @@
 ##Search the inventory and return table of results
 
-#from Skeleton import Skeleton
+#from .Skeleton import Skeleton
 #extends Skeleton
 
 #def pagetitle
@@ -150,11 +150,17 @@ checked
 <label class="textbox" for="sold_more_than">This many or more sold</label> 
 <input class="textbox" type="text" name="sold_more_than" id="sold_more_than"  value="$sold_more_than" /><br />
 
-<label class='textbox' for='sold_begin_date'>This item sold After:</label><input type='text' class='textbox' name='sold_begin_date' id='sold_begin_date' value='${sold_begin_date}'/><br />
-<label class='textbox' for='sold_end_date'>This item sold Before</label><input type='text' class='textbox' name='sold_end_date' id='sold_end_date' value='${sold_end_date}'/><br />
+<label class='textbox' for='sold_begin_date'>This item sold After:</label>
+<input type='text' class='textbox' name='sold_begin_date' id='sold_begin_date' value="${sold_begin_date}"/><br />
 
-<label class='textbox' for='inv_begin_date'>This item inventoried After:</label><input type='text' class='textbox' name='inv_begin_date' id='inv_begin_date' value='${inv_begin_date}'/><br />
-<label class='textbox' for='inv_end_date'>This item inventoried Before</label><input type='text' class='textbox' name='inv_end_date' id='inv_end_date' value='${inv_end_date}'/><br />
+<label class='textbox' for='sold_end_date'>This item sold Before</label>
+<input type='text' class='textbox' name='sold_end_date' id='sold_end_date' value="${sold_end_date}"/><br />
+
+<label class='textbox' for='inv_begin_date'>This item inventoried After:</label>
+<input type='text' class='textbox' name='inv_begin_date' id='inv_begin_date' value="${inv_begin_date}"/><br />
+
+<label class='textbox' for='inv_end_date'>This item inventoried Before</label>
+<input type='text' class='textbox' name='inv_end_date' id='inv_end_date' value="${inv_end_date}"/><br />
 
 <label class="textbox" for="tag">Tag</label> 
 <input class="textbox" type="text" id="tag" name="tag" value="$tag" /><br />

@@ -9,12 +9,10 @@ import uuid
 import logging
 import logging.handlers
 
-from mx.DateTime import now
-
 from Cheetah.Template import Template
 from simplejson import JSONEncoder
 
-import turbojson
+#import turbojson
 import json
 
 import isbnlib
@@ -26,6 +24,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 from sqlobject.sqlbuilder import *
 from sqlobject.dberrors import DuplicateEntryError
+
+from tools.now import Now
 
 #Class that manages dictionary of menu items.
 #Format for adding a menu:
@@ -59,32 +59,32 @@ from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 from objects.transaction import Transaction
 
-from IndexTemplate import IndexTemplate
-from SearchTemplate import SearchTemplate
-from BookEditTemplate import BookEditTemplate
-from TitleEditTemplate import TitleEditTemplate
-from TitleListTemplate import TitleListTemplate
-from AuthorEditTemplate import AuthorEditTemplate
-from CategoryEditTemplate import CategoryEditTemplate
-from ChooseItemForISBNTemplate import ChooseItemForISBNTemplate
-from ChooseItemTemplate import ChooseItemTemplate
-from KindEditTemplate import KindEditTemplate
-from KindListTemplate import KindListTemplate
-from LocationEditTemplate import LocationEditTemplate
-from LocationListTemplate import LocationListTemplate
-from NotesTemplate import NotesTemplate
-from ReportListTemplate import ReportListTemplate
-from ReportTemplate import ReportTemplate
-from TransactionsTemplate import TransactionsTemplate
-from CartTemplate import CartTemplate
-from CartTemplate2 import CartTemplate2
-from CheckoutTemplate import CheckoutTemplate
-from StaffingCalendarTemplate import StaffingCalendarTemplate
-from AddToInventoryTemplate import AddToInventoryTemplate
-from SpecialOrderEditTemplate import SpecialOrderEditTemplate
-from SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
-from SpecialOrderListTemplate import SpecialOrderListTemplate
-from SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
+from .IndexTemplate import IndexTemplate
+from .SearchTemplate import SearchTemplate
+from .BookEditTemplate import BookEditTemplate
+from .TitleEditTemplate import TitleEditTemplate
+from .TitleListTemplate import TitleListTemplate
+from .AuthorEditTemplate import AuthorEditTemplate
+from .CategoryEditTemplate import CategoryEditTemplate
+from .ChooseItemForISBNTemplate import ChooseItemForISBNTemplate
+from .ChooseItemTemplate import ChooseItemTemplate
+from .KindEditTemplate import KindEditTemplate
+from .KindListTemplate import KindListTemplate
+from .LocationEditTemplate import LocationEditTemplate
+from .LocationListTemplate import LocationListTemplate
+from .NotesTemplate import NotesTemplate
+from .ReportListTemplate import ReportListTemplate
+from .ReportTemplate import ReportTemplate
+from .TransactionsTemplate import TransactionsTemplate
+from .CartTemplate import CartTemplate
+from .CartTemplate import CartTemplate
+from .CheckoutTemplate import CheckoutTemplate
+from .StaffingCalendarTemplate import StaffingCalendarTemplate
+from .AddToInventoryTemplate import AddToInventoryTemplate
+from .SpecialOrderEditTemplate import SpecialOrderEditTemplate
+from .SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
+from .SpecialOrderListTemplate import SpecialOrderListTemplate
+from .SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
 
 from config.config import configuration
 
@@ -93,11 +93,12 @@ from printing import barcodeLabel
 from printing import specialOrderLabel
 
 #decorator function to return json
-turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
+#turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
 def jsonify_tool_callback(*args, **kwargs):
     #print>>sys.stderr, "in jsonify"
     cherrypy.response.headers['Content-type'] = 'application/json; charset=utf-8'
-    body=turbojson.jsonify.encode(cherrypy.response.body).encode('utf-8')
+    #body=turbojson.jsonify.encode(cherrypy.response.body).encode('utf-8')
+    body=json.dumps(cherrypy.response.body).encode('utf-8')
     #print>>sys.stderr, "body changed ", body
     cherrypy.response.headers['Content-length']=len(body)
     cherrypy.response.body=body
@@ -147,7 +148,7 @@ class Noteboard:
 #Class for register   
 class Register:
     def __init__(self):
-        self._carttemplate = CartTemplate2()
+        self._carttemplate = CartTemplate()
         self._chooseitemtemplate = ChooseItemTemplate()
         self.menudata=MenuData
         MenuData.setMenuData( {'1': ('Remove Items from Inventory', '/register/build_cart', []) })
@@ -276,7 +277,7 @@ class Register:
                             print("preparing to sell book", file=sys.stderr)
                             print("bookID is", item.get('bookID'), file=sys.stderr)
                             b=Book.selectBy(id=item['bookID'])[0]
-                            b.set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
+                            b.set(status='SOLD', sold_when=Now.now.strftime("%Y-%m-%d"))
                             if item.get('special_order_selected'):
                                 tso=TitleSpecialOrder.get(item['special_order_selected']) 
                                 tso.orderStatus='SOLD'
@@ -302,7 +303,7 @@ class Register:
                             infostring = "'[] " + item['department']
                             if 'booktitle' in item:
                                 infostring=infostring + ": " +item['booktitle']
-                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=float(item['ourprice']), cartID=cart.get('uuid', ''))
+                            Transaction(action='SALE', date=Now.now, info=infostring, owner=None, cashier=None, schedule=None, amount=float(item['ourprice']), cartID=cart.get('uuid', ''))
                             cart['items'].remove(item)
                         except Exception as err:
                             print("error in selling book", err, file=sys.stderr)

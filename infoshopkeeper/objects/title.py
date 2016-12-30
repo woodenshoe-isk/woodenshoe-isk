@@ -1,6 +1,6 @@
 import sys
 import string
-import sets
+#import sets
 import datetime
 
 from sqlobject import *
@@ -51,7 +51,7 @@ class Title(SQLObjectWithFormGlue):
             return ''
             
     def distributors(self):
-        return list(sets.Set([b.distributor for b in self.books]))
+        return list(set([b.distributor for b in self.books]))
 
     def distributors_as_string(self):
         distributors=self.distributors()

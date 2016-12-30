@@ -74,7 +74,7 @@ class SalesReport(Report, PdfReport):
         return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class='status'>%s</td></tr>" % (r[0], r[1], r[2], r[3], r[4], r[5], r[6])  for r in results]
     
     def format_header(self):
-	return "<tr><th>Title</th><th>Date Sold</th><th>Price</th><th>Copies In Stock</th><th>Copies Sold</th><th>Status</th></tr>"
+        return "<tr><th>Title</th><th>Date Sold</th><th>Price</th><th>Copies In Stock</th><th>Copies Sold</th><th>Status</th></tr>"
 
     def format_results_as_pdf(self, results):
         self.defineConstants()

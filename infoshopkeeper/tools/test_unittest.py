@@ -1,4 +1,3 @@
-import mx.DateTime
 import random
 import unittest
 
@@ -8,7 +7,7 @@ import isbnlib
 from objects.book import Book
 from objects.title import Title
 
-from tools import inventory
+from tools import inventory, now
 
 globals()['UNIT_TEST']=True
 
@@ -68,7 +67,7 @@ class test_inventory(unittest.TestCase):
         fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location.locationName, location_id=random_item.locationID, quantity=1, known_title=random_item.title, types=random_item.title.type, kind_name=random_item.title.kind.kindName)
         print(fakeargs)
         inventory.addToInventory( **fakeargs )
-        today=mx.DateTime.now().strftime('%Y-%m-%d')
+        today=now.Now.now.strftime('%Y-%m-%d')
         confirm=Book.selectBy(titleID=random_item.titleID).filter( Book.q.inventoried_when == today)
         try:
             self.assertTrue(confirm, "inventory.addToInventory of title that we have does not add item to inventory")

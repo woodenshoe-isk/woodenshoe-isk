@@ -39,23 +39,23 @@ name = cfg.get("infoshopname")
 class fakeArgs:
     # this is a class that fake the args for the sales report module
     def __init__(self, args):
-	self.values = args
+        self.values = args
 
     def __getitem__(self, kekchose):
-	return self.get(kekchose, "")
-		
+        return self.get(kekchose, "")
+        
     def get(self, arg1, arg2):
-    	if arg1 in self.values:
-	    return self.values[arg1]
-	else:
-	    return arg2
+        if arg1 in self.values:
+            return self.values[arg1]
+        else:
+            return arg2
         
 
 class PdfReport:
     def defineConstants(self):
         self.PAGE_HEIGHT = letter[1]
-	self.PAGE_WIDTH = letter[0]
-    	
+        self.PAGE_WIDTH = letter[0]
+        
     def makePresentationPage( self, canvas, doc):
         canvas.saveState()
         canvas.setFont( 'Times-Bold', 16 )
@@ -66,7 +66,7 @@ class PdfReport:
         canvas.saveState()
         canvas.setFont( 'Times-Bold', 16 )
         canvas.drawCentredString( self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-( 1*inch ), str(self.reportname) )
-	
+    
 
     def addPagenum( self, canvas, doc ):
         canvas.saveState()
@@ -80,7 +80,7 @@ class PdfReport:
 
     def pukePDF( self, filename):
         # Generate the PDF
-	doc = SimpleDocTemplate( filename, pagesize = letter, leftMargin = 0.5*inch, rightMargin = 0.5*inch, bottomMargin = 1.5*inch )
+        doc = SimpleDocTemplate( filename, pagesize = letter, leftMargin = 0.5*inch, rightMargin = 0.5*inch, bottomMargin = 1.5*inch )
         Story = [ Spacer( 1, 0.15*inch ) ]
         # Get the flowable from the report python 
         table = self.format_results_as_pdf(self.query(self.args))
