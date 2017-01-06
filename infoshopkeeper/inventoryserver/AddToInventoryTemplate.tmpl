@@ -91,6 +91,12 @@ from Skeleton import Skeleton
                     isbnstring.replace('/[\s-]/g', '');
                 }
                 
+                if ( jQuery( '#isbn' ).val().match(/^[0-9]{13}5[0-9]{4}$/) == null ) {
+                    jQuery('#printlabel').prop('checked', true);
+                } else {
+                    jQuery('#printlabel').prop('checked', false);
+                }
+
                 //use isdirty to avoid infinite loop
                 if (true) {
                     //check database for isbn
@@ -132,12 +138,22 @@ from Skeleton import Skeleton
                             }
                         });
                     });
+
                     isbnDirty = true;
                 }
             }
             return false;
         });
-        
+       
+        //check if listprice and ourprice are same. If not, check printlabel
+        jQuery('#listprice, #ourprice').blur( function() {
+                if (jQuery('#listprice').val() != jQuery('#ourprice').val()) {
+                       jQuery('#printlabel').prop('checked', true);
+                } else {
+                       jQuery('#printlabel').prop('checked', false);
+                }
+       });
+
         //jQuery to make select isbn button clickable link
         jQuery('#select_isbn_button').click( function(){
             console.log('in click handler');
