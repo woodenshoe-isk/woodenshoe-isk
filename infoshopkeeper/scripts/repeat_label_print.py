@@ -9,9 +9,7 @@ from objects.location import Location
 from printing import barcodeLabel
 
 def rlinput(prompt, prefill=''):
-    print prefill
     def hook(prefill):
-        print prefill
         readline.insert_text(prefill)
 
     readline.set_startup_hook(hook)
@@ -32,17 +30,19 @@ while should_quit != True:
         except:
             isbn, price = isbn[0:13], 0.00
         titles = Title.selectBy(isbn=isbn)
+        book = None
         if list(titles):
             for t1 in titles:
                 ourprice = rlinput("price >> ", prefill=price)                                                             
                 books = Book.selectBy(titleID=t1.id, ourprice=float(ourprice), status='STOCK')
                 if list(books):
                     ourprice = books[0].ourprice
+                    listprice = books[0].listprice
                     book = books[0]
                     break
             if not book:        
                 listprice = Book.selectBy(titleID=t1.id).max(Book.q.listprice) 
-                book = Book(title=t1[0], status='STOCK', location=1, owner='woodenshoe', listprice=float(listprice), ourprice=float(book.ourprice), consignmentStatus='', distributor='', notes='')
+                book = Book(title=t1, status='STOCK', location=1, owner='woodenshoe', listprice=float(listprice), ourprice=float(ourprice), consignmentStatus='', distributor='', notes='')
             barcodeLabel.print_barcode_label(isbn=isbn, booktitle=t1.booktitle, ourprice=book.ourprice, listprice=listprice, num_copies=1)
         else:
             continue

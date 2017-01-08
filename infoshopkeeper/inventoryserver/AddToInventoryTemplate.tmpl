@@ -35,12 +35,12 @@ from Skeleton import Skeleton
                 jQuery('.ui-dialog-buttonset > button:last').focus();
             },
             buttons: {
-                'Not Use ISBN': function(){
-                    jQuery('#isbn').val( 'N/A' ).blur();
-                    dlg.dialog('close');
-                    jQuery('#printlabel').attr('checked', true);
-                    return false;
-                },
+//                'Not Use ISBN': function(){
+//                    jQuery('#isbn').val( 'N/A' ).blur();
+//                    dlg.dialog('close');
+//                    jQuery('#printlabel').attr('checked', true);
+//                    return false;
+//                },
                 'Generate ISBN': function(){
                     jQuery.ajax({url: '/admin/get_next_unused_local_isbn', 
                                         success: function(data){

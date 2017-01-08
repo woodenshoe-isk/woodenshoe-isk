@@ -1,6 +1,8 @@
 import logging
 import logging.handlers
 
+from tools.GroupRotatingFileHandler import GroupRotatingFileHandler
+
 from config.config import configuration
 
 cfg = configuration()
@@ -23,7 +25,7 @@ if dbtype in ('mysql', 'postgres'):
         my_logger.setLevel(logging.DEBUG)
 
         # Add the log message handler to the logger
-        handler = logging.handlers.RotatingFileHandler("/var/log/infoshopkeeper/SQLObject.log", maxBytes=100000, backupCount=5)
+        handler = GroupRotatingFileHandler("/var/log/infoshopkeeper/SQLObject.log", maxBytes=100000, backupCount=5)
         my_logger.addHandler(handler)
         
     #deprecate
