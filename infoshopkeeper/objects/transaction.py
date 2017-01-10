@@ -5,9 +5,10 @@ import string
 from sqlobject import *
 from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 import datetime
-now=datetime.datetime.now   
+
 
 from tools import db
+from tools.now import Now
 
 #_connection = db.SQLObjconnect()
 
@@ -19,7 +20,7 @@ class Transaction(SQLObjectWithFormGlue):
     
     action=StringCol()
     amount=FloatCol()
-    date=DateTimeCol(default=now)
+    date=DateTimeCol(default=Now.now)
     schedule = StringCol()            
     info =StringCol()
     owner =StringCol()

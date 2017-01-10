@@ -108,7 +108,7 @@ class SQLObjectWithFormGlue(SQLObject):
             else:
                 readOnlyFragment = ""
             # look at http://formencode.org/docs/htmlfill.html
-            if getattr(col, 'length', 0) < 256:
+            if getattr(col, 'length', 0) and getattr(col, 'length', 0)<256:
                 form_fragment = """<label class='textbox' for='id_%s'>
                                      %s
                                    </label>

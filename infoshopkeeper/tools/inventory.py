@@ -71,13 +71,13 @@ def lookup_by_isbn(number, forceUpdate=False):
             authors=[]
             if len(the_titles[0].author) > 0:
                 authors = [x.authorName.format() for x in the_titles[0].author]
-            authors_as_string = string.join(authors, ',')
+            authors_as_string = ', '.join(authors)
             categories=[]
             if len(the_titles[0].categorys) > 0:
                 #print len(the_titles[0].categorys)
                 #print the_titles[0].categorys
                 categories = [x.categoryName.format() for x in the_titles[0].categorys] 
-            categories_as_string = string.join(categories, ',')
+            categories_as_string = ', '.join(categories)
             if len(the_titles[0].books) > 0:
                 ListPrice = max([x.listprice for x in the_titles[0].books])
             else:
@@ -130,7 +130,7 @@ def lookup_by_isbn(number, forceUpdate=False):
             
             print("idtype ",  idType, file=sys.stderr)
             try:
-                    amazonBooks = ecs.ItemLookup(isbn, IdType= idType, SearchIndex="Books", ResponseGroup="ItemAttributes,BrowseNodes,Images")
+                    amazonBooks = ecs.ItemLookup(isbn, IdType= idType, SearchIndex='Books', ResponseGroup='ItemAttributes,BrowseNodes,Images')
             except ecs.InvalidParameterValue:
                     pass
 
@@ -283,7 +283,7 @@ def search_by_keyword(authorOrTitle=''):
         join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id')]
          
         #add filter clauses if they are called for
-        where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (escape_string(authorOrTitle.strip()), escape_string(authorOrTitle.strip())))
+        where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (authorOrTitle.strip(), authorOrTitle.strip()))
         #AND all where clauses together
         where_clause=' AND '.join(where_clause_list)
         titles=[]
@@ -490,16 +490,93 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
     print("location_id is", location_id, file=sys.stderr)
     for i in range(int(quantity)): 
         print("book loop", file=sys.stderr)
-        b=Book(title=known_title, status=status.encode("utf8", "backslashreplace"), distributor=distributor.encode('ascii', "backslashreplace"), listprice=listprice, ourprice=ourprice, location=int(location_id), owner=owner.encode("utf8", "backslashreplace"), notes=notes.encode("utf8", "backslashreplace"), consignmentStatus="")
+        b=Book(title=known_title, status=status, distributor=distributor.encode('ascii', "backslashreplace"), listprice=listprice, ourprice=ourprice, location=int(location_id), owner=owner.encode("utf8", "backslashreplace"), notes=notes.encode("utf8", "backslashreplace"), consignmentStatus="")
 #               book_for_info.extracolumns()
 #~ #               for mp in extra_prices.keys():
 #                   setattr(book_for_info,string.replace(mp," ",""),extra_prices[mp])
 
-             
+
+def searchInventory(sortby='booktitle', out_of_stock=False, **kwargs):
+    #start building the filter list
+    where_clause_list = []
+    print("kwargs are ", kwargs, file=sys.stderr)
+    for k in kwargs:
+        if type(k)==bytes:
+            kwargs[k] = kwargs[k].decode('utf-8')
+    to_delete = [k for k in kwargs if kwargs[k] == '']
+    for td in to_delete:
+        del kwargs[td]
+    print(len(kwargs), file=sys.stderr)
+    clause_tables=['book', 'author', 'author_title', 'category', 'location']
+    join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+    if 'the_kind' in kwargs:
+        where_clause_list .append("title.kind_id = '%s'" % kwargs['the_kind'])
+    if 'the_location' in kwargs and len(the_location)>1:
+        where_clause_list .append("book.location_id = '%s'" % kwargs['the_location'])
+    if 'title' in kwargs:
+        where_clause_list.append("title.booktitle RLIKE '%s'" % kwargs['title'].strip())
+    if 'publisher' in kwargs:
+        where_clause_list.append("title.publisher RLIKE '%s'" % kwargs['publisher'].strip())
+    if 'tag' in kwargs:
+        where_clause_list.append("title.tag RLIKE '%s'" % kwargs['tag'].strip())
+    if 'isbn' in kwargs:
+        isbn, price=inventory.process_isbn(isbn)
+        where_clause_list.append("title.isbn RLIKE '%s'" % kwargs['isbn'])
+    if 'formatType' in kwargs:
+        where_clause_list.append("title.type RLIKE '%s'" % kwargs['formatType'].strip())
+    if 'owner' in kwargs:
+        where_clause_list.append("book.owner RLIKE '%s'" % kwargs['owner'].strip())
+    if 'distributor' in kwargs:
+        where_clause_list.append("book.distributor RLIKE '%s'" % kwargs['distributor'].strip())
+    if 'inv_begin_date' in kwargs:
+        where_clause_list.append("book.inventoried_when >= '%s'" % kwargs['inv_begin_date'])
+    if 'inv_end_date' in kwargs:
+        where_clause_list.append("book.inventoried_when < '%s'" % kwargs['inv_end_date'])
+    if 'sold_begin_date' in kwargs:
+        where_clause_list.append("book.sold_when >= '%s'" % kwargs['sold_begin_date'])
+    if 'sold_end_date' in kwargs:
+        where_clause_list.append("book.sold_when < '%s'" % kwargs['sold_end_date'])
+    if 'author' in kwargs:
+        where_clause_list.append("author.author_name RLIKE '%s'" % kwargs['author'].strip())
+    if 'category' in kwargs:
+        where_clause_list.append("category.category_name RLIKE '%s'" % kwargs['category'].strip())
+    if 'status' in kwargs:
+        where_clause_list.append("book.status = '%s'" % kwargs['status'].strip())
+    if 'id' in kwargs:
+        where_clause_list.append("title.id=%s" % kwargs['id'])
+    if 'authorOrTitle' in kwargs:
+        where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (kwargs['authorOrTitle'].strip(), kwargs['authorOrTitle'].strip()))
+
+    where_clause=' AND '.join(where_clause_list)
+     
+    #do search first. Note it currently doesnt let you search for every book in database, unless you use some sort of
+    #trick like '1=1' for the where clause string, as the where clause string may not be blank
+    titles=[]
+    if len(kwargs)>1 or kwargs.setdefault('out_of_stock', False):
+        titles=Title.select( where_clause, join=join_list, orderBy=sortby, clauseTables=clause_tables, distinct=True)
+    #filter for stock status
+    if 'out_of_stock' in kwargs:
+        titles = [t for t in titles if t.copies_in_status("STOCK") == 0]
+    #filter on specific numbers in stock
+    if 'stock_less_than' in kwargs:
+        titles = [t for t in titles if t.copies_in_status("STOCK") <= int(kwargs['stock_less_than'])]
+    if 'stock_more_than' in kwargs:
+        titles = [t for t in titles if t.copies_in_status("STOCK") >= int(kwargs['stock_more_than'])]
+    #filter by items sold
+    if 'sold_more_than' in kwargs:
+        titles = [t for t in titles if t.copies_in_status("SOLD") >= int(kwargs['sold_more_than'])]
+    if 'sold_less_than' in kwargs:
+        titles = [t for t in titles if t.copies_in_status("SOLD") >= int(kwargs['sold_less_than'])]
+    print(titles, file=sys.stderr)
+    return titles
+
 def getInventory(queryTerms):
-    #print queryTerms
-    keys=list(queryTerms.keys())
+    print( queryTerms, file=sys.stderr)
+    keys=list(queryTerms)
     print("keys are ", keys)
+    for k in keys:
+        if type(queryTerms[k])==bytes:
+            queryTerms[k] = queryTerms[k].decode('utf-8')
      
     isbnSelect=""
     kindSelect=""
@@ -545,27 +622,24 @@ def getInventory(queryTerms):
          
         if 'categoryName' in keys:
             categorySelect="""book.title_id = title.id AND category.title_id=title.id AND category.category_name RLIKE %s""" % (Book.sqlrepr(queryTerms["categoryName"]))
-            #categorySelect=Book.sqlrepr(AND(Field("book","title_id")==Field("title","id"), Field("category","title_id")==Field("title","id"), RLIKE(Field("category","category_name"), queryTerms["categoryName"])))
             clauseTables.append('category')
-        # At this time, ubuntu install sqlobject 0.6.1 if apt-get install python2.4-sqlobject,
-        # which make the search crash, since the distinct attribute is defined somewhere after 0.6.1 
     try:
         books=Book.select(
-            string.join([term for term in [statusSelect, titleSelect, authorSelect, kindSelect, categorySelect] if term !=""], " AND "),
+            " AND ".join([term for term in [statusSelect, titleSelect, authorSelect, kindSelect, categorySelect] if term !=""]),
             clauseTables=clauseTables,
             distinct=True    )
     except TypeError:
         books=Book.select(
-            string.join([term for term in [statusSelect, titleSelect, authorSelect, kindSelect, categorySelect] if term !=""], " AND "),
+            " AND ".join([term for term in [statusSelect, titleSelect, authorSelect, kindSelect, categorySelect] if term !=""]),
             clauseTables=clauseTables   )
 
     results={}
     i=1
-    for b in books:
+    for book_for_info in books:
         theTitle=book_for_info.title.booktitle
-        authorString=string.join([a.authorName for a in book_for_info.title.author], ",")
-        categoryString=string.join([c.categoryName for c in book_for_info.title.categorys], ",")
-        results[i]=(string.capitalize(theTitle),
+        authorString = ",".join([a.authorName for a in book_for_info.title.author])
+        categoryString = ",".join([c.categoryName for c in book_for_info.title.categorys])
+        results[i]=(theTitle.capitalize(),
                     authorString, 
                     book_for_info.listprice  if book_for_info.listprice is not None else '',
                     book_for_info.title.publisher if book_for_info.title.publisher is not None else '',

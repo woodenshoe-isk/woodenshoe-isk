@@ -1,4 +1,4 @@
-from .Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 
 #def headscripts
@@ -13,8 +13,8 @@ from .Skeleton import Skeleton
             
 //         //Ajax setup for error handling
 //         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-//                 alert(textStatus + '\r\r' + errorThrown 
-//                     + '\r\r' + XMLHttpRequest.responseText);
+//                 alert(textStatus + '\\r\\r' + errorThrown
+//                     + '\\r\\r' + XMLHttpRequest.responseText);
 //           
 //         }});
         
@@ -203,7 +203,7 @@ from .Skeleton import Skeleton
                                special_orders_to_hold=special_orders.slice(0, num_special_orders_to_hold);
                                args={special_orders:JSON.stringify(special_orders_to_hold), status:'ON HOLD SHELF'}
                                console.log(args)
-                               jQuery.post('/set_special_order_item_status', args);
+                               jQuery.post('/specialorder/set_special_order_item_status', args);
                             }
                                 
                             //clear all text fields except price & quantity

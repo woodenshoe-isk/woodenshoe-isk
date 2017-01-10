@@ -418,7 +418,7 @@ class Test_InventoryServer(unittest.TestCase ):
 
     def test_search_returns_result(self):
         response=self._my_app.get('/search', {'title':'zinn'})
-        self.assertTrue(response.body.count('Zinn'), '/search did not return results')
+        self.assertTrue(response.body.count(b'Zinn'), '/search did not return results')
         
     @unittest.expectedFailure
     def test_titlelist_unit(self):

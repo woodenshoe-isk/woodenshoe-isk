@@ -1,6 +1,6 @@
 ##Edit Special Order information
 
-#from .Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 
 #def pagetitle
@@ -68,9 +68,9 @@
                         
                         //add item to special order, and update page if it succeeds
                         itemargs={'item':JSON.stringify(inventory_data), 'specialOrderID':jQuery('#sqlobject_id').val()};
-                        jQuery.post('/add_to_special_order', itemargs, function(){
+                        jQuery.post('/specialorder/add_to_special_order', itemargs, function(){
                             console.log(inventory_data);
-                            //special_order_string='<li class=\'special_order_item_list\'><ul><li>' + inventory_data.id + '</li><li>' +inventory_data.isbn + '</li><li>' + inventory_data.title+ + '</li><li>' + inventory_data.authors_as_string + '</li><li><button onclick=\"window.location.href=\'\/special_order_item_edit?id=' + inventory_data.id + '\">edit</button</ul></li>'                         //<li><button onclick=\"window.location.href=\'/special_order_item_edit?id='inventory_data.id'\">edit</button></li></ul></li>';
+                            //special_order_string='<li class=\'special_order_item_list\'><ul><li>' + inventory_data.id + '</li><li>' +inventory_data.isbn + '</li><li>' + inventory_data.title+ + '</li><li>' + inventory_data.authors_as_string + '</li><li><button onclick=\"window.location.href=\'\/specialorder\/special_order_item_edit?id=' + inventory_data.id + '\">edit</button</ul></li>'                         //<li><button onclick=\"window.location.href=\'/specialorder/special_order_item_edit?id='inventory_data.id'\">edit</button></li></ul></li>';
                             //jQuery('#special_order_list').append(special_order_string);                           
                             location.reload();
                             dlg.dialog('close');
@@ -142,7 +142,7 @@
                         }
                     });
                 } else {
-                    window.open('/select_special_order_search?authorOrTitle='+escape(isbnstring) + '&special_order=' + jQuery('#sqlobject_id').val(), '_self');
+                    window.open('/specialorder/select_special_order_search?authorOrTitle='+escape(isbnstring) + '&special_order=' + jQuery('#sqlobject_id').val(), '_self');
                 }  
             } 
 
@@ -175,7 +175,7 @@
     <h1>New Special Order</h1>
 #end if
 
-<form class='editform' method="get" action="/special_order_edit">
+<form class='editform' method="get" action="/specialorder/special_order_edit">
 $specialorder.object_to_form
 </form></br>
 
@@ -210,7 +210,7 @@ $specialorder.object_to_form
                 <li>#if $tso.title.booktitle then $tso.title.booktitle else ""#</li>
                 <li>#if $tso.title.authors_as_string then $tso.title.authors_as_string else ""#</li>
                 <li>#if $tso.orderStatus then $tso.orderStatus else ""#</li>
-                <li><button onclick="window.location.href='/special_order_item_edit?id=$tso.id'">edit</button></li>
+                <li><button onclick="window.location.href='/specialorder/special_order_item_edit?id=$tso.id'">edit</button></li>
             </ul>
         #end for
         </li>

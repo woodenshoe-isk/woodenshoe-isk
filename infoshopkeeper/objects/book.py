@@ -14,7 +14,7 @@ class Book(SQLObjectWithFormGlue):
     ourprice=FloatCol()
     inventoried_when=DateCol(default=Now.now)
     sold_when=DateCol(default=Now.now)  # we ignore this until the status gets set to "SOLD"
-    status = EnumCol(enumValues=('STOCK', 'SOLD', 'NOT FOUND'), default="STOCK")
+    status = EnumCol(enumValues=('STOCK', 'SOLD', 'NOT FOUND'), default='STOCK')
     consignmentStatus = StringCol()            
     distributor =StringCol()
     #location = StringCol()
@@ -30,7 +30,7 @@ class Book(SQLObjectWithFormGlue):
     #we link changes of status to change in sold_when date
     def _set_status(self, value):
         if value in ('SOLD', 'NOT FOUND'):
-            self.sold_when=now()
+            self.sold_when=Now.now
         elif value == 'STOCK':
             self.sold_when=self.inventoried_when
         self._SO_set_status(value)

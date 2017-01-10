@@ -66,15 +66,15 @@ class Images(SQLObjectWithFormGlue):
     
     #we link changes of any url to change in updated_at date
     def _set_small_url(self, value):
-        self.updated_at=now()
+        self.updated_at=Now.now
         self._SO_set_small_url(value)
 
     def _set_med_url(self, value):
-        self.updated_at=now()
+        self.updated_at=Now.now
         self._SO_set_med_url(value)
 
     def _set_large_url(self, value):
-        self.updated_at=now()
+        self.updated_at=Now.now
         self._SO_set_large_url(value)
 
     

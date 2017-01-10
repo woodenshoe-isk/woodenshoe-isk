@@ -1,6 +1,6 @@
 ##Edit Special Order information
 
-#from .Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 
 #def pagetitle
@@ -38,10 +38,10 @@
                     //add item to special order, and update page
                     special_order_args={item:JSON.stringify(item), specialOrderID:jQuery('#special_order_id').text()};
                     alert(special_order_args);
-                    jQuery.post('/add_to_special_order', special_order_args, function() {
+                    jQuery.post('/specialorder/add_to_special_order', special_order_args, function() {
                         //go back to special order edit page, success or not.
                         //will reflect on reload.
-                        document.location.href= "http://" + document.location.host + '/special_order_edit?id=' + jQuery('#special_order_id').text();
+                        document.location.href= "http://" + document.location.host + '/specialorder/special_order_edit?id=' + jQuery('#special_order_id').text();
                     });
                     
                     return false;

@@ -2,7 +2,7 @@
 ##Pretty much gets report & menu data, both of which are dynamic data
 
 from config.config import configuration
-from inventoryserver.server import *
+from inventoryserver.server import MenuData
 import Cheetah
 
 class SkeletonBase(Cheetah.Template.Template):

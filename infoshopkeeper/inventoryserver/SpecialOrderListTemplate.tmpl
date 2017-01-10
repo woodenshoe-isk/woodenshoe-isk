@@ -1,7 +1,7 @@
 ##Choose item from inventory using usual search criteria
 ##and add it to cart
 
-#from .Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 
 #def pagetitle
@@ -40,14 +40,14 @@ Special Orders
             jQuery('#results_table tr').dblclick(function(event) {
                 event.preventDefault();
                 specialorderID=jQuery(this).children().last()[0].innerHTML;
-                document.location.href= "http://" + document.location.host + '/special_order_edit?id=' + specialorderID;
+                document.location.href= "http://" + document.location.host + '/specialorder/special_order_edit?id=' + specialorderID;
                 return false;
             });
         } else {
             jQuery('#results_table tr').click(function(event) {
                 event.preventDefault();
                 specialorderID=jQuery(this).children().last()[0].innerHTML;
-                document.location.href= "http://" + document.location.host + '/special_order_edit?id=' + specialorderID;
+                document.location.href= "http://" + document.location.host + '/specialorder/special_order_edit?id=' + specialorderID;
                 return false;
             });
         }
@@ -60,7 +60,7 @@ Special Orders
 
 <h1>Search Special Orders</h1>
 
-<form id="search_form" method="get" action="/special_order_list"
+<form id="search_form" method="get" action="/specialorder/special_order_list"
 #if not($empty)
 style="visibility:hidden;display:none"
 #end if

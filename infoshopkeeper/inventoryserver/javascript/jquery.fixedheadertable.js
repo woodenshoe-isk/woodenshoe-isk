@@ -1,6 +1,5 @@
-.
 /*!
-*` jquery.fixedHeaderTable. The jQuery fixedHeaderTable plugin
+* jquery.fixedHeaderTable. The jQuery fixedHeaderTable plugin
 *
 * Copyright (c) 2011 Mark Malek
 * http://fixedheadertable.com
