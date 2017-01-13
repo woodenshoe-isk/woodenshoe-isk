@@ -13,8 +13,8 @@
     jQuery(document).ready( function(){
 //         //Ajax setup for error handling
 //         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-//                 alert(textStatus + '\r\r' + errorThrown 
-//                     + '\r\r' + XMLHttpRequest.responseText);          
+//                 alert(textStatus + '\\r\\r' + errorThrown
+//                     + '\\r\\r' + XMLHttpRequest.responseText);
 //         }});
 
         jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
@@ -75,7 +75,7 @@
           </tr>
         </thead>
         <tbody>
-         #for r in $resultset.itervalues()
+         #for r in $resultset.values()
               <tr>
                     #try              
                         <td>#if $r['isbn'] then $r['isbn'] else ""#</td>
