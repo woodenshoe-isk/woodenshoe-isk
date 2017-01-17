@@ -85,7 +85,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     text_object.textLine(truncate_by_word(author, max_width=column_width, split_char=','))
     canvas1.drawText(text_object)
     
-    price_string='5999'
+    price_string='59999'
     if 0 <= float(str(ourprice).strip('$')) < 100:
         price_string='5' + ('%3.2f' % float(str(ourprice).strip('$'))).replace('.', '').zfill(4)[-4:]
         

@@ -453,4 +453,208 @@ for reportItem in InventoryServer().reportlist:
 
         
         
-'''class Test_AddToInventoryTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_AuthorEditTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_BaseSearchTemplate    def test___init__    def test_pagetitle    def test_headscripts    def test_header_title    def test_body    def test_writeBodyclass Test_BookEditTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_CartTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_CategoryEditTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_CheckoutTemplate    def test___init__    def test_pagetitle    def test_body    def test_writeBodyclass Test_ChooseItemForISBNTemplate    def test___init__    def test_pagetitle    def test_headscripts    def test_body    def test_writeBodyclass Test_ChooseItemTemplate    def test___init__    def test_pagetitle    def test_headscripts    def test_body    def test_writeBodyclass Test_EditTemplate    def test___init__    def test_headscripts    def test_writeBodyclass Test_IndexTemplate    def test___init__    def test_pagetitle    def test_body    def test_writeBodyclass Test_KindEditTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_KindListTemplate    def test___init__    def test_pagetitle    def test_body    def test_writeBodyclass Test_LocationEditTemplate    def test___init__    def test_pagetitle    def test_body    def test_writeBodyclass Test_LocationListTemplate    def test___init__    def test_pagetitle    def test_body    def test_writeBodyclass Test_mysite_commonclass Test_NotesTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_ReportListTemplate    def test___init__    def test_pagetitle    def test_body    def test_writeBodyclass Test_ReportTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_SearchTemplate    def test___init__    def test_pagetitle    def test_headscripts    def test_body    def test_writeBodyclass Test_SelectSpecialOrderTemplate    def test___init__    def test_pagetitle    def test_headscripts    def test_body    def test_writeBodyclass Test_MenuData:    def test_getMenuData    def test_setMenuDatadef test_jsonify_tool_callbackclass Test_Noteboard:    def test___init__class Test_Register:    def test___init__class Test_Staffing:    def test___init__    def test_calendarclass Test_Admin:    def test___init__    def test_print_label    def test_search_id    def test_select_item_for_isbn_searchclass Test_SpecialOrders:    def test___init__    def test_special_order_list    def test_common    def test_special_order_edit    def test_special_order_item_edit    def test_select_special_order_search    def test_add_to_special_order    def test_set_special_order_item_statusclass Test_CSLogging:    def test___init__    def test_loggerclass Test_InventoryServer:    def test___init__    def test_loadUserByUsername    def test_checkLoginAndPassword    def test_common    def test_author_autocomplete    def test_title_autocomplete    def test_checkout    def test_addtocart    def test_transactions    def test_reports    def test_report    def test_testclass Test_Skeleton    def test___init__    def test_headscripts    def test_head    def test_generateMenu    def test_body    def test_respondclass Test_SkeletonBase    def test___init__class Test_SpecialOrderEditTemplate    def test___init__    def test_pagetitle    def test_headscripts    def test_body    def test_writeBodyclass Test_SpecialOrderItemEditTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_SpecialOrderListTemplate    def test___init__    def test_pagetitle    def test_headscripts    def test_body    def test_writeBodyclass Test_StaffingCalendarTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_TestTemplate    def test___init__    def test_respondclass Test_TitleEditTemplate    def test___init__    def test_headscripts    def test_pagetitle    def test_body    def test_writeBodyclass Test_TitleListTemplate    def test___init__    def test_respondclass Test_TransactionsTemplate    def test___init__    def test_pagetitle    def test_body    def test_writeBody'''
+'''class Test_AddToInventoryTemplate
+    def test___init__    
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_AuthorEditTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_BaseSearchTemplate
+    def test___init__
+    def test_pagetitle
+    def test_headscripts
+    def test_header_title
+    def test_body
+    def test_writeBody
+class Test_BookEditTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_CartTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_CategoryEditTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_CheckoutTemplate
+    def test___init__
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_ChooseItemForISBNTemplate
+    def test___init__
+    def test_pagetitle
+    def test_headscripts
+    def test_body
+    def test_writeBody
+class Test_ChooseItemTemplate
+    def test___init__
+    def test_pagetitle
+    def test_headscripts
+    def test_body
+    def test_writeBody
+class Test_EditTemplate
+    def test___init__
+    def test_headscripts
+    def test_writeBody
+class Test_IndexTemplate
+    def test___init__
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_KindEditTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_KindListTemplate
+    def test___init__
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_LocationEditTemplate
+    def test___init__
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_LocationListTemplate
+    def test___init__
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_mysite_common
+class Test_NotesTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_ReportListTemplate
+    def test___init__
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_ReportTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_SearchTemplate
+    def test___init__
+    def test_pagetitle
+    def test_headscripts
+    def test_body
+    def test_writeBody
+class Test_SelectSpecialOrderTemplate
+    def test___init__
+    def test_pagetitle
+    def test_headscripts
+    def test_body
+    def test_writeBody
+class Test_MenuData
+    def test_getMenuData
+    def test_setMenuData
+    def test_jsonify_tool_callback
+class Test_Noteboard
+    def test___init__
+class Test_Register
+    def test___init__
+class Test_Staffing
+    def test___init__
+    def test_calendar
+class Test_Admin
+    def test___init__
+    def test_print_label
+    def test_search_id
+    def test_select_item_for_isbn_search
+class Test_SpecialOrders
+    def test___init__
+    def test_special_order_list
+    def test_common
+    def test_special_order_edit
+    def test_special_order_item_edit
+    def test_select_special_order_search
+    def test_add_to_special_order
+    def test_set_special_order_item_status
+class Test_CSLogging
+    def test___init__
+    def test_logger
+class Test_InventoryServer
+    def test___init__
+    def test_loadUserByUsername
+    def test_checkLoginAndPassword
+    def test_common
+    def test_author_autocomplete
+    def test_title_autocomplete
+    def test_checkout
+    def test_addtocart
+    def test_transactions
+    def test_reports
+    def test_report
+    def test_test
+class Test_Skeleton
+    def test___init__
+    def test_headscripts
+    def test_head
+    def test_generateMenu
+    def test_body
+    def test_respond
+class Test_SkeletonBase
+    def test___init__
+class Test_SpecialOrderEditTemplate
+    def test___init__
+    def test_pagetitle
+    def test_headscripts
+    def test_body
+    def test_writeBody
+class Test_SpecialOrderItemEditTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_SpecialOrderListTemplate
+    def test___init__
+    def test_pagetitle
+    def test_headscripts
+    def test_body
+    def test_writeBody
+class Test_StaffingCalendarTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_TestTemplate
+    def test___init__
+    def test_respond
+class Test_TitleEditTemplate
+    def test___init__
+    def test_headscripts
+    def test_pagetitle
+    def test_body
+    def test_writeBody
+class Test_TitleListTemplate
+    def test___init__
+    def test_respond
+class Test_TransactionsTemplate
+    def test___init__
+    def test_pagetitle
+    def test_body
+    def test_writeBody'''

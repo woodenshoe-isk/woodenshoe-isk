@@ -35,12 +35,12 @@
                 jQuery('.ui-dialog-buttonset > button:last').focus();
             },
             buttons: {
-                'Not Use ISBN': function(){
-                    jQuery('#isbn').val( 'N/A' ).blur();
-                    dlg.dialog('close');
-                    jQuery('#printlabel').attr('checked', true);
-                    return false;
-                },
+                //'Not Use ISBN': function(){
+                //    jQuery('#isbn').val( 'N/A' ).blur();
+                //    dlg.dialog('close');
+                //    jQuery('#printlabel').attr('checked', true);
+                //    return false;
+                //},
                 'Generate ISBN': function(){
                     jQuery.ajax({url: '/admin/get_next_unused_local_isbn', 
                                         success: function(data){
@@ -178,10 +178,10 @@
                             //add to inventory succeeds
                             
                             //print label if we need to
-                            copies = jQuery('#quantity').val()
+                            copies = 1    //jQuery('#quantity').val()
                             if (jQuery('#printlabel').is(':checked')) {
                                 total_copies = copies * jQuery('#num_copies').val()
-                                jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(),'listprice':jQuery('#listprice').val(),'num_copies': total_copies});
+                                jQuery.post('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(),'listprice':jQuery('#listprice').val(),'num_copies': total_copies});
                             }                        
                             
                             //check on special orders

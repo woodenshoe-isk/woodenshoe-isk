@@ -573,6 +573,7 @@ class Admin:
     #prints label for item. needs printer info to be set up in etc.
     @cherrypy.expose
     def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', listprice='0.00', num_copies=1):
+        print>>sys.stderr, "printing %s" % booktitle
         barcodeLabel.print_barcode_label(isbn=isbn, booktitle=booktitle, ourprice=ourprice, listprice=listprice, num_copies=num_copies)
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
         #find out where gs lives on this system; chop off /n
