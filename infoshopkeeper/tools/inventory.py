@@ -122,13 +122,9 @@ def lookup_by_isbn(number, forceUpdate=False):
             idType=''
             if len(isbn)==12:
                 idType='UPC'
-            elif len(isbn)==13:
-                #if we are using an internal isbn
-                if isbn.startswith('199'):
-                    return []
-                #otherwise search on amazon.
-                elif isbn.startswith('978') or isbn.startswith('979'):
-                    idType='ISBN'
+                    idType='EAN'
+            
+            print("idtype ",  idType, file=sys.stderr)
                 else:
                     idType='EAN'
             
