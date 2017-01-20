@@ -34,6 +34,10 @@ while should_quit != True:
         if list(titles):
             for t1 in titles:
                 ourprice = rlinput("price >> ", prefill=price)                                                             
+                try:
+                     float(ourprice)
+                except:
+                     continue
                 books = Book.selectBy(titleID=t1.id, ourprice=float(ourprice), status='STOCK')
                 if list(books):
                     ourprice = books[0].ourprice

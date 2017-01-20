@@ -194,9 +194,9 @@ from Skeleton import Skeleton
                             //add to inventory succeeds
                             
                             //print label if we need to
-                            copies = jQuery('#quantity').val()
+                            copies_multiplier = 1 
                             if (jQuery('#printlabel').is(':checked')) {
-                                total_copies = copies * jQuery('#num_copies').val()
+                                total_copies = copies_multiplier * jQuery('#num_copies').val()
                                 jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(),'listprice':jQuery('#listprice').val(),'num_copies': total_copies});
                             }                        
                             
@@ -208,7 +208,7 @@ from Skeleton import Skeleton
                             } else {
                                 special_orders = special_orders.split(",");
                             }
-                            num_special_orders_to_hold = copies - Math.max(copies - special_orders.length, 0);
+                            num_special_orders_to_hold = total_copies - Math.max(total_copies - special_orders.length, 0);
                             console.log("so " + special_orders);
                             console.log("numspec " + num_special_orders_to_hold);
                             if (num_special_orders_to_hold > 0 ) {
