@@ -194,9 +194,12 @@ from Skeleton import Skeleton
                             //add to inventory succeeds
                             
                             //print label if we need to
-                            copies_multiplier = 1 
+                            copies_multiplier =  jQuery('#labels_per_copy').val();
+                            num_copies = jQuery('#quantity').val();
+                            
                             if (jQuery('#printlabel').is(':checked')) {
-                                total_copies = copies_multiplier * jQuery('#num_copies').val()
+                                total_copies = parseInt(copies_multiplier) * parseInt(num_copies);
+                                console.log('total_copies is ' + total_copies)
                                 jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(),'listprice':jQuery('#listprice').val(),'num_copies': total_copies});
                             }                        
                             
@@ -208,7 +211,7 @@ from Skeleton import Skeleton
                             } else {
                                 special_orders = special_orders.split(",");
                             }
-                            num_special_orders_to_hold = total_copies - Math.max(total_copies - special_orders.length, 0);
+                            num_special_orders_to_hold = num_copies - Math.max(num_copies - special_orders.length, 0);
                             console.log("so " + special_orders);
                             console.log("numspec " + num_special_orders_to_hold);
                             if (num_special_orders_to_hold > 0 ) {
@@ -279,12 +282,12 @@ Add item to  inventory
 <label class="textbox" for "printlabel"> </label>
 <input type="checkbox" id="printlabel" name="printlabel" 
 #if $printlabel
-checked=true 
+    checked=true 
 #end if
 value="1" />Print 
-<select class="inline" id="num_copies" name="num_copies">
+<select class="inline" id="labels_per_copy" name="labels_per_copy">
 #for $i in [1, 2, 3, 4]
-<option value='$i'>$i</option>
+    <option value='$i'>$i</option>
 #end for
 </select> barcode label for each copy of this title<br />
 
