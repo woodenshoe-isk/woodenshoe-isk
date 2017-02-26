@@ -522,7 +522,7 @@ class Admin:
      
     #hook for add to inventory template
     @cherrypy.expose
-    def add_to_inventory(self, isbn="", orig_isbn='', large_url='', med_url='', small_url='', quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=configuration.get('default_owner'), status="STOCK", tag="", kind=configuration.get('default_kind'), type='', known_title=False, printlabel=False, num_copies=1):
+    def add_to_inventory(self, isbn="", orig_isbn='', large_url='', med_url='', small_url='', quantity=1, title="", listprice='0.00', ourprice='0.00', authors="", publisher="", categories="", distributor="", location="", owner=configuration.get('default_owner'), status="STOCK", tag="", kind=configuration.get('default_kind'), type='', known_title=False, printlabel=False, labels_per_copy =1):
         self._add_to_inventory_template.isbn=isbn
         self._add_to_inventory_template.orig_isbn=orig_isbn
         self._add_to_inventory_template.large_url=large_url

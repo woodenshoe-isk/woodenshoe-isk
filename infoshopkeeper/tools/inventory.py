@@ -62,11 +62,11 @@ def lookup_by_isbn(number, forceUpdate=False):
     if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
         #first we check our database
         titles =  Title.select(Title.q.isbn==isbn)
-        #print titles #debug
+        ##print titles #debug
         known_title= False
         the_titles=list(titles)
         if (len(the_titles) > 0) and ( not forceUpdate ):
-            #print "in titles"
+            ##print "in titles"
             known_title= the_titles[0]
             ProductName = the_titles[0].booktitle.format()
             authors=[]
@@ -75,8 +75,8 @@ def lookup_by_isbn(number, forceUpdate=False):
             authors_as_string = string.join(authors,',')
             categories=[]
             if len(the_titles[0].categorys) > 0:
-                #print len(the_titles[0].categorys)
-                #print the_titles[0].categorys
+                ##print len(the_titles[0].categorys)
+                ##print the_titles[0].categorys
                 categories = [x.categoryName.format() for x in the_titles[0].categorys] 
             categories_as_string = string.join(categories,',')
             if len(the_titles[0].books) > 0:
@@ -111,13 +111,13 @@ def lookup_by_isbn(number, forceUpdate=False):
                 "known_title": known_title,
                 "special_order_pivots":SpecialOrders}
         else: #we don't have it yet
-            #print "in isbn"
+            ##print "in isbn"
             sleep(1) # so amazon doesn't get huffy 
             ecs.setLicenseKey(amazon_license_key)
             ecs.setSecretAccessKey(amazon_secret_key)
             ecs.setAssociateTag(amazon_associate_tag)
              
-            #print "about to search", isbn, isbn[0]
+            ##print "about to search", isbn, isbn[0]
             amazonBooks=[]
              
             idType=''
@@ -135,11 +135,12 @@ def lookup_by_isbn(number, forceUpdate=False):
                     
             print>>sys.stderr, "idtype ",  idType
             try:
+                    print>>sys.stderr, isbn, idType
                     amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
             except ecs.InvalidParameterValue:
                     pass
 
-            #print pythonBooks
+            ##print pythonBooks
             if amazonBooks:
                 result={}
                 authors=[]
@@ -172,13 +173,13 @@ def lookup_by_isbn(number, forceUpdate=False):
                         if hasattr(item, 'Name'):
                             bn.add(item.Name)
                         if hasattr(item, 'Ancestors'):
-                            #print "hasansc"   
+                            ##print "hasansc"   
                             for i in item.Ancestors:
                                 bn.update(parseBrowseNodesInner(i))
                         if hasattr(item, 'Children'):
                             for i in item.Children:
                                 bn.update(parseBrowseNodesInner(i))
-                                #print "bn ", bn
+                                ##print "bn ", bn
                         if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
                             if hasattr(item, 'Name'):
                                 return set([item.Name])
@@ -341,13 +342,13 @@ def search_by_keyword(authorOrTitle=''):
                     if hasattr(item, 'Name'):
                         bn.add(item.Name)
                     if hasattr(item, 'Ancestors'):
-                        #print "hasansc"   
+                        ##print "hasansc"   
                         for i in item.Ancestors:
                             bn.update(parseBrowseNodesInner(i))
                     if hasattr(item, 'Children'):
                         for i in item.Children:
                             bn.update(parseBrowseNodesInner(i))
-                            #print "bn ", bn
+                            ##print "bn ", bn
                     if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
                         if hasattr(item, 'Name'):
                             return set([item.Name])
@@ -424,21 +425,21 @@ def search_by_keyword(authorOrTitle=''):
         try:
             iter1=iter1(authorOrTitle)
         except IOError as err:
-            print err
+            #print err
             yield
         except Exception as err:
-            print err
+            #print err
             yield
         else:
-            print iter1
+            #print iter1
             for element in iter1:
                 try:
                     yield element
                 except IOError:
-                    print err
+                    #print err
                     yield
                  
-def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
+def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', labels_per_copy=0, printlabel=False, special_orders=0):
     print>>sys.stderr, "GOT to addToInventory"
     if not authors:
         authors = []
@@ -502,9 +503,9 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
 
              
 def getInventory(queryTerms):
-    #print queryTerms
+    ##print queryTerms
     keys=queryTerms.keys()
-    print "keys are ", keys
+    #print "keys are ", keys
      
     isbnSelect=""
     kindSelect=""
@@ -538,7 +539,7 @@ def getInventory(queryTerms):
 
         if 'isbn' in keys:
             isbn, price = process_isbn(queryTerms['isbn'])
-            print "isbn and price are ", isbn, price
+            #print "isbn and price are ", isbn, price
             titleSelect=Book.sqlrepr(AND(Field("book","title_id")==Field("title","id"), Field("title","isbn")==isbn))
 
 

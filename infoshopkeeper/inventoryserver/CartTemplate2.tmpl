@@ -336,6 +336,7 @@
         //prevent return from triggering submit.
         //we want to actually approve the data before we submit.
         jQuery('.isbnfield').keypress( function(evt) {
+            console.log("keypress " +  jQuery('.isbnfield').val()) 
             if (evt.keyCode == 13 || evt.charCode == 13) {
                 console.log(evt)
                 evt.preventDefault();
