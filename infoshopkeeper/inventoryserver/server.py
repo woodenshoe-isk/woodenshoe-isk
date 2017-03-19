@@ -37,7 +37,7 @@ class MenuData:
    
     @classmethod
     def getMenuData(cls):
-        return [MenuData.menuData[key] for key in sorted(MenuData.menuData.keys())] 
+        return [MenuData.menuData[key] for key in sorted(MenuData.menuData)] 
     
     @classmethod
     def setMenuData(cls, dictionaryOfMenuLists):
@@ -573,7 +573,7 @@ class Admin:
     #prints label for item. needs printer info to be set up in etc.
     @cherrypy.expose
     def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', listprice='0.00', num_copies=1):
-        print>>sys.stderr, "printing %s" % booktitle
+        print("printing %s" % booktitle, file=sys.stderr)
         barcodeLabel.print_barcode_label(isbn=isbn, booktitle=booktitle, ourprice=ourprice, listprice=listprice, num_copies=num_copies)
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
         #find out where gs lives on this system; chop off /n
@@ -673,7 +673,6 @@ class Admin:
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def search_id(self, titleid):
-        print(file=sys.stderr)
         title=Title.get(titleid)
         if title:
             #queryAll returns lists of lists for results
@@ -918,7 +917,7 @@ class CSLogging:
     def __init__(self):
         self.client_side_logger = logging.getLogger('ClientSideLogger')
         self.client_side_logger.setLevel(logging.DEBUG)
-        handler = logging.handlers.RotatingFileHandler("/var/log/infoshopkeeper/ClientSideError.log", maxBytes=100000, backupCount=5)
+        handler = logging.handlers.RotatingFileHandler(configuration.get('client_side_error_log'), maxBytes=10000, backupCount=5)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.client_side_logger.addHandler(handler)

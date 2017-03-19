@@ -1,5 +1,5 @@
 __all__=(
-        'Ean13BarcodeWidget', 'isEanString',
+        'Ean13BarcodeWidget', 'isEanString', 'Ean5BarcodeWidget', 'Ean13Ext5BarcodeWidget', 'Ean8BarcodeWidget'
         )
 from reportlab.graphics.shapes import Group, String, Rect
 from reportlab.graphics.widgetbase import Widget

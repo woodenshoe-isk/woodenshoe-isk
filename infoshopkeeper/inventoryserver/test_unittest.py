@@ -4,8 +4,15 @@ import tidylib
 import random
 import webtest
 import json
+import re
+
+import datetime
 
 from tools.now import Now
+import tools.db
+
+from config import config
+
 from objects.author import Author
 from objects.book import Book
 from objects.category import Category
@@ -16,6 +23,7 @@ from inventoryserver.server import Noteboard
 from inventoryserver.server import Register
 from inventoryserver.server import Admin
 from inventoryserver.server import InventoryServer
+from inventoryserver.server import CSLogging
 
 from tools.run_sql_select import run_sql_select
 
@@ -178,10 +186,10 @@ class Test_Register(unittest.TestCase ):
                   JOIN book b1 
                     ON t1.id=b1.title_id 
                  GROUP BY t1.isbn 
-                HAVING COUNT(
+                 HAVING COUNT(
                         CASE WHEN b1.status='STOCK' 
                         THEN 1 END) = 0 
-                ORDER BY t1.booktitle) as subq1 
+                ORDER BY t1.isbn) as subq1
             ON t2.isbn=subq1.isbn'''
         results= run_sql_select( query_string )
         random_item= random.sample( results, 1 )[0]
@@ -196,6 +204,10 @@ class Test_Register(unittest.TestCase ):
     #def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.#default_owner, status="STOCK", tag="", kind=etc.#default_kind, type='', known_title=False):
     #def add_item_to_inventory(self, **kwargs):
     #def search_isbn(self, **args):
+    #def test_print_label
+    #def test_search_id
+    #def test_select_item_for_isbn_search
+
 class Test_Admin(unittest.TestCase ):
     def setUp(self):
         try:
@@ -206,6 +218,7 @@ class Test_Admin(unittest.TestCase ):
             self._my_app=webtest.TestApp(application)
         except:
             pass
+        self._conn = tools.db.connectionForURI(tools.db.conn())
         
     def test_admin_class_instantiates(self):
         self.assertIsInstance(self._my_class, Admin, "Admin class did not instantiate properly")
@@ -312,6 +325,32 @@ class Test_Admin(unittest.TestCase ):
         response=self._my_app.get('/admin/search_isbn', {'isbn':random_item.isbn}).json[0]
         self.assertEqual(response['isbn'], random_item.isbn, "/admin/search_isbn doesn't return proper item for isbn10")
 
+    def test_print_label_unit(self):
+        random_item=random.sample(list(Title.select('WHERE title.isbn RLIKE "^978"')), 1)[0]
+        result=self._my_class.print_label(isbn=random_item.isbn, booktitle=random_item.booktitle, authorstring=random_item.authors_as_string())
+        self.assertIsNone(result, "print_label doesn't return")
+
+    def test_print_label_functional(self):
+        random_item=random.sample(list(Title.select('WHERE title.isbn RLIKE "^978"')), 1)[0]
+        response=self._my_app.post('/admin/print_label', {'isbn':random_item.isbn, 'booktitle':random_item.booktitle, 'authorstring':random_item.authors_as_string()})
+        print(response)
+        self.assertIsNone(response, "print_label doesn't return")
+
+    @unittest.skip("old method")
+    def test_search_id(self):
+        pass
+
+    def test_select_item_for_isbn_search_functional(self):
+        random_item=random.sample(list(Title.select()), 1)[0]
+        response=self._my_app.get('/admin/select_item_for_isbn_search', {'isbn':random_item.isbn})
+        code, error=tidylib.tidy_document(response.body, options={'show-errors':1, 'show-warnings':0})
+        self.assertFalse(error, "/admin/select_item_for_isbn_search did not return proper response")
+
+    def test_select_item_for_isbn_search_unit(self):
+        random_item=random.sample(list(Title.select()), 1)[0]
+        code, error=tidylib.tidy_document(self._my_class.select_item_for_isbn_search(isbn=random_item.isbn, title=random_item.booktitle, author=random_item.authors_as_string()),options={'show-errors':1,'show-warnings':0})
+        self.assertEqual(error, '', "InventoryServer.select_item_for_isbn_search did not return proper response")
+
 #class InventoryServer:
     #def __init__(self):
     #def test(self):
@@ -408,7 +447,7 @@ class Test_InventoryServer(unittest.TestCase ):
 
     @unittest.expectedFailure
     def test_search_unit(self):
-        code, error=tidylib.tidy_document(self._my_class.search(), options={'show-errors':1,'show-warnings':0})
+        code, error = tidylib.tidy_document(self._my_class.search(), options={'show-errors':1,'show-warnings':0})
         self.assertFalse(error, "method InventoryServer.search does not return valid html page")
         
     def test_search_functional(self):
@@ -429,7 +468,48 @@ class Test_InventoryServer(unittest.TestCase ):
         response=self._my_app.get('/titlelist')
         code, error=tidylib.tidy_document(response.body, options={'show-errors':1, 'show-warnings':0})
         self.assertFalse(error, '/titlelist did not return valid html page')
-    
+ 
+class Test_CSLogging(unittest.TestCase):
+    def setUp(self):
+        try:
+            self._my_class=CSLogging()
+        except Exception as excp:
+                pass
+        try:
+            self._my_app=webtest.TestApp(application)
+        except:
+                pass
+
+    def test_logger_unit(self):
+        code, error=tidylib.tidy_document(self._my_class.logger(url='url_test', message='message_test', linenumber=0, browser='browser_test',), options={'show-errors':1,'show-warnings':0})
+        self.assertFalse(error, 'logger did not return valid html page')
+        now = datetime.datetime.now()
+        regex = r"^(?P<datetime>(?=\d)(?:(?!(?:1582(?:\.|-|\/)10(?:\.|-|\/)(?:0?[5-9]|1[0-4]))|(?:1752(?:\.|-|\/)0?9(?:\.|-|\/)(?:0?[3-9]|1[0-3])))(?=(?:(?!000[04]|(?:(?:1[^0-6]|[2468][^048]|[3579][^26])00))(?:(?:\d\d)(?:[02468][048]|[13579][26]))\D0?2\D29)|(?:\d{4}\D(?!(?:0?[2469]|11)\D31)(?!0?2(?:\.|-|\/)(?:29|30))))(\d{4})([-\/.])(0?\d|1[012])\3((?!00)[012]?\d|3[01])(?:$|(?=\x20\d)\x20))?((?:(?:0?[1-9]|1[012])(?::[0-5]\d){0,2}(?:\x20[aApP][mM]))|(?:[01]\d|2[0-3])(?::[0-5]\d){1,2}(?:[,.]\d+)?)?)(?P<remainder>.*(?P<success>(?:message_test)+).*$)"
+        regex = re.compile(regex, re.MULTILINE | re.UNICODE)
+        success = False
+        try:
+            csl = open(config.configuration.get('client_side_error_log'), 'r')
+            lines = csl.readlines()
+        except Exception as e:
+            raise e
+        else:
+            with open(config.configuration.get('client_side_error_log'), 'r'):
+                for lin1 in lines:
+                    print(lin1)
+                    match = next(regex.finditer(lin1))
+                    groups = match.groups()
+                    if not groups[7]:
+                        csl.write(lin1)
+                    else:
+                        success = True
+        self.assertTrue(success, 'client side logger did not write to log')
+
+    def test_logger_functional(self):
+        response=self._my_app.get('/logging/logger')
+        code, error=tidylib.tidy_document(response.body, options={'show-errors':1, 'show-warnings':0})
+        self.assertFalse(error, '/logging/logger did not return valid html page')
+
+
 def create_dynamic_method(reportItem):
     """just don't include `test` in the function name here, nose will try to
     run it"""
@@ -451,140 +531,21 @@ for reportItem in InventoryServer().reportlist:
 
 
 
+
         
         
-'''class Test_AddToInventoryTemplate
-    def test___init__    
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_AuthorEditTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_BaseSearchTemplate
-    def test___init__
-    def test_pagetitle
-    def test_headscripts
-    def test_header_title
-    def test_body
-    def test_writeBody
-class Test_BookEditTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_CartTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_CategoryEditTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_CheckoutTemplate
-    def test___init__
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_ChooseItemForISBNTemplate
-    def test___init__
-    def test_pagetitle
-    def test_headscripts
-    def test_body
-    def test_writeBody
-class Test_ChooseItemTemplate
-    def test___init__
-    def test_pagetitle
-    def test_headscripts
-    def test_body
-    def test_writeBody
-class Test_EditTemplate
-    def test___init__
-    def test_headscripts
-    def test_writeBody
-class Test_IndexTemplate
-    def test___init__
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_KindEditTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_KindListTemplate
-    def test___init__
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_LocationEditTemplate
-    def test___init__
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_LocationListTemplate
-    def test___init__
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_mysite_common
-class Test_NotesTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_ReportListTemplate
-    def test___init__
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_ReportTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_SearchTemplate
-    def test___init__
-    def test_pagetitle
-    def test_headscripts
-    def test_body
-    def test_writeBody
-class Test_SelectSpecialOrderTemplate
-    def test___init__
-    def test_pagetitle
-    def test_headscripts
-    def test_body
-    def test_writeBody
+'''
 class Test_MenuData
     def test_getMenuData
     def test_setMenuData
-    def test_jsonify_tool_callback
-class Test_Noteboard
-    def test___init__
-class Test_Register
-    def test___init__
+def test_jsonify_tool_callback
 class Test_Staffing
-    def test___init__
     def test_calendar
 class Test_Admin
-    def test___init__
     def test_print_label
     def test_search_id
     def test_select_item_for_isbn_search
 class Test_SpecialOrders
-    def test___init__
     def test_special_order_list
     def test_common
     def test_special_order_edit
@@ -593,10 +554,8 @@ class Test_SpecialOrders
     def test_add_to_special_order
     def test_set_special_order_item_status
 class Test_CSLogging
-    def test___init__
     def test_logger
 class Test_InventoryServer
-    def test___init__
     def test_loadUserByUsername
     def test_checkLoginAndPassword
     def test_common
@@ -608,53 +567,4 @@ class Test_InventoryServer
     def test_reports
     def test_report
     def test_test
-class Test_Skeleton
-    def test___init__
-    def test_headscripts
-    def test_head
-    def test_generateMenu
-    def test_body
-    def test_respond
-class Test_SkeletonBase
-    def test___init__
-class Test_SpecialOrderEditTemplate
-    def test___init__
-    def test_pagetitle
-    def test_headscripts
-    def test_body
-    def test_writeBody
-class Test_SpecialOrderItemEditTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_SpecialOrderListTemplate
-    def test___init__
-    def test_pagetitle
-    def test_headscripts
-    def test_body
-    def test_writeBody
-class Test_StaffingCalendarTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_TestTemplate
-    def test___init__
-    def test_respond
-class Test_TitleEditTemplate
-    def test___init__
-    def test_headscripts
-    def test_pagetitle
-    def test_body
-    def test_writeBody
-class Test_TitleListTemplate
-    def test___init__
-    def test_respond
-class Test_TransactionsTemplate
-    def test___init__
-    def test_pagetitle
-    def test_body
-    def test_writeBody'''
+'''

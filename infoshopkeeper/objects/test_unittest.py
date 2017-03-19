@@ -92,19 +92,19 @@ class Test_SQLObjectWithFormGlue
     def test_handleEnum
     def test_handleString
     def test_handleUnicodeStr
-    ]def test_handleFloat
+    def test_handleFloat
         def test_handleBlob
         def test_handleDateTime
     def test_object_to_view
         def test_handleForeignKey
         def test_handleString
-            defaults =  {col.name:        def test_handleUnicodeStr
         def test_handleFloat
         def test_handleBlob
         def test_handleDateTime
     def test_safe
 class Test_Title
-    class Test_sqlmeta:    def test_copies_in_status
+    class Test_sqlmeta:
+    def test_copies_in_status
     def test_authors_as_string
     def test_categories_as_string
     def test_distributors
@@ -114,8 +114,11 @@ class Test_Title
     def test_highest_price_book
     def test_first_book_sold
     def test_last_book_sold
-class Test_TitleSpecialOrder	class Test_sqlmeta:class Test_Transaction
-    class Test_sqlmeta:    def test_object_to_form
+class Test_TitleSpecialOrder	
+    class Test_sqlmeta:
+class Test_Transaction
+    class Test_sqlmeta:    
+    def test_object_to_form
     def test_extracolumns
     def test_void
     def test_get_info'''

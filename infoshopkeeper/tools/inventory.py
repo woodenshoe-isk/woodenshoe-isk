@@ -122,15 +122,19 @@ def lookup_by_isbn(number, forceUpdate=False):
             idType=''
             if len(isbn)==12:
                 idType='UPC'
-                    idType='EAN'
-            
-            print("idtype ",  idType, file=sys.stderr)
+            elif len(isbn)==13:
+                #if we are using an internal isbn
+                if isbn.startswith('199'):
+                    return []
+                #otherwise search on amazon.
+                elif isbn.startswith('978') or isbn.startswith('979'):
+                    idType='ISBN'
                 else:
                     idType='EAN'
             
             print("idtype ",  idType, file=sys.stderr)
             try:
-                    amazonBooks = ecs.ItemLookup(isbn, IdType= idType, SearchIndex='Books', ResponseGroup='ItemAttributes,BrowseNodes,Images')
+                    amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
             except ecs.InvalidParameterValue:
                     pass
 
@@ -520,7 +524,7 @@ def searchInventory(sortby='booktitle', out_of_stock=False, **kwargs):
     if 'tag' in kwargs:
         where_clause_list.append("title.tag RLIKE '%s'" % kwargs['tag'].strip())
     if 'isbn' in kwargs:
-        isbn, price=inventory.process_isbn(isbn)
+        isbn, price=process_isbn(kwargs['isbn'])
         where_clause_list.append("title.isbn RLIKE '%s'" % kwargs['isbn'])
     if 'formatType' in kwargs:
         where_clause_list.append("title.type RLIKE '%s'" % kwargs['formatType'].strip())

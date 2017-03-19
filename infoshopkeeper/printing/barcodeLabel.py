@@ -26,6 +26,7 @@ num_copies=1
 def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=0, num_copies=1):
     import sys
     print(type(isbn), type(isbn1), type(booktitle), file=sys.stderr)
+    print(isbn, booktitle, author, ourprice, listprice, numcopies, file=sys.stderr)
     rl_config.warnOnMissingFontGlyphs = 1
     try:
         registerFont(TTFont('Courier New', 'Courier New.ttf'))
@@ -56,10 +57,10 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
         title_array = []
         for i in booktitle.split(split_char):
            title_array.append(i)
-           if stringWidth(string.join(title_array, split_char), font, font_size) > max_width:
+           if stringWidth(split_char.join(title_array), font, font_size) > max_width:
                 title_array.pop()
                 break
-        return string.join(title_array, split_char)
+        return split_char.join(title_array)
     
     saleBanner=False
     if float(str(ourprice).strip('$')) < float(str(listprice).strip('$')):
