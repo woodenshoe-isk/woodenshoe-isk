@@ -104,6 +104,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     #print_command_string = string.Template(u"open $filename")
     pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': configuration.get('label_printer_name'), 'num_copies':num_copies})
     result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
+    print(pcs_sub, file=sys.stderr)
 #    tmpfile.unlink(tmpfile.name)
 
 def test_label():

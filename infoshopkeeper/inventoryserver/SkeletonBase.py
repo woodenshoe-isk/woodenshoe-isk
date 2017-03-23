@@ -4,6 +4,7 @@
 from config.config import configuration
 from inventoryserver.server import MenuData
 import Cheetah
+import urllib
 
 class SkeletonBase(Cheetah.Template.Template):
     def __init__(self, *args, **kwargs):

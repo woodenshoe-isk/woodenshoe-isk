@@ -42,7 +42,8 @@ def process_isbn(isbn):
         #note the checking for the first character of ean5 extension
         #if it's 5, it means price is in us dollars 0-99.99
         #otherwise, we need to do price ourself.
-        if len(isbn) in (15, 17, 18):
+#        if len(isbn) in (15,17,18):
+        if len(isbn)==18:
             if isbn[-5] == '5':
                 price = float(isbn[-4:])/100
             isbn=isbn[:-5]
@@ -61,11 +62,11 @@ def lookup_by_isbn(number, forceUpdate=False):
     if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
         #first we check our database
         titles =  Title.select(Title.q.isbn==isbn)
-        #print titles #debug
+        ##print titles #debug
         known_title= False
         the_titles=list(titles)
         if (len(the_titles) > 0) and ( not forceUpdate ):
-            #print "in titles"
+            ##print "in titles"
             known_title= the_titles[0]
             ProductName = the_titles[0].booktitle.format()
             authors=[]
@@ -74,8 +75,8 @@ def lookup_by_isbn(number, forceUpdate=False):
             authors_as_string = ', '.join(authors)
             categories=[]
             if len(the_titles[0].categorys) > 0:
-                #print len(the_titles[0].categorys)
-                #print the_titles[0].categorys
+                ##print len(the_titles[0].categorys)
+                ##print the_titles[0].categorys
                 categories = [x.categoryName.format() for x in the_titles[0].categorys] 
             categories_as_string = ', '.join(categories)
             if len(the_titles[0].books) > 0:
@@ -110,13 +111,13 @@ def lookup_by_isbn(number, forceUpdate=False):
                 "known_title": known_title,
                 "special_order_pivots":SpecialOrders}
         else: #we don't have it yet
-            #print "in isbn"
+            ##print "in isbn"
             sleep(1) # so amazon doesn't get huffy 
             ecs.setLicenseKey(amazon_license_key)
             ecs.setSecretAccessKey(amazon_secret_key)
             ecs.setAssociateTag(amazon_associate_tag)
              
-            #print "about to search", isbn, isbn[0]
+            ##print "about to search", isbn, isbn[0]
             amazonBooks=[]
              
             idType=''
@@ -134,11 +135,12 @@ def lookup_by_isbn(number, forceUpdate=False):
             
             print("idtype ",  idType, file=sys.stderr)
             try:
+                    print( isbn, idType, file=sys.stderr)
                     amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
             except ecs.InvalidParameterValue:
                     pass
 
-            #print pythonBooks
+            ##print pythonBooks
             if amazonBooks:
                 result={}
                 authors=[]
@@ -171,13 +173,13 @@ def lookup_by_isbn(number, forceUpdate=False):
                         if hasattr(item, 'Name'):
                             bn.add(item.Name)
                         if hasattr(item, 'Ancestors'):
-                            #print "hasansc"   
+                            ##print "hasansc"   
                             for i in item.Ancestors:
                                 bn.update(parseBrowseNodesInner(i))
                         if hasattr(item, 'Children'):
                             for i in item.Children:
                                 bn.update(parseBrowseNodesInner(i))
-                                #print "bn ", bn
+                                ##print "bn ", bn
                         if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
                             if hasattr(item, 'Name'):
                                 return set([item.Name])
@@ -340,13 +342,13 @@ def search_by_keyword(authorOrTitle=''):
                     if hasattr(item, 'Name'):
                         bn.add(item.Name)
                     if hasattr(item, 'Ancestors'):
-                        #print "hasansc"   
+                        ##print "hasansc"   
                         for i in item.Ancestors:
                             bn.update(parseBrowseNodesInner(i))
                     if hasattr(item, 'Children'):
                         for i in item.Children:
                             bn.update(parseBrowseNodesInner(i))
-                            #print "bn ", bn
+                            ##print "bn ", bn
                     if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
                         if hasattr(item, 'Name'):
                             return set([item.Name])
@@ -437,8 +439,8 @@ def search_by_keyword(authorOrTitle=''):
                     print(err)
                     yield
                  
-def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
-    print("GOT to addToInventory", file=sys.stderr)
+def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', labels_per_copy=0, printlabel=False, special_orders=0):
+    print>>sys.stderr, "GOT to addToInventory"
     if not authors:
         authors = []
     if known_title:
@@ -641,8 +643,8 @@ def getInventory(queryTerms):
     i=1
     for book_for_info in books:
         theTitle=book_for_info.title.booktitle
-        authorString = ",".join([a.authorName for a in book_for_info.title.author])
-        categoryString = ",".join([c.categoryName for c in book_for_info.title.categorys])
+        authorString = ", ".join([a.authorName for a in book_for_info.title.author])
+        categoryString = ", ".join([c.categoryName for c in book_for_info.title.categorys])
         results[i]=(theTitle.capitalize(),
                     authorString, 
                     book_for_info.listprice  if book_for_info.listprice is not None else '',
