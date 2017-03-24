@@ -30,11 +30,11 @@ if dbtype in ('mysql', 'postgres'):
         
     #deprecate
     def connect():
-        return dbmodule.connect(host=dbhost,db=dbname,user=dbuser,passwd=dbpass)
+        return dbmodule.connect(host=dbhost, db=dbname, user=dbuser, passwd=dbpass)
 
 
     def conn():
-        connection_string  = u'%s://%s:%s@%s/%s?debug=1&logger=SQLObhectLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype,dbuser,dbpass,dbhost,dbname)
+        connection_string  = '%s://%s:%s@%s/%s?debug=1&logger=SQLObhectLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype, dbuser, dbpass, dbhost, dbname)
         return connection_string
         sqlhub.process_connection = connectionForURI(connection_string)
       
@@ -86,5 +86,5 @@ elif dbtype is 'sqlite':
         return _conn
 
     def conn():
-        return '%s://%s?debug=t' % (dbtype,dbpath)
+        return '%s://%s?debug=t' % (dbtype, dbpath)
         #~ return '%s://%s?debug=t&factory=SQLiteCustomConnection' % (dbtype,dbpath)

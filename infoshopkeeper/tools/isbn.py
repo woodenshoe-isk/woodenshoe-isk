@@ -8,7 +8,7 @@
 # Updated 12/1/2011   Markos Kapes
 # Changed string exceptions to real ones for py2.6+ compatibility
 
-import sys,re
+import sys, re
 
 __doc__="""Code for messing with ISBN numbers. Stuff for validating ISBN-10 and
 ISBN-13 numbers, computing check digits and converting from one format
@@ -62,8 +62,8 @@ class ISBNNotConvertible(Exception) : pass
 def isbn_strip(isbn):
     """Strip whitespace, hyphens, etc. from an ISBN number and return
 the result."""
-    short=re.sub("\W","",isbn)
-    return re.sub("\D","X",short)
+    short=re.sub("\W", "", isbn)
+    return re.sub("\D", "X", short)
 
 def convert(isbn):
     """Convert an ISBN-10 to ISBN-13 or vice-versa."""
@@ -195,7 +195,7 @@ ISBN-13."""
     else:
         return convert(isbn)
 
-def url(type,isbn):
+def url(type, isbn):
     """Returns a URL for a book, corresponding to the "type" and the "isbn"
 provided. This function is likely to go out-of-date quickly, and is
 provided mainly as an example of a potential use-case for the module.

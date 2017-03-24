@@ -1,7 +1,7 @@
 from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
-from Report import Report
-from PdfReport import PdfReport
+from .Report import Report
+from .PdfReport import PdfReport
 from reportlab.lib.units import inch
 import sys
 
@@ -26,15 +26,15 @@ class SalesReport(Report, PdfReport):
         '''      
 
         
-    def query(self,args):
+    def query(self, args):
         self.cursor=self.conn.cursor()
         kind="%s" % args.get('kind', '1')
-        print>>sys.stderr, kind
-        print>>sys.stderr, args
-        begin_date=args.get('begin_date','1990-01-01') or  '1990-01-01'
-        end_date=args.get('end_date','2030-01-01') or '2030-01-01'
-        with_notfound = args.get('with_notfound',False) or False
-        print>>sys.stderr, begin_date, end_date, with_notfound
+        print(kind, file=sys.stderr)
+        print(args, file=sys.stderr)
+        begin_date=args.get('begin_date', '1990-01-01') or  '1990-01-01'
+        end_date=args.get('end_date', '2030-01-01') or '2030-01-01'
+        with_notfound = args.get('with_notfound', False) or False
+        print(begin_date, end_date, with_notfound, file=sys.stderr)
         if with_notfound:
             status_string = '\'SOLD|NOT FOUND\''
         else:
@@ -61,22 +61,22 @@ class SalesReport(Report, PdfReport):
               AND b1.sold_when<=ADDDATE('%s',INTERVAL 1 DAY) 
             GROUP BY b1.id  
             ORDER BY b1.sold_when""" % (kind, status_string, begin_date, end_date)
-        print>>sys.stderr, sql_query
+        print(sql_query, file=sys.stderr)
         self.cursor.execute( sql_query )
         results= self.cursor.fetchall()
         self.cursor.close()
         return results
     
-    def format_results(self,results):
+    def format_results(self, results):
     # 11/10/2008 john fixed this manually
     #        return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4].tostring(),r[1])  for r in results]
     #   return ["<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (r[2],r[4],r[1])  for r in results]
-        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class='status'>%s</td></tr>" % (r[0],r[1],r[2],r[3],r[4], r[5], r[6])  for r in results]
+        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class='status'>%s</td></tr>" % (r[0], r[1], r[2], r[3], r[4], r[5], r[6])  for r in results]
     
     def format_header(self):
 	return "<tr><th>Title</th><th>Date Sold</th><th>Price</th><th>Copies In Stock</th><th>Copies Sold</th><th>Status</th></tr>"
 
-    def format_results_as_pdf(self,results):
+    def format_results_as_pdf(self, results):
         self.defineConstants()
         if len(results) == 0:
             raise TypeError
@@ -84,16 +84,16 @@ class SalesReport(Report, PdfReport):
         rows_height = []  
         for a in range(num_rows):
             rows_height.append(None)
-        colwidths = ( None,None,None,None,None,None,None,None)
+        colwidths = ( None, None, None, None, None, None, None, None)
         
         #print results
         t = Table( results )
         #t = Table( results, colwidths, rows_height )
         GRID_STYLE = TableStyle(
-            [     ('GRID', (0,0), (-1,-1), 0.25, colors.black),
-                  ('FONT', (0,-1), (-1, -1), "Times-Bold"),
+            [     ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
+                  ('FONT', (0, -1), (-1, -1), "Times-Bold"),
 #                  ('FONT', (0,1), (-1, -1), "Times-Roman"),
-              ('ALIGN', (1,1), (-1,-1), 'RIGHT')]
+              ('ALIGN', (1, 1), (-1, -1), 'RIGHT')]
             )
         t.setStyle( GRID_STYLE )
         return t
@@ -102,12 +102,12 @@ class SalesReport(Report, PdfReport):
     def _queryForm(self):
         val="<label class='textbox' for='kind'>Kind</label><select class='textbox' id='kind' name='kind'>"
         for k in list(Kind.select()):
-            val = val+"<option value='%s'>%s</option>" % (k.id,k.kindName)
+            val = val+"<option value='%s'>%s</option>" % (k.id, k.kindName)
         val=val+"</select><br>"
         val =val+"""
             <label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value='%s'/><br>
             <label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='%s'/><br>
             <label class='textbox' for='with_notfound'>Include \"NOT FOUND\" records?</label><input type='checkbox' class='textbox' name='with_notfound' id='with_notfound'/><br>
-        """ % (self.args.get("begin_date",""),self.args.get("end_date",""))
+        """ % (self.args.get("begin_date", ""), self.args.get("end_date", ""))
         return val
 

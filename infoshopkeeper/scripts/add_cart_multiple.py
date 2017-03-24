@@ -25,20 +25,20 @@ for j in range(1, 5):
         random_item=random.sample(list(Book.selectBy(status='STOCK')), 1)[0]
         item={"department":"Book","isInventoried":"True","isTaxable":"True","booktitle":random_item.title.booktitle,"isbn":random_item.title.isbn,"bookID":random_item.id,"titleID":random_item.titleID,"ourprice":random_item.ourprice}
         result=_my_app.post('/register/add_item_to_cart', {'item':json.dumps(item)})
-        for k in range(0, random.randint(0,5)):
+        for k in range(0, random.randint(0, 5)):
             _my_app.get(random.choice(random_app_urls))
         confirm=_my_app.get('/register/get_cart').json[0]['items']
         #print "test_add_inventoried", result, confirm
         try:
             assert i == len(confirm), '/register/add_item_to_cart dropped item'
         except:
-            print >> oldstdout, i, len(confirm)
+            print(i, len(confirm), file=oldstdout)
             assertion_errcount = assertion_errcount +1
     _my_app.get('/register/void_cart')
 
 sys.stdout=oldstdout
 sys.stderr=oldstderr
 
-print "Count of assertion errors: ", assertion_errcount
+print("Count of assertion errors: ", assertion_errcount)
 
     

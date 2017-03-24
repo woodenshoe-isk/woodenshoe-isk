@@ -45,7 +45,7 @@ class fakeArgs:
 	return self.get(kekchose, "")
 		
     def get(self, arg1, arg2):
-    	if self.values.has_key(arg1):
+    	if arg1 in self.values:
 	    return self.values[arg1]
 	else:
 	    return arg2
@@ -59,13 +59,13 @@ class PdfReport:
     def makePresentationPage( self, canvas, doc):
         canvas.saveState()
         canvas.setFont( 'Times-Bold', 16 )
-        canvas.drawCentredString( self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-( 0.25*inch ), unicode(name) )
+        canvas.drawCentredString( self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-( 0.25*inch ), str(name) )
         canvas.line( 0.5*inch, self.PAGE_HEIGHT-( 0.35*inch ), self.PAGE_WIDTH-( 0.5*inch ), self.PAGE_HEIGHT-( 0.35*inch ) )
         canvas.setFont( 'Times-Bold', 8 )
-        canvas.drawCentredString( self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-( 0.45*inch ), unicode(addr) )
+        canvas.drawCentredString( self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-( 0.45*inch ), str(addr) )
         canvas.saveState()
         canvas.setFont( 'Times-Bold', 16 )
-        canvas.drawCentredString( self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-( 1*inch ), unicode(self.reportname) )
+        canvas.drawCentredString( self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-( 1*inch ), str(self.reportname) )
 	
 
     def addPagenum( self, canvas, doc ):
@@ -78,7 +78,7 @@ class PdfReport:
         canvas.drawString( inch, 0.5*inch, 'Page %d' % ( doc.page ) )
         canvas.restoreState()
 
-    def pukePDF( self , filename):
+    def pukePDF( self, filename):
         # Generate the PDF
 	doc = SimpleDocTemplate( filename, pagesize = letter, leftMargin = 0.5*inch, rightMargin = 0.5*inch, bottomMargin = 1.5*inch )
         Story = [ Spacer( 1, 0.15*inch ) ]

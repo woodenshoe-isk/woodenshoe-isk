@@ -48,7 +48,7 @@ def print_special_order_label(isbn='', booktitle='', author='', price=0, custome
 
     font = 'Courier New Bold'
     font_size = 9
-    format_price='$' + ('%3.2f' % float(unicode(price).strip('$')))
+    format_price='$' + ('%3.2f' % float(str(price).strip('$')))
     doc_width = 2.4*inch
     doc_height = 4*inch
     margin = 0.1*inch
@@ -73,17 +73,17 @@ def print_special_order_label(isbn='', booktitle='', author='', price=0, custome
     canvas1.translate(margin, margin)
     #create barcode and draw it at the origin.
     price_string='5999'
-    if 0 <= float(unicode(price).strip('$')) < 100:
-        price_string='5' + ('%3.2f' % float(unicode(price).strip('$'))).replace('.', '').zfill(4)[-4:]
+    if 0 <= float(str(price).strip('$')) < 100:
+        price_string='5' + ('%3.2f' % float(str(price).strip('$'))).replace('.', '').zfill(4)[-4:]
     barcode1=barcode.createBarcodeDrawing('EAN13', value=str(isbn + price_string), validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
-    renderPDF.draw(barcode1, canvas1, 0,0)
+    renderPDF.draw(barcode1, canvas1, 0, 0)
     
     text_object = canvas1.beginText()
     text_object.setFont(font, font_size)
     text_object.setTextOrigin(0, column_height-margin)
     text_object.textOut( truncate_by_word(booktitle, max_width=(column_width - price_width - margin)))
     text_object.moveCursor(column_width - price_width, 0)
-    text_object.textLine(unicode(format_price))
+    text_object.textLine(str(format_price))
     #move cursor permanently moves margin, so we have to move back to zero
     text_object.setXPos( -text_object.getX())
     text_object.textLine(truncate_by_word(author, max_width=column_width, split_char=','))
@@ -102,8 +102,8 @@ def print_special_order_label(isbn='', booktitle='', author='', price=0, custome
         text_object.textLine(customer_email)
     text_object.setXPos(-text_object.getX())
     text_object.textLine('')
-    for i in (u'First', u'Second', u'Third'):
-            text_object.textLine(u'□ %s call on ___ by ___' % i)
+    for i in ('First', 'Second', 'Third'):
+            text_object.textLine('□ %s call on ___ by ___' % i)
     text_object.textLine('')
     text_object.textLine('Notes:')
     canvas1.drawText(text_object)
@@ -112,7 +112,7 @@ def print_special_order_label(isbn='', booktitle='', author='', price=0, custome
     
     #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sprice='$ourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120' barcode_label.ps 1>&2")
     tmpfile.close()
-    print_command_string = string.Template(u"lpr -P $printer -# $numcopies -o orientation-requested=3 -o media=BrL063E078A5766 $filename")
+    print_command_string = string.Template("lpr -P $printer -# $numcopies -o orientation-requested=3 -o media=BrL063E078A5766 $filename")
     pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer':configuration.get('label_printer_name'), 'numcopies':copies})
     subprocess.check_call( pcs_sub.encode('utf8'), shell=True, cwd=os.path.dirname(os.path.abspath(__file__)))
     #tmpfile.unlink(tmpfile.name)

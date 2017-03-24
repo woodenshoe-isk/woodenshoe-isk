@@ -1,11 +1,11 @@
 import sys
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from sqlobject import *
 from tools import db
 from config.config import configuration
-from SQLObjectWithFormGlue import SQLObjectWithFormGlue
+from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx.DateTime import now
 
 
@@ -99,17 +99,17 @@ class Images(SQLObjectWithFormGlue):
          image_filename = os.path.join(image_dir, isbn + '_' + size + '.' + filetype)
          if os.path.exists(image_filename):
             relative_image_url = os.path.relpath(image_filename, image_directory_root)
-            print>>sys.stderr, "image file {url}".format(url=relative_image_url)
+            print("image file {url}".format(url=relative_image_url), file=sys.stderr)
             return os.path.join('/images/', relative_image_url)
          else:
             #if we don't have it, we try to get the image from
             #the remote url
             try:
-                imagedata = urllib2.urlopen(remote_url).read()
+                imagedata = urllib.request.urlopen(remote_url).read()
  
             except Exception as e1:
                 #if we can't retrieve, get the default image relative url
-                print>>sys.stderr, e1
+                print(e1, file=sys.stderr)
                 relative_image_url = os.path.relpath(default_image, image_directory_root)
                 return os.path.join('/images/', relative_image_url)
  
@@ -128,7 +128,7 @@ class Images(SQLObjectWithFormGlue):
                        image_file.write(imagedata)
                 #if we have a file I/O problem we again return default image
                 except Exception as e2:
-                    print>>sys.stderr, e2
+                    print(e2, file=sys.stderr)
                     relative_image_url = os.path.relpath(default_image, image_directory_root)
                     return os.path.join('/images/', relative_image_url)
                 else:
