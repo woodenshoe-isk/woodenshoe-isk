@@ -73,7 +73,7 @@ __license__ = "Python"
 # Support for BlendedSearch contributed by Alex Choo
 
 from xml.dom import minidom
-import os, sys, getopt, cgi, urllib, string
+import os, sys, getopt, cgi, urllib.request, urllib.parse, urllib.error, string
 try:
     import timeoutsocket # http://www.timo-tasi.org/python/timeoutsocket.py
     timeoutsocket.setDefaultSocketTimeout(10)
@@ -110,10 +110,10 @@ _supportedLocales = {
 
 ## administrative functions
 def version():
-    print """PyAmazon %(__version__)s
+    print("""PyAmazon %(__version__)s
 %(__copyright__)s
 released %(__date__)s
-""" % globals()
+""" % globals())
 
 def setAssociate(associate):
     global ASSOCIATE
@@ -125,8 +125,8 @@ def getAssociate(override=None):
 ## utility functions
 
 def _checkLocaleSupported(locale):
-    if not _supportedLocales.has_key(locale):
-        raise AmazonError, ("Unsupported locale. Locale must be one of: %s" %
+    if locale not in _supportedLocales:
+        raise AmazonError("Unsupported locale. Locale must be one of: %s" %
             string.join(_supportedLocales, ", "))
 
 def setLocale(locale):
@@ -152,7 +152,7 @@ def getLicense(license_key = None):
     for get, location in _licenseLocations:
         rc = get(license_key)
         if rc: return rc
-    raise NoLicenseKey, 'get a license key at http://www.amazon.com/webservices'
+    raise NoLicenseKey('get a license key at http://www.amazon.com/webservices')
 
 def setProxy(http_proxy):
     """set HTTP proxy"""
@@ -196,12 +196,12 @@ def unmarshal(element):
         for child in childElements:
             key = child.tagName
             if hasattr(rc, key):
-                if type(getattr(rc, key)) <> type([]):
+                if not isinstance(getattr(rc, key), type([])):
                     setattr(rc, key, [getattr(rc, key)])
                 setattr(rc, key, getattr(rc, key) + [unmarshal(child)])
             elif isinstance(child, minidom.Element) and (child.tagName == 'Details'):
                 # make the first Details element a key
-                setattr(rc,key,[unmarshal(child)])
+                setattr(rc, key, [unmarshal(child)])
                 #dbg: because otherwise 'hasattr' only tests
                 #dbg: on the second occurence: if there's a
                 #dbg: single return to a query, it's not a
@@ -229,7 +229,7 @@ def buildURL(search_type, keyword, product_line, type, page, license_key, locale
         url += "&page=%s" % page
     if product_line:
         url += "&mode=%s" % product_line
-    url += "&%s=%s" % (search_type, urllib.quote(keyword))
+    url += "&%s=%s" % (search_type, urllib.parse.quote(keyword))
     return url
 
 
@@ -288,7 +288,7 @@ def search(search_type, keyword, product_line, type = "heavy", page = None,
     url = buildURL(search_type, keyword, product_line, type, page, 
             license_key, locale, associate)
     proxies = getProxies(http_proxy)
-    u = urllib.FancyURLopener(proxies)
+    u = urllib.request.FancyURLopener(proxies)
     usock = u.open(url)
     xmldoc = minidom.parse(usock)
 
@@ -302,7 +302,7 @@ def search(search_type, keyword, product_line, type = "heavy", page = None,
         data = unmarshal(xmldoc).ProductInfo        
         
     if hasattr(data, 'ErrorMsg'):
-        raise AmazonError, data.ErrorMsg
+        raise AmazonError(data.ErrorMsg)
     else:
         if search_type == "BlendedSearch":
             # a list of ProductLine containing a list of ProductInfo
@@ -328,22 +328,22 @@ def searchByAuthor(author, type="heavy", page=1, license_key=None, http_proxy=No
 
 def searchByArtist(artist, product_line="music", type="heavy", page=1, license_key=None, http_proxy=None, locale=None, associate=None):
     if product_line not in ("music", "classical"):
-        raise AmazonError, "product_line must be in ('music', 'classical')"
+        raise AmazonError("product_line must be in ('music', 'classical')")
     return search("ArtistSearch", artist, product_line, type, page, license_key, http_proxy, locale, associate)
 
 def searchByActor(actor, product_line="dvd", type="heavy", page=1, license_key=None, http_proxy=None, locale=None, associate=None):
     if product_line not in ("dvd", "vhs", "video"):
-        raise AmazonError, "product_line must be in ('dvd', 'vhs', 'video')"
+        raise AmazonError("product_line must be in ('dvd', 'vhs', 'video')")
     return search("ActorSearch", actor, product_line, type, page, license_key, http_proxy, locale, associate)
 
 def searchByDirector(director, product_line="dvd", type="heavy", page=1, license_key=None, http_proxy=None, locale=None, associate=None):
     if product_line not in ("dvd", "vhs", "video"):
-        raise AmazonError, "product_line must be in ('dvd', 'vhs', 'video')"
+        raise AmazonError("product_line must be in ('dvd', 'vhs', 'video')")
     return search("DirectorSearch", director, product_line, type, page, license_key, http_proxy, locale, associate)
 
 def searchByManufacturer(manufacturer, product_line="pc-hardware", type="heavy", page=1, license_key=None, http_proxy=None, locale=None, associate=None):
     if product_line not in ("electronics", "kitchen", "videogames", "software", "photo", "pc-hardware"):
-        raise AmazonError, "product_line must be in ('electronics', 'kitchen', 'videogames', 'software', 'photo', 'pc-hardware')"
+        raise AmazonError("product_line must be in ('electronics', 'kitchen', 'videogames', 'software', 'photo', 'pc-hardware')")
     return search("ManufacturerSearch", manufacturer, product_line, type, page, license_key, http_proxy, locale, associate)
 
 def searchByListMania(listManiaID, type="heavy", page=1, license_key=None, http_proxy=None, locale=None, associate=None):

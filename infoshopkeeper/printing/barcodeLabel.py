@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import barcode_monkeypatch
+from . import barcode_monkeypatch
 
 from reportlab import rl_config
 from reportlab.graphics import barcode, renderPDF
@@ -25,7 +25,7 @@ num_copies=1
 
 def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=0, num_copies=1):
     import sys
-    print>>sys.stderr, type(isbn), type(isbn1), type(booktitle)
+    print(type(isbn), type(isbn1), type(booktitle), file=sys.stderr)
     rl_config.warnOnMissingFontGlyphs = 1
     try:
         registerFont(TTFont('Courier New', 'Courier New.ttf'))
@@ -42,7 +42,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
 
     font = 'Courier New Bold'
     font_size = 9
-    format_ourprice='$' + ('%3.2f' % float(unicode(ourprice).strip('$')))
+    format_ourprice='$' + ('%3.2f' % float(str(ourprice).strip('$')))
     doc_width = 2.4*inch
     doc_height = 2*inch
     margin = 0.1*inch
@@ -62,7 +62,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
         return string.join(title_array, split_char)
     
     saleBanner=False
-    if float(unicode(ourprice).strip('$')) < float(unicode(listprice).strip('$')):
+    if float(str(ourprice).strip('$')) < float(str(listprice).strip('$')):
         saleBanner=True
         doc_height = doc_height + font_size*1.5
         column_height = doc_height -2*margin
@@ -79,27 +79,27 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     text_object.setFont(font, font_size)
     text_object.textOut( truncate_by_word(booktitle, max_width=(column_width - ourprice_width - margin)))
     text_object.moveCursor(column_width - ourprice_width, 0)
-    text_object.textLine(unicode(format_ourprice))
+    text_object.textLine(str(format_ourprice))
     #move cursor permanently moves margin, so we have to move back to zero
     text_object.setXPos( -text_object.getX())
     text_object.textLine(truncate_by_word(author, max_width=column_width, split_char=','))
     canvas1.drawText(text_object)
     
     price_string='5999'
-    if 0 <= float(unicode(ourprice).strip('$')) < 100:
-        price_string='5' + ('%3.2f' % float(unicode(ourprice).strip('$'))).replace('.', '').zfill(4)[-4:]
+    if 0 <= float(str(ourprice).strip('$')) < 100:
+        price_string='5' + ('%3.2f' % float(str(ourprice).strip('$'))).replace('.', '').zfill(4)[-4:]
         
     #create barcode and draw it at the origin.
     barcode1=barcode.createBarcodeDrawing('EAN13EXT5', value=str(isbn + price_string), validate=True, width= column_width, height=1.4*inch, humanReadable=True, fontName=font)
-    renderPDF.draw(barcode1, canvas1, 0,0)
+    renderPDF.draw(barcode1, canvas1, 0, 0)
     canvas1.restoreState()
     canvas1.showPage()
     canvas1.save()
 
     #print_command_string = string.Template(u"export TMPDIR=$tmpdir; $gs_location -q -dSAFER -dNOPAUSE -sDEVICE=pdfwrite -sourprice='$ourourprice' -sisbnstring='$isbn' -sbooktitle='$booktitle' -sauthorstring='$authorstring' -sOutputFile=%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x144' barcode_label.ps 1>&2")
-    print tmpfile.name
+    print(tmpfile.name)
     tmpfile.close()
-    print_command_string = string.Template(u"lpr -P $printer -# $num_copies -o orientation-requested=3 -o media=60x60 $filename")
+    print_command_string = string.Template("lpr -P $printer -# $num_copies -o orientation-requested=3 -o media=60x60 $filename")
     #print_command_string = string.Template(u"open $filename")
     pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': configuration.get('label_printer_name'), 'num_copies':num_copies})
     result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)

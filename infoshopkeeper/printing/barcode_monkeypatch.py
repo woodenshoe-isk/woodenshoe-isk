@@ -1,6 +1,6 @@
 from reportlab.graphics import barcode
 from reportlab.graphics.barcode import eanbc, widgets
-import eanbc as eanbc1
+from . import eanbc as eanbc1
 
 def getCodes():
     """Returns a dict mapping code names to widgets"""
@@ -11,7 +11,7 @@ def getCodes():
         BarcodePOSTNET, BarcodeUSPS_4State
     
     #newer codes will typically get their own module
-    from eanbc import Ean13BarcodeWidget, Ean13Ext5BarcodeWidget, Ean8BarcodeWidget, Ean5BarcodeWidget, UPCA
+    from .eanbc import Ean13BarcodeWidget, Ean13Ext5BarcodeWidget, Ean8BarcodeWidget, Ean5BarcodeWidget, UPCA
     from reportlab.graphics.barcode.qr import QrCodeWidget
         
     #the module exports a dictionary of names to widgets, to make it easy for

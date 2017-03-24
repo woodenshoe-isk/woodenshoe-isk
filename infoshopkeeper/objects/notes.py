@@ -1,6 +1,6 @@
 from sqlobject import *
 from tools import db
-from SQLObjectWithFormGlue import SQLObjectWithFormGlue
+from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from datetime import datetime
 from mx import DateTime
 

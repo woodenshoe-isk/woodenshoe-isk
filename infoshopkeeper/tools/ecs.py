@@ -131,7 +131,7 @@ __license__ = "Python Software Foundation"
 __docformat__ = 'restructuredtext'
 
 
-import os, urllib, string, hmac, hashlib
+import os, urllib.request, urllib.parse, urllib.error, string, hmac, hashlib
 from datetime import datetime
 from xml.dom import minidom
 
@@ -146,13 +146,13 @@ OPTIONS = {}
 
 
 __supportedLocales = {
-        None : "ecs.amazonaws.com",  
-        "us" : "ecs.amazonaws.com",  
-        "uk" : "ecs.amazonaws.co.uk", 
-        "de" : "ecs.amazonaws.de", 
-        "jp" : "ecs.amazonaws.jp", 
-        "fr" : "ecs.amazonaws.fr", 
-        "ca" : "ecs.amazonaws.ca", 
+        None: "ecs.amazonaws.com",  
+        "us": "ecs.amazonaws.com",  
+        "uk": "ecs.amazonaws.co.uk", 
+        "de": "ecs.amazonaws.de", 
+        "jp": "ecs.amazonaws.jp", 
+        "fr": "ecs.amazonaws.fr", 
+        "ca": "ecs.amazonaws.ca", 
     }
 
 __licenseKeys = (
@@ -233,7 +233,7 @@ def __buildPlugins():
         'CustomerFull': ((), (), (), (), {}),
         'CustomerInfo': ((), (), ('Customers',), ('Customer',), {}),
         'CustomerLists': ((), (), ('Customers',), ('Customer',), {}),
-        'CustomerReviews': ((), (), ('Customers',),('Customer', 'Review'), 
+        'CustomerReviews': ((), (), ('Customers',), ('Customer', 'Review'), 
             {'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
         'EditorialReview': ((), (), ('EditorialReviews',), ('EditorialReview',), {}),
         'Help': ((), (), ('RequiredParameters', 'AvailableParameters',
@@ -260,7 +260,7 @@ def __buildPlugins():
         'Offers': ((), (), (), ('Offer',), {'Offers': ('OfferPage', 'TotalOffers', 10)}),
         'OfferSummary': ((), (), (), (), {}),
         'Request': (('Request',), (), (), (), {}),
-        'Reviews': ((), (), (),('Review',), 
+        'Reviews': ((), (), (), ('Review',), 
             {'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
         'SalesRank': ((), (), (), (), {}),
         'SearchBins': ((), (), ('SearchBinSets',), ('SearchBinSet',), {}),
@@ -307,7 +307,7 @@ def __buildPlugins():
         l = []
         for x in responseGroups:
             l.append(x)
-            if x in rgh.keys():
+            if x in list(rgh.keys()):
                 l.extend( collapse(rgh[x]) )
         return l
 
@@ -321,13 +321,13 @@ def __buildPlugins():
         else:
             s = set()
 
-        map(lambda x: s.update(rgps[x][index]), responseGroups)
+        list(map(lambda x: s.update(rgps[x][index]), responseGroups))
         return s
             
     def unionPlugins(responseGroups):
         return dict( [ (key, mergePlugins(collapse(responseGroups), index)) for index, key in enumerate(['isBypassed', 'isPivoted', 'isCollective', 'isCollected', 'isPaged']) ])
 
-    return dict( [ (k, unionPlugins(v)) for k, v in orgs.items() ] )
+    return dict( [ (k, unionPlugins(v)) for k, v in list(orgs.items()) ] )
     
 
 __plugins = __buildPlugins()
@@ -414,7 +414,7 @@ class pagedIterator:
         """Cached items"""
         try:
             self.__len = int(element.getElementsByTagName(kwTotalResults).item(0).firstChild.data)
-        except AttributeError, e:
+        except AttributeError as e:
             self.__len = len(self.__items)
 
     def __len__(self):
@@ -423,7 +423,7 @@ class pagedIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.__index < self.__len:
             self.__index = self.__index + 1
             return self.__getitem__(self.__index-1)
@@ -486,9 +486,9 @@ def setLocale(locale):
     """Set the locale
     if unsupported locale is set, BadLocale is raised."""
     global LOCALE
-    if not __supportedLocales.has_key(locale):
-        raise BadLocale, ("Unsupported locale. Locale must be one of: %s" %
-            ', '.join([x for x in __supportedLocales.keys() if x]))
+    if locale not in __supportedLocales:
+        raise BadLocale("Unsupported locale. Locale must be one of: %s" %
+            ', '.join([x for x in list(__supportedLocales.keys()) if x]))
     LOCALE = locale
 
 
@@ -509,7 +509,7 @@ def setLicenseKey(license_key=None):
         if rc: 
             LICENSE_KEY = rc;
             return;
-    raise NoLicenseKey, ("Please get the license key from  http://www.amazon.com/webservices")
+    raise NoLicenseKey(("Please get the license key from  http://www.amazon.com/webservices"))
 
 
 def getLicenseKey():
@@ -532,7 +532,7 @@ def setSecretAccessKey(secret_access_key=None):
         if rc: 
             SECRET_ACCESS_KEY = rc;
             return;
-    raise NoSecretAccessKey, ("Please get your secret key from  http://www.amazon.com/webservices")
+    raise NoSecretAccessKey(("Please get your secret key from  http://www.amazon.com/webservices"))
 
 def getSecretAccessKey():
     """Get the secret access key.
@@ -554,7 +554,7 @@ def setAssociateTag(associateTag=None):
         if rc: 
             ASSOCIATE_TAG = rc;
             return;
-    raise NoAssociateTag, ("Please get your secret key from  http://www.amazon.com/webservices")
+    raise NoAssociateTag(("Please get your secret key from  http://www.amazon.com/webservices"))
 
 def getAssociateTag():
     """Get associate tag.
@@ -582,24 +582,24 @@ def setOptions(options):
         global OPTIONS
         OPTIONS.update(options)
     else:
-        raise BadOption, ('Unsupported option')
+        raise BadOption(('Unsupported option'))
 
         
 def getOptions():
     """Get options"""
     return OPTIONS 
 
-def buildSignature(netloc,query_string):
+def buildSignature(netloc, query_string):
     secret_key = getSecretAccessKey()
-    string_to_sign = 'GET\n%s\n%s\n%s' % (netloc,'/onca/xml',query_string)
+    string_to_sign = 'GET\n%s\n%s\n%s' % (netloc, '/onca/xml', query_string)
     
-    return urllib.quote_plus(hmac.new(secret_key,string_to_sign,hashlib.sha256).digest().encode('base64').strip())
+    return urllib.parse.quote_plus(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest().encode('base64').strip())
 
 def buildQuery(argv):
     # 1. Filter any key set to 'None'
     # 2. Sort the dict by key
     # 3. Quote everything and build the query string
-    query_string = urllib.urlencode([(k, argv[k]) for (k) in sorted(argv.keys()) if argv[k]])
+    query_string = urllib.parse.urlencode([(k, argv[k]) for (k) in sorted(argv.keys()) if argv[k]])
 
     netloc = __supportedLocales[getLocale()]
     signature = buildSignature(netloc, query_string)
@@ -635,7 +635,7 @@ def buildException(els):
 def query(url):
     """Send the query url and return the DOM
     Exception is raised if there are errors"""
-    u = urllib.FancyURLopener()
+    u = urllib.request.FancyURLopener()
     usock = u.open(url)
     dom = minidom.parse(usock)
     usock.close()
@@ -692,7 +692,7 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
             key = child.tagName
             if hasattr(rc, key):
                 attr = getattr(rc, key)
-                if type(attr) <> type([]):
+                if not isinstance(attr, type([])):
                     setattr(rc, key, [attr])
                 setattr(rc, key, getattr(rc, key) + [unmarshal(XMLSearch, arguments, child, plugins)])
             elif isinstance(child, minidom.Element):
@@ -700,7 +700,7 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
                     rc.append(unmarshal(XMLSearch, arguments, child, plugins))
                 elif child.tagName in plugins['isCollective']:
                     setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins, listIterator([])))
-                elif child.tagName in plugins['isPaged'].keys():
+                elif child.tagName in list(plugins['isPaged'].keys()):
                     setattr(rc, key, pagedIterator(XMLSearch, arguments, (child.tagName, plugins['isPaged'][child.tagName]), child, plugins))
                 elif child.tagName in plugins['isPivoted']:
                     unmarshal(XMLSearch, arguments, child, plugins, rc)

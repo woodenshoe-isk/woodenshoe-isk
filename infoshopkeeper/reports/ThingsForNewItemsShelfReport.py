@@ -1,5 +1,5 @@
 #Returns items that are less than a month old
-from Report import Report
+from .Report import Report
 
 from objects.kind import Kind
 
@@ -8,7 +8,7 @@ class ThingsForNewItemsShelfReport(Report):
     do_total=False
     show_header=True
 
-    def query(self,args):
+    def query(self, args):
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
             SELECT DISTINCT(subq2.id), subq2.booktitle, subq2.author_string 
@@ -33,14 +33,14 @@ class ThingsForNewItemsShelfReport(Report):
     def format_header(self):
         return "<tr><th>Title</th><th>Author</th></tr>"
 
-    def format_results(self,results):
-        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td></tr>" % (r[0],r[1],r[2])  for r in results]
+    def format_results(self, results):
+        return ["<tr ondblclick=\"document.location.href='/titleedit?id=%s';\"><td>%s</td><td>%s</td></tr>" % (r[0], r[1], r[2])  for r in results]
 
 
     def _queryForm(self):
         val="<select class='textbox' id='kind' name='kind'>"
         for k in list(Kind.select()):
-            val = val+"<option value='%s'>%s</option>" % (k.id,k.kindName)
+            val = val+"<option value='%s'>%s</option>" % (k.id, k.kindName)
         val=val+"</select>"
 	
         return val

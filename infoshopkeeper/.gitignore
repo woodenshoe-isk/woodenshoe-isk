@@ -6,6 +6,6 @@
 *.swn
 *.wsgi
 *Template.py
-index.py
+infoshopkeeper/inventoryserver/index.py
 htmlcov/*
 .coverage

@@ -4,7 +4,7 @@ import string
 from objects.title import Title
 from objects.location import Location
 from sqlobject import *
-from SQLObjectWithFormGlue import SQLObjectWithFormGlue
+from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from mx.DateTime import now
 
 from tools import db
@@ -14,7 +14,7 @@ class Book(SQLObjectWithFormGlue):
     ourprice=FloatCol()
     inventoried_when=DateCol(default=now)
     sold_when=DateCol(default=now)  # we ignore this until the status gets set to "SOLD"  
-    status = EnumCol(enumValues=(u'STOCK', u'SOLD', u'NOT FOUND'), default=u"STOCK")
+    status = EnumCol(enumValues=('STOCK', 'SOLD', 'NOT FOUND'), default="STOCK")
     consignmentStatus = StringCol()            
     distributor =StringCol()
     #location = StringCol()

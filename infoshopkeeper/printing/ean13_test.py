@@ -5,7 +5,7 @@ from reportlab.lib.units import mm, inch
 from reportlab.graphics import barcode, renderPDF
 
 # generate a canvas (A4 in this case, size doesn"t really matter)
-canvas1=canvas.Canvas("/tmp/barcode_example.pdf",(2.4*inch, 2*inch))
+canvas1=canvas.Canvas("/tmp/barcode_example.pdf", (2.4*inch, 2*inch))
 canvas1.saveState()
 
 
@@ -15,7 +15,7 @@ canvas1.saveState()
 # barWidth encodes how wide the "narrowest" barcode unit is
 ean13 = '9781583228708'
 barcode1=barcode.createBarcodeDrawing('EAN13', value=str(ean13), validate=True, width= 2.4*inch, height=1.4*inch, humanReadable=True, fontName='Helvetica')
-renderPDF.draw(barcode1, canvas1, 0,0)
+renderPDF.draw(barcode1, canvas1, 0, 0)
 canvas1.restoreState()
 canvas1.showPage()
 canvas1.save()
