@@ -1,4 +1,3 @@
-import mx.DateTime
 import random
 import unittest
 
@@ -8,9 +7,14 @@ import isbnlib
 from objects.book import Book
 from objects.title import Title
 
+<<<<<<< HEAD
 from tools import inventory
+from tools import isbn
+=======
+from tools import inventory, now
+>>>>>>> 3c6574259f98ad6784113632037b3c331ebecd19
 
-globals()['UNIT_TEST']=True
+UNIT_TEST = True
 
 #class inventory:
     #def __init__(self):
@@ -27,7 +31,7 @@ class test_inventory(unittest.TestCase):
     def test_lookup_by_isbn10_dont_have(self):
         isbn_we_will_never_have='0060723467'      #Dick Cheney's autobiography
         result= inventory.lookup_by_isbn( isbn_we_will_never_have )
-        isbn_we_will_never_have = isbnlib.to_isbn13(isbn_we_will_never_have)
+        isbn_we_will_never_have = isbn.toI13(isbn_we_will_never_have)
         self.assertEqual(isbn_we_will_never_have, result['isbn'] )
     def test_lookup_by_isbn10_is_invalid(self):
         #translation table of checkdigits to wrong ones (digit plus 1)
@@ -68,12 +72,12 @@ class test_inventory(unittest.TestCase):
         fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location.locationName, location_id=random_item.locationID, quantity=1, known_title=random_item.title, types=random_item.title.type, kind_name=random_item.title.kind.kindName)
         print(fakeargs)
         inventory.addToInventory( **fakeargs )
-        today=mx.DateTime.now().strftime('%Y-%m-%d')
+        today=now.Now.now.strftime('%Y-%m-%d')
         confirm=Book.selectBy(titleID=random_item.titleID).filter( Book.q.inventoried_when == today)
         try:
             self.assertTrue(confirm, "inventory.addToInventory of title that we have does not add item to inventory")
         finally:
-            print("confirm: ", list(confirm), confirm[-1])
+            print(("confirm: ", list(confirm), confirm[-1]))
             confirm[-1].destroySelf()
     def test_addToInventory_dont_have_title(self):
         pass
@@ -124,3 +128,4 @@ class test_inventory(unittest.TestCase):
 #     
     
     
+'''class Test_AmazonErrorclass Test_NoLicenseKeydef test_versiondef test_setAssociatedef test_getAssociatedef test__checkLocaleSupporteddef test_setLocaledef test_getLocaledef test_setLicensedef test_getLicensedef test_setProxydef test_getProxydef test_getProxiesdef test__contentsOfdef test__getScriptDirclass Test_Bag:def test_unmarshaldef test_buildURLdef test_searchByKeyworddef test_browseBestSellersdef test_searchByASINdef test_searchByUPCdef test_searchByAuthordef test_searchByArtistdef test_searchByActordef test_searchByDirectordef test_searchByManufacturerdef test_searchByListManiadef test_searchSimilardef test_searchByWishlistdef test_searchByPowerdef test_searchByBlended    def test_connect    def test_conn    def test_now    def test_regexp    class Test_SQLiteCustomConnection        def test___init__        def test_registerFunctions    def test_connect    def test_conndef test___buildPlugins    def test_collapse    def test_mergePlugins    def test_unionPluginsclass Test_Bag :    def test___repr__def test_rawObjectdef test_rawIteratorclass Test_listIteratordef test_pagedWrapperclass Test_pagedIterator:    def test___init__    def test___len__    def test___iter__    def test___next__    def test___getitem__class Test_AWSExceptionclass Test_NoLicenseKeyclass Test_NoSecretAccessKeyclass Test_NoAssociateTagclass Test_BadLocaleclass Test_BadOptionclass Test_ExactParameterRequirementclass Test_ExceededMaximumParameterValuesclass Test_InsufficientParameterValuesclass Test_InternalErrorclass Test_InvalidEnumeratedParameterclass Test_InvalidISO8601Timeclass Test_InvalidOperationForMarketplaceclass Test_InvalidOperationParameterclass Test_InvalidParameterCombinationclass Test_InvalidParameterValueclass Test_InvalidResponseGroupclass Test_InvalidServiceParameterclass Test_InvalidSubscriptionIdclass Test_InvalidXSLTAddressclass Test_MaximumParameterRequirementclass Test_MinimumParameterRequirementclass Test_MissingOperationParameterclass Test_MissingParameterCombinationclass Test_MissingParametersclass Test_MissingParameterValueCombinationclass Test_MissingServiceParameterclass Test_ParameterOutOfRangeclass Test_ParameterRepeatedInRequestclass Test_RestrictedParameterValueCombinationclass Test_XSLTTransformationErrordef test_setLocaledef test_getLocaledef test_setLicenseKeydef test_getLicenseKeydef test_setSecretAccessKeydef test_getSecretAccessKeydef test_setAssociateTagdef test_getAssociateTagdef test_getVersiondef test_setOptionsdef test_getOptionsdef test_buildSignaturedef test_buildQuerydef test_buildRequestdef test_buildException    class_name = error.childNodes[0].firstChild.data[4:def test_querydef test_unmarshaldef test_ItemLookupdef test_XMLItemLookupdef test_ItemSearchdef test_XMLItemSearchdef test_SimilarityLookupdef test_XMLSimilarityLookupdef test_ListLookupdef test_XMLListLookupdef test_ListSearchdef test_XMLListSearchdef test_CartCreatedef test_XMLCartCreatedef test_CartAdddef test_XMLCartAdddef test_CartGetdef test_XMLCartGetdef test_CartModifydef test_XMLCartModifydef test_CartCleardef test_XMLCartCleardef test___fromListToItemsdef test___cartOperationdef test_SellerLookupdef test_XMLSellerLookupdef test_SellerListingLookupdef test_XMLSellerListingLookupdef test_SellerListingSearchdef test_XMLSellerListingSearchdef test_CustomerContentSearchdef test_XMLCustomerContentSearchdef test_CustomerContentLookupdef test_XMLCustomerContentLookupdef test_BrowseNodeLookupdef test_XMLBrowseNodeLookupdef test_Helpdef test_XMLHelpdef test_TransactionLookupdef test_XMLTransactionLookupdef test_format_currencydef test_process_isbn                def test_parseBrowseNodes                    def test_parseBrowseNodesInnerdef test_search_by_keyword    def test_database_gen    def test_amazon_gen        def test_process_data            def test_parseBrowseNodes                def test_parseBrowseNodesInnerdef test_searchInventorydef test_getInventorydef test_updateItemclass Test_ISBNInvalidclass Test_ISBNNotConvertibledef test_isbn_stripdef test_convertdef test_isValiddef test_checkdef test_checkI10def test_isI10def test_checkI13def test_isI13def test_toI10def test_toI13def test_urlclass Test_Nowclass Test_Emptyclass Test_PersistentQueue:    def test___init__    def test__init_index        def test__load_cache    def test__sync_index    def test__split    def test__join    def test__sync    def test___len__    def test__put    def test__get    def test__qsize    def test_qsize    def test_task_done    def test_join    def test_sync    def test_empty    def test_full    def test_put    def test_put_nowait    def test_get    def test_get_nowait    def test_close    class Test_MyThread        def test___init__        def test_rundef test_run_sql_select'''

@@ -1,5 +1,5 @@
 __all__=(
-        'Ean13BarcodeWidget', 'isEanString',
+        'Ean13BarcodeWidget', 'isEanString', 'Ean5BarcodeWidget', 'Ean13Ext5BarcodeWidget', 'Ean8BarcodeWidget'
         )
 from reportlab.graphics.shapes import Group, String, Rect
 from reportlab.graphics.widgetbase import Widget
@@ -190,7 +190,7 @@ class Ean13BarcodeWidget(PlotArea):
 
     def __init__(self,value='123456789012',**kw):
         self.value=max(self._digits-len(value), 0)*'0'+value[:self._digits]
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(self, k, v)
 
     width = property(lambda self: self.barWidth*(self._nbars-18+self._calc_quiet(self.lquiet)+self._calc_quiet(self.rquiet)))
@@ -423,7 +423,7 @@ class Ean5BarcodeWidget(PlotArea):
     def __init__(self,value='12345',**kw):    
         value1=max(self._digits-len(value), 0)*'0'+value[:self._digits]
         self.value=value1
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(self, k, v)
     
     width = property(lambda self: self.barWidth*(self._nbars-18+self._calc_quiet(self.lquiet)+self._calc_quiet(self.rquiet)))
@@ -567,7 +567,7 @@ class Ean13Ext5BarcodeWidget(PlotArea):
     y = 0
 
     def __init__(self, value='123456789012345678', **kw):
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             setattr(self, k, v)
         ean13 = value[0:12]
         

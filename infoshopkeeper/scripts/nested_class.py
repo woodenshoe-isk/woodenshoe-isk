@@ -109,7 +109,7 @@ def modify_for_nested_pickle(cls, name_prefix, module):
 
     """
     import types
-    for (name, v) in cls.__dict__.items():
+    for (name, v) in list(cls.__dict__.items()):
         if isinstance(v, type):
             if v.__name__ == name and v.__module__ == module.__name__ and getattr(module, name, None) is not v:
                 # OK, probably this is a nested class.

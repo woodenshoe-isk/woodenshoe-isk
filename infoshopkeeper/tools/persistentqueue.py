@@ -202,7 +202,7 @@ class PersistentQueue:
             self.unfinished_tasks = unfinished
         finally:
             self._sync()
-            print(self.unfinished_tasks, self.qsize()) 
+            print((self.unfinished_tasks, self.qsize())) 
             self.all_tasks_done.release()
 
     def join(self):
@@ -216,7 +216,7 @@ class PersistentQueue:
         """
         self.all_tasks_done.acquire()
         try:
-            print("qsize: ", self.qsize(), " unfinished_tasks: ", self.unfinished_tasks)
+            print(("qsize: ", self.qsize(), " unfinished_tasks: ", self.unfinished_tasks))
             while self.unfinished_tasks:
                 self.all_tasks_done.wait()
         finally:
@@ -351,25 +351,25 @@ class PersistentQueue:
 if __name__ == "__main__":
     ELEMENTS = 1000
     p = PersistentQueue('test', 10)
-    print('Enqueueing %d items, cache size = %d to queue of size: %s' % (ELEMENTS, p.cache_size, p.qsize()))
+    print(('Enqueueing %d items, cache size = %d to queue of size: %s' % (ELEMENTS, p.cache_size, p.qsize())))
     for a in range(ELEMENTS):
         p.put(str(a))
-    print('%d elements enqueued' % ELEMENTS)
+    print(('%d elements enqueued' % ELEMENTS))
     p.sync()
-    print('Queue length (using __len__):', len(p))
-    print('Dequeueing %d items' % (ELEMENTS/2))
+    print(('Queue length (using __len__):', len(p)))
+    print(('Dequeueing %d items' % (ELEMENTS/2)))
     for a in range(ELEMENTS/2):
         p.get()
-    print('Queue length (using __len__):', len(p))
-    print('Dequeueing %d items' % (ELEMENTS/2))
+    print(('Queue length (using __len__):', len(p)))
+    print(('Dequeueing %d items' % (ELEMENTS/2)))
     for a in range(ELEMENTS/2):
         p.get()
-    print('Queue length (using __len__):', len(p))
+    print(('Queue length (using __len__):', len(p)))
     p.sync()
-    print('Enqueueing %d items, cache size = %d to queue of size: %s' % (ELEMENTS, p.cache_size, p.qsize()))
+    print(('Enqueueing %d items, cache size = %d to queue of size: %s' % (ELEMENTS, p.cache_size, p.qsize())))
     for a in range(ELEMENTS):
         p.put(str(a))
-    print('%d elements enqueued' % ELEMENTS)
+    print(('%d elements enqueued' % ELEMENTS))
     p.sync()
     
     class MyThread( _threading.Thread ):
@@ -378,21 +378,21 @@ if __name__ == "__main__":
             self.queue=queue
     
         def run(self):
-            print('Queue length (using __len__):', len(self.queue))
+            print(('Queue length (using __len__):', len(self.queue)))
             isDone=False
             while not isDone:
                 self.queue.get()
                 self.queue.task_done()
-                print(self.queue.qsize(), len(self.queue))
+                print((self.queue.qsize(), len(self.queue)))
                 if self.queue.qsize() == 0:
                     isDone=True
                 
-            print('Queue length (using __len__):', len(self.queue), self.queue.__len__())
+            print(('Queue length (using __len__):', len(self.queue), self.queue.__len__()))
     
     t=MyThread(p)
     t.setDaemon(True)
     t.start()
-    print("joining queue of size: ", p.qsize(), " and unfinished tasks size: ", p.unfinished_tasks)
+    print(("joining queue of size: ", p.qsize(), " and unfinished tasks size: ", p.unfinished_tasks))
     p.join()
     print("p.finished")
     p.close()

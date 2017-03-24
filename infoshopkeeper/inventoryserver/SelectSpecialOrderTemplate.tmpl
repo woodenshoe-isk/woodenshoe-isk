@@ -1,6 +1,6 @@
 ##Edit Special Order information
 
-#from Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 
 #def pagetitle
@@ -13,8 +13,8 @@
     jQuery(document).ready( function(){
 //         //Ajax setup for error handling
 //         jQuery.ajaxSetup({"error":function(XMLHttpRequest,textStatus, errorThrown) {   
-//                 alert(textStatus + '\r\r' + errorThrown 
-//                     + '\r\r' + XMLHttpRequest.responseText);          
+//                 alert(textStatus + '\\r\\r' + errorThrown
+//                     + '\\r\\r' + XMLHttpRequest.responseText);
 //         }});
 
         jQuery('#results_table').dataTable({    'aSorting':[[1, 'asc']],
@@ -38,10 +38,10 @@
                     //add item to special order, and update page
                     special_order_args={item:JSON.stringify(item), specialOrderID:jQuery('#special_order_id').text()};
                     alert(special_order_args);
-                    jQuery.post('/add_to_special_order', special_order_args, function() {
+                    jQuery.post('/specialorder/add_to_special_order', special_order_args, function() {
                         //go back to special order edit page, success or not.
                         //will reflect on reload.
-                        document.location.href= "http://" + document.location.host + '/special_order_edit?id=' + jQuery('#special_order_id').text();
+                        document.location.href= "http://" + document.location.host + '/specialorder/special_order_edit?id=' + jQuery('#special_order_id').text();
                     });
                     
                     return false;
@@ -75,7 +75,7 @@
           </tr>
         </thead>
         <tbody>
-         #for r in $resultset.itervalues()
+         #for r in $resultset.values()
               <tr>
                     #try              
                         <td>#if $r['isbn'] then $r['isbn'] else ""#</td>

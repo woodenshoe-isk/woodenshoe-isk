@@ -14,10 +14,7 @@ from inventoryserver.server import Staffing
 from inventoryserver.server import Admin
 from inventoryserver.server import Noteboard
 from inventoryserver.server import SpecialOrders
-<<<<<<< HEAD
-=======
 from inventoryserver.server import CSLogging 
->>>>>>> origin/master
 
 cherrypy.config.update({'environment': 'embedded'})
 

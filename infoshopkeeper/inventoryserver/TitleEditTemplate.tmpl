@@ -4,7 +4,7 @@
 
 #import urllib
 
-#from EditTemplate import EditTemplate
+#from .EditTemplate import EditTemplate
 #extends EditTemplate
 
 #def headscripts
@@ -41,7 +41,7 @@ Editing ${title.booktitle}
 ##if configured to show image we show an image of the title
 #if $should_show_images
 #if $title.images
-<div id="main_image"><img src='$title.images.retrieve_image_url("large")'><br></div>
+<div id="main_image"><img src="$title.images.retrieve_image_url('large')"><br></div>
 #end if
 #end if
 
@@ -70,7 +70,7 @@ $title.object_to_form
 <td>
 <ul style='list-style-type:none;'>
 <li><a class="listinglink" href="/bookedit?id=$b.id">edit</a></li>
-<li><a class="listinglink print_link" href='/admin/print_label?booktitle=$urllib.quote_plus($b.title.booktitle)&isbn=$b.title.isbn&authorstring=$b.title.authors_as_string.replace("'", " ")&ourprice=$b.ourprice&listprice=$b.listprice'>Print label</li>
+<li><a class="listinglink print_link" href='/admin/print_label?booktitle=urllib.quote_plus($b.title.booktitle)&isbn=$b.title.isbn&authorstring=urllib.quote_plus($b.title.authors_as_string)&ourprice=$b.ourprice&listprice=$b.listprice'>Print label</li>
 </ul>
 </td>
 <td>

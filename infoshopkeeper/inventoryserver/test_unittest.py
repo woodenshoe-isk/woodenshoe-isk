@@ -21,7 +21,7 @@ from tools.run_sql_select import run_sql_select
 
 from myapp_local import application
 
-globals()['UNIT_TEST']=True
+UNIT_TEST = True
 
 #class MenuData:
     #def getMenuData(cls):

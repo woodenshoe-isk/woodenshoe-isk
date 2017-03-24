@@ -6,7 +6,7 @@ from sqlobject import *
 from tools import db
 from config.config import configuration
 from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
-from mx.DateTime import now
+from tools.now import Now
 
 
 
@@ -14,8 +14,8 @@ class Images(SQLObjectWithFormGlue):
     _cfg = configuration()
     
     title = ForeignKey('Title') 
-    createdAt = DateCol(default=now)
-    updatedAt = DateCol(default=now)
+    createdAt = DateCol(default=Now.now)
+    updatedAt = DateCol(default=Now.now)
     
     class sqlmeta:
         fromDatabase = True
@@ -66,15 +66,15 @@ class Images(SQLObjectWithFormGlue):
     
     #we link changes of any url to change in updated_at date
     def _set_small_url(self, value):
-        self.updated_at=now()
+        self.updated_at=Now.now
         self._SO_set_small_url(value)
 
     def _set_med_url(self, value):
-        self.updated_at=now()
+        self.updated_at=Now.now
         self._SO_set_med_url(value)
 
     def _set_large_url(self, value):
-        self.updated_at=now()
+        self.updated_at=Now.now
         self._SO_set_large_url(value)
 
     

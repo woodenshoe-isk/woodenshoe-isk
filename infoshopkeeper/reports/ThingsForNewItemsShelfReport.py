@@ -11,7 +11,7 @@ class ThingsForNewItemsShelfReport(Report):
     def query(self, args):
         self.cursor=self.conn.cursor()
         self.cursor.execute("""
-            SELECT DISTINCT(subq2.id), subq2.booktitle, subq2.author_string 
+            SELECT DISTINCT(subq2.id), subq2.booktitle, subq2.author_string, subq2.min_b_inventoried_when
                 FROM (SELECT t2.id id, t2.booktitle booktitle, subq1.author_string author_string, subq1.min_b_inventoried_when  FROM 
                         (SELECT t1.isbn isbn, MIN(t1.id) min_isbn, MIN(b1.inventoried_when) min_b_inventoried_when, GROUP_CONCAT(DISTINCT(a1.author_name)) author_string 
                                 FROM book b1                    

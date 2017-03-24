@@ -1,4 +1,4 @@
-#from Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 
 #def pagetitle
@@ -8,10 +8,10 @@ Transactions
 #def body
 <h1>Transactions</h1>
 <form action="/transactions" method="post">
-<label class='textbox' for='what'>What</label> <input type='text' class='textbox' name='what' id='what' value='${what}'/> 
-<label class='textbox' for='action'>Action</label> <input type='text' class='textbox' name='action' id='action' value='${action}'/> 
-<label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value='${begin_date}'/>
-<label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value='${end_date}'/>
+<label class='textbox' for='what'>What</label> <input type='text' class='textbox' name='what' id='what' value="${what}"/> 
+<label class='textbox' for='action'>Action</label> <input type='text' class='textbox' name='action' id='action' value="${action}"/> 
+<label class='textbox' for='begin_date'>Begin Date</label><input type='text' class='textbox' name='begin_date' id='begin_date' value="${begin_date}"/>
+<label class='textbox' for='end_date'>End Date</label><input type='text' class='textbox' name='end_date' id='end_date' value="${end_date}"/>
 <input class="submit" type="submit">
 <script type='text/javascript'>
         Calendar.setup({

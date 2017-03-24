@@ -83,12 +83,12 @@ class Title(SQLObjectWithFormGlue):
                                        
     def first_book_sold(self):
         try:
-            return sorted([x for x in self.books if x.status=='SOLD'], key=lambda x:  x.sold_when, reverse=False)[0]
+            return sorted([x for x in self.books if x.status=='SOLD'], key=lambda x:  x.inventoried_when, reverse=False)[0]
         except:
             return ''
 
     def last_book_sold(self):
         try:
-            return sorted([x for x in self.books if x.status=='SOLD'], key=lambda x:  x.sold_when, reverse=True)[0]
+            return sorted([x for x in self.books if x.status=='SOLD'], key=lambda x:  x.inventoried_when, reverse=True)[0]
         except:
             return ''

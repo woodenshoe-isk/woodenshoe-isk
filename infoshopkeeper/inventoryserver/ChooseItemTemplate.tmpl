@@ -1,7 +1,7 @@
 ##Choose item from inventory using usual search criteria
 ##and add it to cart
 
-#from Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 
 #def pagetitle
@@ -74,6 +74,8 @@ Search the inventory
                 event.preventDefault();
                 position = resultsTable.fnGetPosition(this); // getting the clicked row position
                 titleID = resultsTable.fnGetData(position)[0];
+                console.log( titleID );
+                console.log(resultsTable.fnGetData(position));
                 var price_array = eval(resultsTable.fnGetData(position)[1]);
                 if (price_array.length==1) {
                     price = price_array[0];
@@ -203,7 +205,9 @@ selected="true"
 #for $t in $titles
   <tr>
     <td>#if $t.id then $t.id else ""#</td>
-    <td><%=list({x.ourprice for x in t.books if x.status=='STOCK'})%></td>
+    <td>
+        #echo list({x.ourprice for x in t.books if x.status=='STOCK'})
+    </td>
     #if $should_show_images
     <td>
         #if $t.images

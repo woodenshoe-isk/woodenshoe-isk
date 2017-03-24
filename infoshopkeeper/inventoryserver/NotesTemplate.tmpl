@@ -1,20 +1,21 @@
 ##Read/Leave notes on the notes page
 
-#from Skeleton import Skeleton
+#from inventoryserver.Skeleton import Skeleton
 #extends Skeleton
 #def headscripts
 <script type='text/javascript'>                                         
 	jQuery(document).ready( function(){
 	    //give focus to first field of notes form
         jQuery('form:first input:first').focus();    	    
-        
-        //set up ajax error handling
+
+//set up ajax error handling
 //         jQuery.ajaxSetup({  'cache':false,
-//                             'error':function(XMLHttpRequest,textStatus, errorThrown) {   
-//                                 alert(textStatus + '\r' +
-//                                       errorThrown + '\r' +
+//                             'error': function( XMLHttpRequest,textStatus,
+//                                 errorThrown) {
+//                                       alert(textStatus + '\\r' +
+//                                       errorThrown + '\\r' +
 //                                       XMLHttpRequest.responseText);
-//                             }
+//                                  :}
 //         });
         
         //populate table with contents of notes table.
@@ -26,7 +27,7 @@
                                                     'oSearch': {'sSearch':'', bRegex:false, bSmart:true},
                                                     'iDisplayLength': 15,
                                                     'order':[], 
-                                                    'sPaginationType':'simple_numbers'});
+                                                'sPaginationType':'simple_numbers'});
         });
     });
 </script>

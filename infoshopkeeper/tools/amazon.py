@@ -110,10 +110,10 @@ _supportedLocales = {
 
 ## administrative functions
 def version():
-    print("""PyAmazon %(__version__)s
+    print(("""PyAmazon %(__version__)s
 %(__copyright__)s
 released %(__date__)s
-""" % globals())
+""" % globals()))
 
 def setAssociate(associate):
     global ASSOCIATE

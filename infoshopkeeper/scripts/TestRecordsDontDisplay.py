@@ -40,12 +40,12 @@ for title in titles:
     except Exception as e:
         print(e)
         titles_that_dont_even_fetch.append(title.id)
-print("Number of titles that don't fetch: ", titles_that_dont_even_fetch.__len__())
-print("Number of titles that don't display: ", titles_that_dont_display.__len__())
-print("Number of titles that display: ", titles_that_display)
+print(("Number of titles that don't fetch: ", titles_that_dont_even_fetch.__len__()))
+print(("Number of titles that don't display: ", titles_that_dont_display.__len__()))
+print(("Number of titles that display: ", titles_that_display))
 
-print("Titles that don't display are: ", titles_that_dont_display)
-print("Titles that don't fetch are: ", titles_that_dont_even_fetch)
+print(("Titles that don't display are: ", titles_that_dont_display))
+print(("Titles that don't fetch are: ", titles_that_dont_even_fetch))
 
 diagnostic_dict={}
 for t in titles_that_dont_display:
@@ -108,25 +108,25 @@ for t in titles_that_dont_display:
         titles_that_dont_display.remove(t)
         
 if diagnostic_dict.get('book'):
-    print("Titles that don't have books are: ", diagnostic_dict['book'])
+    print(("Titles that don't have books are: ", diagnostic_dict['book']))
 if diagnostic_dict.get('author'):
-    print("Titles that don't have authors are: ", diagnostic_dict['author'])
+    print(("Titles that don't have authors are: ", diagnostic_dict['author']))
 if diagnostic_dict.get('category'):
-    print("Titles that don't have categories are: ", diagnostic_dict['category'])
+    print(("Titles that don't have categories are: ", diagnostic_dict['category']))
 if diagnostic_dict.get('safe_booktitle'):
-    print("Titles whose booktitle doesn't display safely are: ", diagnostic_dict['safe_booktitle'])
+    print(("Titles whose booktitle doesn't display safely are: ", diagnostic_dict['safe_booktitle']))
 if diagnostic_dict.get('authors_as_string'):
-    print("Titles whose authors don't display safely as string are: ", diagnostic_dict['authors_as_string'])
+    print(("Titles whose authors don't display safely as string are: ", diagnostic_dict['authors_as_string']))
 if diagnostic_dict.get('type'):
-    print("Titles without type are: ", diagnostic_dict['type'])
+    print(("Titles without type are: ", diagnostic_dict['type']))
 if diagnostic_dict.get('distributors_as_string'):
-    print("Titles without distributors as string are: ", diagnostic_dict['distributors_as_string'])
+    print(("Titles without distributors as string are: ", diagnostic_dict['distributors_as_string']))
 if diagnostic_dict.get('publisher'):
-    print("Titles without publisher are: ", diagnostic_dict['publisher'])
+    print(("Titles without publisher are: ", diagnostic_dict['publisher']))
 if diagnostic_dict.get('kind'):
-    print('Titles without kind are: ', diagnostic_dict['kind'])
+    print(('Titles without kind are: ', diagnostic_dict['kind']))
 if titles_that_dont_display:
-    print("The remainder of problem tiles are: ", titles_that_dont_display)
+    print(("The remainder of problem tiles are: ", titles_that_dont_display))
    
 sys.exit(0) 
 
@@ -156,7 +156,7 @@ def get_authors_from_amazon(auth_missing=None):
                 au_rec=Author.selectBy(authorName=au)[0]
                 print(au_rec)
                 t1.addAuthor(au_rec)
-                print(t1.author)
+                print((t1.author))
         except Exception as e:
             print(e)
              

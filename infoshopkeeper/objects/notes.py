@@ -1,10 +1,9 @@
 from sqlobject import *
-from tools import db
+from tools import db, now
 from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 from datetime import datetime
-from mx import DateTime
 
 class Notes(SQLObjectWithFormGlue):
-	whenEntered=DateTimeCol(dbName='whenEntered', default=datetime.now)
+	whenEntered=DateTimeCol(dbName='whenEntered', default=now.Now.now)
 	class sqlmeta:
   	    fromDatabase = True

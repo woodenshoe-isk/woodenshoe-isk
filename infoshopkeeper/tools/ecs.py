@@ -134,6 +134,7 @@ __docformat__ = 'restructuredtext'
 import os, urllib.request, urllib.parse, urllib.error, string, hmac, hashlib
 from datetime import datetime
 from xml.dom import minidom
+from base64 import b64encode
 
 
 # Package-wide variables:
@@ -321,7 +322,7 @@ def __buildPlugins():
         else:
             s = set()
 
-        list(map(lambda x: s.update(rgps[x][index]), responseGroups))
+        list([s.update(rgps[x][index]) for x in responseGroups])
         return s
             
     def unionPlugins(responseGroups):
@@ -435,7 +436,7 @@ class pagedIterator:
         if num >= self.__len:
             raise IndexError
 
-        page = num / self.__pageSize + 1
+        page = num // self.__pageSize + 1
         index = num % self.__pageSize
         if page != self.__page:
             self.__arguments[self.__keywords['Page']] = page
@@ -506,8 +507,11 @@ def setLicenseKey(license_key=None):
     global LICENSE_KEY
     for get in __licenseKeys:
         rc = get(license_key)
-        if rc: 
-            LICENSE_KEY = rc;
+        if rc:
+            if type(rc == str):
+                LICENSE_KEY = rc.encode('utf-8');
+            else:
+                LICENSE_KEY = rc;
             return;
     raise NoLicenseKey(("Please get the license key from  http://www.amazon.com/webservices"))
 
@@ -529,8 +533,11 @@ def setSecretAccessKey(secret_access_key=None):
     global SECRET_ACCESS_KEY
     for get in __secretAccessKeys:
         rc = get(secret_access_key)
-        if rc: 
-            SECRET_ACCESS_KEY = rc;
+        if rc:
+            if type(rc == str):
+                SECRET_ACCESS_KEY = rc.encode('utf-8');
+            else:
+                SECRET_ACCESS_KEY = rc;
             return;
     raise NoSecretAccessKey(("Please get your secret key from  http://www.amazon.com/webservices"))
 
@@ -551,8 +558,11 @@ def setAssociateTag(associateTag=None):
     global ASSOCIATE_TAG
     for get in __associateTags:
         rc = get(associateTag)
-        if rc: 
-            ASSOCIATE_TAG = rc;
+        if rc:
+            if type(rc == str):
+                ASSOCIATE_TAG = rc.encode('utf-8');
+            else:
+                ASSOCIATE_TAG = rc
             return;
     raise NoAssociateTag(("Please get your secret key from  http://www.amazon.com/webservices"))
 
@@ -591,9 +601,10 @@ def getOptions():
 
 def buildSignature(netloc, query_string):
     secret_key = getSecretAccessKey()
-    string_to_sign = 'GET\n%s\n%s\n%s' % (netloc, '/onca/xml', query_string)
+    string_to_sign = ('GET\n%s\n%s\n%s' % (netloc, '/onca/xml', query_string)).encode('utf-8')
     
-    return urllib.parse.quote_plus(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest().encode('base64').strip())
+    #return urllib.parse.quote_plus(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest().encode('base64').strip())
+    return urllib.parse.quote(b64encode(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest()))
 
 def buildQuery(argv):
     # 1. Filter any key set to 'None'
@@ -635,10 +646,17 @@ def buildException(els):
 def query(url):
     """Send the query url and return the DOM
     Exception is raised if there are errors"""
-    u = urllib.request.FancyURLopener()
-    usock = u.open(url)
-    dom = minidom.parse(usock)
-    usock.close()
+    #u = urllib.request.FancyURLopener()
+    #usock = u.open(url)
+    #dom = minidom.parse(usock)
+    #usock.close()
+    
+    request = urllib.request.Request(url)
+    #base64string =  bytes('%s:%s' % ('login', 'password'), 'ascii')
+    #request.add_header("Authorization", "Basic %s" % base64string)
+    result = urllib.request.urlopen(request)
+    resulttext = result.read().decode('utf-8')
+    dom = minidom.parseString(resulttext)
 
     errors = dom.getElementsByTagName('Error')
     if errors:
@@ -722,7 +740,7 @@ def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition
         ('Items', __plugins['ItemLookup']['isPaged']['Items']), __plugins['ItemLookup'])
 
     
-def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None): 
+def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
     '''DOM representation of ItemLookup in ECS'''
 
     Operation = "ItemLookup"

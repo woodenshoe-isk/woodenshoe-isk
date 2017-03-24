@@ -21,17 +21,9 @@ for t in titles:
     try:
         titleinfo=inventory.lookup_by_isbn(t.isbn)
     except Exception as e:
-<<<<<<< HEAD
         print("isbn %s seems to be invalid" % t.isbn)
         #raise e
     else:
-        #print titleinfo
-        if titleinfo['kind'] != 'books':
-            continue
-        #print titleinfo
-        if isinstance(titleinfo['list_price'],unicode):
-            correctedprice=float(titleinfo['list_price'].replace('$',''))
-=======
         #print "isbn %s seems to be invalid" % t.isbn
         raise e
     if titleinfo:
@@ -41,10 +33,6 @@ for t in titles:
         #print titleinfo
         if isinstance(titleinfo['list_price'], str):
 	    correctedprice=float(titleinfo['list_price'].replace('$', ''))
-<<<<<<< HEAD
->>>>>>> 2to3
-=======
->>>>>>> 2to3
         elif not titleinfo['list_price']:
             correctedprice=0.0
         else:

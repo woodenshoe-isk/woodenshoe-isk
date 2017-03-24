@@ -1,1 +1,1 @@
-globals()['UNIT_TEST'] = True
+UNIT_TEST = True
