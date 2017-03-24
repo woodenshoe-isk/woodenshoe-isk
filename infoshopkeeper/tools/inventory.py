@@ -42,16 +42,7 @@ def process_isbn(isbn):
         #note the checking for the first character of ean5 extension
         #if it's 5, it means price is in us dollars 0-99.99
         #otherwise, we need to do price ourself.
-<<<<<<< HEAD
-<<<<<<< HEAD
-#        if len(isbn) in (15,17,18):
         if len(isbn)==18:
-=======
-        if len(isbn) in (15, 17, 18):
->>>>>>> 2to3
-=======
-        if len(isbn) in (15, 17, 18):
->>>>>>> 2to3
             if isbn[-5] == '5':
                 price = float(isbn[-4:])/100
             isbn=isbn[:-5]
@@ -139,31 +130,13 @@ def lookup_by_isbn(number, forceUpdate=False):
                 elif isbn.startswith('978') or isbn.startswith('979'):
                     idType='ISBN'
                 else:
-<<<<<<< HEAD
-<<<<<<< HEAD
                      idType='EAN'
-                    
-            print>>sys.stderr, "idtype ",  idType
-            try:
-                    print>>sys.stderr, isbn, idType
-                    amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
-=======
-                    idType='EAN'
             
             print("idtype ",  idType, file=sys.stderr)
             try:
-                    amazonBooks = ecs.ItemLookup(isbn, IdType= idType, SearchIndex="Books", ResponseGroup="ItemAttributes,BrowseNodes,Images")
->>>>>>> 2to3
-=======
-                    idType='EAN'
-            
-            print("idtype ",  idType, file=sys.stderr)
-            try:
-                    amazonBooks = ecs.ItemLookup(isbn, IdType= idType, SearchIndex="Books", ResponseGroup="ItemAttributes,BrowseNodes,Images")
->>>>>>> 2to3
+                amazonBooks = ecs.ItemLookup(isbn, IdType= idType, SearchIndex="Books", ResponseGroup="ItemAttributes,BrowseNodes,Images")
             except ecs.InvalidParameterValue:
-                    pass
-
+                pass
             ##print pythonBooks
             if amazonBooks:
                 result={}
@@ -449,18 +422,6 @@ def search_by_keyword(authorOrTitle=''):
         try:
             iter1=iter1(authorOrTitle)
         except IOError as err:
-<<<<<<< HEAD
-<<<<<<< HEAD
-            #print err
-            yield
-        except Exception as err:
-            #print err
-            yield
-        else:
-            #print iter1
-=======
-=======
->>>>>>> 2to3
             print(err)
             yield
         except Exception as err:
@@ -468,35 +429,14 @@ def search_by_keyword(authorOrTitle=''):
             yield
         else:
             print(iter1)
-<<<<<<< HEAD
->>>>>>> 2to3
-=======
->>>>>>> 2to3
             for element in iter1:
                 try:
                     yield element
                 except IOError:
-<<<<<<< HEAD
-<<<<<<< HEAD
-                    #print err
-                    yield
-                 
-def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', labels_per_copy=0, printlabel=False, special_orders=0):
-    print>>sys.stderr, "GOT to addToInventory"
-=======
-                    print(err)
                     yield
                  
 def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
     print("GOT to addToInventory", file=sys.stderr)
->>>>>>> 2to3
-=======
-                    print(err)
-                    yield
-                 
-def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
-    print("GOT to addToInventory", file=sys.stderr)
->>>>>>> 2to3
     if not authors:
         authors = []
     if known_title:
@@ -559,23 +499,9 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
 
              
 def getInventory(queryTerms):
-<<<<<<< HEAD
-<<<<<<< HEAD
-    ##print queryTerms
-    keys=queryTerms.keys()
-    #print "keys are ", keys
-=======
     #print queryTerms
     keys=list(queryTerms.keys())
     print("keys are ", keys)
->>>>>>> 2to3
-=======
-    #print queryTerms
-    keys=list(queryTerms.keys())
-    print("keys are ", keys)
->>>>>>> 2to3
-     
-    isbnSelect=""
     kindSelect=""
     statusSelect=""
     titleSelect=""
@@ -607,18 +533,8 @@ def getInventory(queryTerms):
 
         if 'isbn' in keys:
             isbn, price = process_isbn(queryTerms['isbn'])
-<<<<<<< HEAD
-<<<<<<< HEAD
-            #print "isbn and price are ", isbn, price
-            titleSelect=Book.sqlrepr(AND(Field("book","title_id")==Field("title","id"), Field("title","isbn")==isbn))
-=======
             print("isbn and price are ", isbn, price)
             titleSelect=Book.sqlrepr(AND(Field("book", "title_id")==Field("title", "id"), Field("title", "isbn")==isbn))
->>>>>>> 2to3
-=======
-            print("isbn and price are ", isbn, price)
-            titleSelect=Book.sqlrepr(AND(Field("book", "title_id")==Field("title", "id"), Field("title", "isbn")==isbn))
->>>>>>> 2to3
 
 
         if 'authorName' in keys:
