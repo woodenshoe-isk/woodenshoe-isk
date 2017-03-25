@@ -42,7 +42,6 @@ def process_isbn(isbn):
         #note the checking for the first character of ean5 extension
         #if it's 5, it means price is in us dollars 0-99.99
         #otherwise, we need to do price ourself.
-#        if len(isbn) in (15,17,18):
         if len(isbn)==18:
             if isbn[-5] == '5':
                 price = float(isbn[-4:])/100
@@ -138,8 +137,7 @@ def lookup_by_isbn(number, forceUpdate=False):
                     print( isbn, idType, file=sys.stderr)
                     amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
             except ecs.InvalidParameterValue:
-                    pass
-
+                pass
             ##print pythonBooks
             if amazonBooks:
                 result={}
@@ -439,8 +437,8 @@ def search_by_keyword(authorOrTitle=''):
                     print(err)
                     yield
                  
-def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', labels_per_copy=0, printlabel=False, special_orders=0):
-    print>>sys.stderr, "GOT to addToInventory"
+def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
+    print("GOT to addToInventory", file=sys.stderr)
     if not authors:
         authors = []
     if known_title:
