@@ -77,7 +77,7 @@ def updateItem(t, updateTitle=False, updateImage=False, updateAuthors=False, upd
                 isk_authors = {x.authorName for x in t.author}
             except:
                 isk_authors = set()
-            print(amazon_authors, isk_authors)
+            print((amazon_authors, isk_authors))
 
             #items that are in isk bout not in amazon info
             authors_to_remove = isk_authors - amazon_authors

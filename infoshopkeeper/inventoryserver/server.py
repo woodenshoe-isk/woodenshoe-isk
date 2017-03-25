@@ -9,12 +9,10 @@ import uuid
 import logging
 import logging.handlers
 
-from mx.DateTime import now
-
 from Cheetah.Template import Template
 from simplejson import JSONEncoder
 
-import turbojson
+#import turbojson
 import json
 
 import isbnlib
@@ -27,6 +25,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 from sqlobject.sqlbuilder import *
 from sqlobject.dberrors import DuplicateEntryError
 
+from tools.now import Now
+
 #Class that manages dictionary of menu items.
 #Format for adding a menu:
 #   {'1': [('menu display title', 'menu action', [ 'submenu of same triplet format' ]), ]}
@@ -37,7 +37,7 @@ class MenuData:
    
     @classmethod
     def getMenuData(cls):
-        return [MenuData.menuData[key] for key in sorted(MenuData.menuData.keys())] 
+        return [MenuData.menuData[key] for key in sorted(MenuData.menuData)] 
     
     @classmethod
     def setMenuData(cls, dictionaryOfMenuLists):
@@ -59,32 +59,32 @@ from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 from objects.transaction import Transaction
 
-from .IndexTemplate import IndexTemplate
-from .SearchTemplate import SearchTemplate
-from .BookEditTemplate import BookEditTemplate
-from .TitleEditTemplate import TitleEditTemplate
-from .TitleListTemplate import TitleListTemplate
-from .AuthorEditTemplate import AuthorEditTemplate
-from .CategoryEditTemplate import CategoryEditTemplate
-from .ChooseItemForISBNTemplate import ChooseItemForISBNTemplate
-from .ChooseItemTemplate import ChooseItemTemplate
-from .KindEditTemplate import KindEditTemplate
-from .KindListTemplate import KindListTemplate
-from .LocationEditTemplate import LocationEditTemplate
-from .LocationListTemplate import LocationListTemplate
-from .NotesTemplate import NotesTemplate
-from .ReportListTemplate import ReportListTemplate
-from .ReportTemplate import ReportTemplate
-from .TransactionsTemplate import TransactionsTemplate
-from .CartTemplate import CartTemplate
-from .CartTemplate2 import CartTemplate2
-from .CheckoutTemplate import CheckoutTemplate
-from .StaffingCalendarTemplate import StaffingCalendarTemplate
-from .AddToInventoryTemplate import AddToInventoryTemplate
-from .SpecialOrderEditTemplate import SpecialOrderEditTemplate
-from .SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
-from .SpecialOrderListTemplate import SpecialOrderListTemplate
-from .SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
+from inventoryserver.IndexTemplate import IndexTemplate
+from inventoryserver.SearchTemplate import SearchTemplate
+from inventoryserver.BookEditTemplate import BookEditTemplate
+from inventoryserver.TitleEditTemplate import TitleEditTemplate
+from inventoryserver.TitleListTemplate import TitleListTemplate
+from inventoryserver.AuthorEditTemplate import AuthorEditTemplate
+from inventoryserver.CategoryEditTemplate import CategoryEditTemplate
+from inventoryserver.ChooseItemForISBNTemplate import ChooseItemForISBNTemplate
+from inventoryserver.ChooseItemTemplate import ChooseItemTemplate
+from inventoryserver.KindEditTemplate import KindEditTemplate
+from inventoryserver.KindListTemplate import KindListTemplate
+from inventoryserver.LocationEditTemplate import LocationEditTemplate
+from inventoryserver.LocationListTemplate import LocationListTemplate
+from inventoryserver.NotesTemplate import NotesTemplate
+from inventoryserver.ReportListTemplate import ReportListTemplate
+from inventoryserver.ReportTemplate import ReportTemplate
+from inventoryserver.TransactionsTemplate import TransactionsTemplate
+from inventoryserver.CartTemplate import CartTemplate
+from inventoryserver.CartTemplate import CartTemplate
+from inventoryserver.CheckoutTemplate import CheckoutTemplate
+from inventoryserver.StaffingCalendarTemplate import StaffingCalendarTemplate
+from inventoryserver.AddToInventoryTemplate import AddToInventoryTemplate
+from inventoryserver.SpecialOrderEditTemplate import SpecialOrderEditTemplate
+from inventoryserver.SpecialOrderItemEditTemplate import SpecialOrderItemEditTemplate
+from inventoryserver.SpecialOrderListTemplate import SpecialOrderListTemplate
+from inventoryserver.SelectSpecialOrderTemplate import SelectSpecialOrderTemplate
 
 from config.config import configuration
 
@@ -93,11 +93,12 @@ from printing import barcodeLabel
 from printing import specialOrderLabel
 
 #decorator function to return json
-turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
+#turbojson.jsonify._instance=turbojson.jsonify.GenericJSON(ensure_ascii=False)
 def jsonify_tool_callback(*args, **kwargs):
     #print>>sys.stderr, "in jsonify"
     cherrypy.response.headers['Content-type'] = 'application/json; charset=utf-8'
-    body=turbojson.jsonify.encode(cherrypy.response.body).encode('utf-8')
+    #body=turbojson.jsonify.encode(cherrypy.response.body).encode('utf-8')
+    body=json.dumps(cherrypy.response.body, sort_keys=True, default=str).encode('utf-8')
     #print>>sys.stderr, "body changed ", body
     cherrypy.response.headers['Content-length']=len(body)
     cherrypy.response.body=body
@@ -139,15 +140,15 @@ class Noteboard:
                 #print "author & message are ", author, " ", message
                 Notes(author=author,  message=message)
                 return self._notestemplate.respond()
-        if kwargs['author']:
-            if kwargs['message']:
+        if kwargs.get('author', None):
+            if kwargs.get('message', None):
                 #print "using kwargs to add note"
                 Notes(author=kwargs['author'], message=kwargs['message'])
 
 #Class for register   
 class Register:
     def __init__(self):
-        self._carttemplate = CartTemplate2()
+        self._carttemplate = CartTemplate()
         self._chooseitemtemplate = ChooseItemTemplate()
         self.menudata=MenuData
         MenuData.setMenuData( {'1': ('Remove Items from Inventory', '/register/build_cart', []) })
@@ -276,7 +277,7 @@ class Register:
                             print("preparing to sell book", file=sys.stderr)
                             print("bookID is", item.get('bookID'), file=sys.stderr)
                             b=Book.selectBy(id=item['bookID'])[0]
-                            b.set(status='SOLD', sold_when=now().strftime("%Y-%m-%d"))
+                            b.set(status='SOLD', sold_when=Now.now.strftime("%Y-%m-%d"))
                             if item.get('special_order_selected'):
                                 tso=TitleSpecialOrder.get(item['special_order_selected']) 
                                 tso.orderStatus='SOLD'
@@ -302,7 +303,7 @@ class Register:
                             infostring = "'[] " + item['department']
                             if 'booktitle' in item:
                                 infostring=infostring + ": " +item['booktitle']
-                            Transaction(action='SALE', date=now(), info=infostring, owner=None, cashier=None, schedule=None, amount=float(item['ourprice']), cartID=cart.get('uuid', ''))
+                            Transaction(action='SALE', date=Now.now, info=infostring, owner=None, cashier=None, schedule=None, amount=float(item['ourprice']), cartID=cart.get('uuid', ''))
                             cart['items'].remove(item)
                         except Exception as err:
                             print("error in selling book", err, file=sys.stderr)
@@ -335,6 +336,8 @@ class Register:
     #search for in stock items by attribute
     @cherrypy.expose
     def select_item_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location="", authorOrTitle=""):
+        kwargs = locals()
+        
         self._chooseitemtemplate.should_show_images = configuration.get('should_show_images')
         self._chooseitemtemplate.empty=True
         self._chooseitemtemplate.title=title
@@ -360,6 +363,14 @@ class Register:
         
         titles=[]
         
+        #only search for in-stock books
+        kwargs['status'] = 'STOCK'
+        
+        titles = inventory.searchInventory(**kwargs)
+
+        self._chooseitemtemplate.titles=titles
+        return self._chooseitemtemplate.respond()
+       
         #used to check that any filtering is done
         fields=[title, author, category, distributor, owner, isbn, publisher, tag, kind, authorOrTitle]
         fields_used = [f for f in fields if f != ""]
@@ -405,7 +416,6 @@ class Register:
         if len(fields_used)>0:
             titles=Title.select( where_clause, join=join_list, clauseTables=clause_tables, orderBy=sortby, distinct=True)
             print(titles.queryForSelect(), file=sys.stderr)
-        print("titles ", list(titles), file=sys.stderr)
         self._chooseitemtemplate.titles=titles
         return self._chooseitemtemplate.respond()
 
@@ -571,6 +581,7 @@ class Admin:
     #prints label for item. needs printer info to be set up in etc.
     @cherrypy.expose
     def print_label(self, isbn='', booktitle='', authorstring='',ourprice='0.00', listprice='0.00', num_copies=1):
+        print("printing %s" % booktitle, file=sys.stderr)
         barcodeLabel.print_barcode_label(isbn=isbn, booktitle=booktitle, ourprice=ourprice, listprice=listprice, num_copies=num_copies)
         #%pipe%'lpr -P $printer -# $num_copies -o media=Custom.175x120'
         #find out where gs lives on this system; chop off /n
@@ -611,8 +622,8 @@ class Admin:
         print(kwargs, file=sys.stderr)
         kwargs['listprice']=float(kwargs['listprice'].replace('$', ''))
         kwargs['ourprice']=float(kwargs['ourprice'].replace('$', ''))
-        kwargs['authors']=kwargs['authors'].split(',')
-        kwargs['categories'] = kwargs['categories'].split(',')
+        kwargs['authors']=kwargs['authors'].split(', ')
+        kwargs['categories'] = kwargs['categories'].split(', ')
         if (kwargs['known_title'] == 'False' or kwargs['known_title'] == 'false'):
             kwargs['known_title']=False
         else:
@@ -670,7 +681,6 @@ class Admin:
     @cherrypy.expose
     @cherrypy.tools.jsonify()
     def search_id(self, titleid):
-        print(file=sys.stderr)
         title=Title.get(titleid)
         if title:
             #queryAll returns lists of lists for results
@@ -695,6 +705,8 @@ class Admin:
     #search for in stock items by attribute
     @cherrypy.expose
     def select_item_for_isbn_search(self, title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="", tag="",kind="",location=""):
+        kwargs = locals()
+        
         self._chooseitemforisbntemplate.empty=True
         self._chooseitemforisbntemplate.title=title
         self._chooseitemforisbntemplate.should_show_images = configuration.get('should_show_images')
@@ -705,7 +717,8 @@ class Admin:
         self._chooseitemforisbntemplate.owner=owner
         self._chooseitemforisbntemplate.publisher=publisher 
         self._chooseitemforisbntemplate.tag=tag
-        self._chooseitemforisbntemplate.locations=list(Location.select(orderBy="location_name"))
+        self._chooseitemforisbntemplate.locations=list(
+                            Location.select(orderBy="location_name"))
         self._chooseitemforisbntemplate.location=location
         the_location=location
         if isinstance(the_location, type([])):
@@ -718,13 +731,21 @@ class Admin:
         self._chooseitemforisbntemplate.table_is_form=True
          
         titles=[]
-         
+
+        titles = inventory.searchInventory(**kwargs)
+    
+        self._chooseitemforisbntemplate.titles=titles
+        return self._chooseitemforisbntemplate.respond()
+
         #used to check that any filtering is done
         fields=[title, author, category, distributor, owner, isbn, publisher, tag, kind]
         fields_used = [f for f in fields if f != ""]
          
         #start out with the join clauses in the where clause list
-        where_clause_list = ["book.title_id=title.id", "author_title.title_id=title.id", "author_title.author_id=author.id", "category.title_id=title.id"]
+        where_clause_list = ["book.title_id=title.id",
+                             "author_title.title_id=title.id",
+                             "author_title.author_id=author.id",
+                             "category.title_id=title.id"]
          
         #add filter clauses if they are called for
         if the_kind:
@@ -755,10 +776,7 @@ class Admin:
         #do search. 
         if len(fields_used)>0:
             titles=Title.select( where_clause, orderBy=sortby, clauseTables=['book', 'author', 'author_title', 'category'], distinct=True)
-                 
-        self._chooseitemforisbntemplate.titles=titles
-        return self._chooseitemforisbntemplate.respond()
-        
+
 class SpecialOrders:
     
     def __init__(self):
@@ -804,19 +822,19 @@ class SpecialOrders:
         
         #add filter clauses if they are called for
         if customer_name:
-            where_clause_list.append("special_order.customer_name RLIKE '%s'" % escape_string(customer_name.strip()))
+            where_clause_list.append("special_order.customer_name RLIKE '%s'" % customer_name.strip())
         if customer_phone_number:
-            where_clause_list.append("special_order.customer_phone_number RLIKE '%s'" % escape_string(customer_phone_number.strip()))
+            where_clause_list.append("special_order.customer_phone_number RLIKE '%s'" % customer_phone_number.strip())
         if customer_email:
-            where_clause_list.append("special_order.customer_email RLIKE '%s'" % escape_string(customer_email.strip()))
+            where_clause_list.append("special_order.customer_email RLIKE '%s'" % customer_email.strip())
         if the_kind:
-            where_clause_list .append("(title.kind_id = '%s' OR title.kind_id IS NULL)" % escape_string(the_kind))
+            where_clause_list .append("(title.kind_id = '%s' OR title.kind_id IS NULL)" % the_kind)
         if title:
-            where_clause_list.append("title.booktitle RLIKE '%s'" % escape_string(title.strip()))
+            where_clause_list.append("title.booktitle RLIKE '%s'" % title.strip())
         if isbn:
-            where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
+            where_clause_list.append("title.isbn RLIKE '%s'" % isbn)
         if author:
-            where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
+            where_clause_list.append("author.author_name RLIKE '%s'" % author.strip())
         where_clause=None
         if len(where_clause_list) > 0:
             #AND all where clauses together
@@ -907,7 +925,7 @@ class CSLogging:
     def __init__(self):
         self.client_side_logger = logging.getLogger('ClientSideLogger')
         self.client_side_logger.setLevel(logging.DEBUG)
-        handler = logging.handlers.RotatingFileHandler("/var/log/infoshopkeeper/ClientSideError.log", maxBytes=100000, backupCount=5)
+        handler = logging.handlers.RotatingFileHandler(configuration.get('client_side_error_log'), maxBytes=10000, backupCount=5)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.client_side_logger.addHandler(handler)
@@ -1238,6 +1256,7 @@ class InventoryServer:
     #search by attribute
     @cherrypy.expose
     def search(self,id='', title="",sortby="booktitle",isbn="",distributor="",owner="",publisher="",author="",category="",out_of_stock='no',stock_less_than="",stock_more_than="",sold_more_than="", sold_begin_date="",sold_end_date="",inv_begin_date='',inv_end_date='', tag="",kind="",location="", formatType=""):
+        kwargs = locals()
         cherrypy.session['lastsearch']=False
         self.common()
         cherrypy.session['lastsearch']=cherrypy.url()
@@ -1261,7 +1280,8 @@ class InventoryServer:
         self._searchtemplate.sold_end_date=sold_end_date
         self._searchtemplate.tag=tag
         #find locations for dropdown
-        self._searchtemplate.locations=list(Location.select(orderBy="location_name"))
+        self._searchtemplate.locations = \
+                        list(Location.select(orderBy="location_name"))
         self._searchtemplate.location=location
         the_location=location
         if isinstance(the_location, type([])):
@@ -1286,9 +1306,11 @@ class InventoryServer:
         #find out if fields are used or if we are filtering on
         #in stock
         titles=[]
-        fields=[id, title, author, category, distributor, owner, isbn, publisher, stock_less_than, stock_more_than, sold_more_than, inv_begin_date, inv_end_date, sold_begin_date, sold_end_date, tag, kind]
-        fields_used = [f for f in fields if f != ""]
-         
+        
+        titles = inventory.searchInventory(**kwargs)
+        self._searchtemplate.titles=titles
+        return  self._searchtemplate.respond()
+        
         #start building the filter list
         where_clause_list = []
         clause_tables=['book', 'author', 'author_title', 'category', 'location']
@@ -1344,8 +1366,6 @@ class InventoryServer:
         #filter by items sold
         if sold_more_than != "":
             titles = [t for t in titles if t.copies_in_status("SOLD") >= int(sold_more_than)]
-        self._searchtemplate.titles=titles
-        return  self._searchtemplate.respond()            
 
     #old transactions template
     @cherrypy.expose    
@@ -1413,7 +1433,7 @@ class InventoryServer:
     @cherrypy.expose
     def test(self):
         return '''
-                <link type="text/css" href="/javascript/css/smoothness/jquery-ui-1.8.13.custom.css" rel="Stylesheet" />	
+                <link type="text/css" href="/javascript/css/smoothness/jquery-ui-1.8.13.custom.css" rel="Stylesheet" />
                 <script type='text/javascript' src='/javascript/jquery-1.12.3.min.js'></script>
                 <script type='text/javascript' src='/javascript/jquery.dataTables.js'></script>
                 <script type='text/javascript' src='/javascript/FixedHeader.js'></script>

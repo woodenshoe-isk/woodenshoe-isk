@@ -4,7 +4,14 @@ import tidylib
 import random
 import webtest
 import json
-import mx
+import re
+
+import datetime
+
+from tools.now import Now
+import tools.db
+
+from config import config
 
 from objects.author import Author
 from objects.book import Book
@@ -16,6 +23,7 @@ from inventoryserver.server import Noteboard
 from inventoryserver.server import Register
 from inventoryserver.server import Admin
 from inventoryserver.server import InventoryServer
+from inventoryserver.server import CSLogging
 
 from tools.run_sql_select import run_sql_select
 
@@ -106,8 +114,8 @@ class Test_Register(unittest.TestCase ):
         item={"department":"Book","isInventoried":"True","isTaxable":"True","booktitle":random_item.title.booktitle,"isbn":random_item.title.isbn,"bookID":random_item.id,"titleID":random_item.titleID,"ourprice":random_item.ourprice}
         result=self._my_app.post('/register/add_item_to_cart', {'item':json.dumps(item)})
         confirm=self._my_app.get('/register/get_cart')
-        print("confirm is", confirm)
-        print("test_add_inventoried", confirm.json[0]['items'][0])
+        print(("confirm is", confirm))
+        print(("test_add_inventoried", confirm.json[0]['items'][0]))
         confirm=confirm.json[0]['items'][0]
         self.assertEqual(item, confirm, '/register/add_item_to_cart returned error in function test')
 
@@ -178,10 +186,10 @@ class Test_Register(unittest.TestCase ):
                   JOIN book b1 
                     ON t1.id=b1.title_id 
                  GROUP BY t1.isbn 
-                HAVING COUNT(
+                 HAVING COUNT(
                         CASE WHEN b1.status='STOCK' 
                         THEN 1 END) = 0 
-                ORDER BY t1.booktitle) as subq1 
+                ORDER BY t1.isbn) as subq1
             ON t2.isbn=subq1.isbn'''
         results= run_sql_select( query_string )
         random_item= random.sample( results, 1 )[0]
@@ -196,6 +204,10 @@ class Test_Register(unittest.TestCase ):
     #def add_to_inventory(self, isbn="", quantity=1, title="", listprice='0.0', ourprice='0.0', authors="", publisher="", categories="", distributor="", location="", owner=etc.#default_owner, status="STOCK", tag="", kind=etc.#default_kind, type='', known_title=False):
     #def add_item_to_inventory(self, **kwargs):
     #def search_isbn(self, **args):
+    #def test_print_label
+    #def test_search_id
+    #def test_select_item_for_isbn_search
+
 class Test_Admin(unittest.TestCase ):
     def setUp(self):
         try:
@@ -206,6 +218,7 @@ class Test_Admin(unittest.TestCase ):
             self._my_app=webtest.TestApp(application)
         except:
             pass
+        self._conn = tools.db.connectionForURI(tools.db.conn())
         
     def test_admin_class_instantiates(self):
         self.assertIsInstance(self._my_class, Admin, "Admin class did not instantiate properly")
@@ -248,7 +261,7 @@ class Test_Admin(unittest.TestCase ):
     
     def test_get_next_unused_local_isbn(self):
         isbn = self._my_class.get_next_unused_local_isbn() 
-        self.assertRegexpMatches(isbn, '^199\d{10}$', "method get_next_unused_local_isbn doesn't return valid isbn")
+        self.assertRegex(isbn, '^199\d{10}$', "method get_next_unused_local_isbn doesn't return valid isbn")
 
     def test_add_to_inventory_unit(self):
         code, error=tidylib.tidy_document(self._my_class.add_to_inventory(), options={'show-errors':1,'show-warnings':0})
@@ -263,7 +276,7 @@ class Test_Admin(unittest.TestCase ):
         random_item=random.sample(list(Book.selectBy(status='STOCK')), 1)[0]
         fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
-        today=mx.DateTime.now().strftime('%Y-%m-%d')
+        today=Now.now.strftime('%Y-%m-%d')
         confirm=Book.selectBy(titleID=random_item.titleID).filter('inventoried_when=%s' % today)
         self.assertTrue(confirm, "test_add_item_to_inventory does not add item to inventory")
     
@@ -271,7 +284,7 @@ class Test_Admin(unittest.TestCase ):
         random_item=random.sample(list(Book.select()), 1)[0]
         fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
-        nowish=mx.DateTime.now().strftime('%Y-%m-%d %H:%M:%S')
+        nowish=Now.now.strftime('%Y-%m-%d %H:%M:%S')
         confirm=Transaction.select('date > %s' % nowish).filter('info RLIKE %s' % random_item.title.booktitle)
         self.assertTrue(confirm, "test_add_item_to_inventory does not add item to inventory")
         
@@ -279,7 +292,7 @@ class Test_Admin(unittest.TestCase ):
         random_item=random.sample(list(Book.selectBy(status='STOCK')), 1)[0]
         fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
-        today=mx.DateTime.now().strftime('%Y-%m-%d')
+        today=Now.now.strftime('%Y-%m-%d')
         confirm=Book.selectBy(titleID=random_item.titleID).filter('inventoried_when=%s' % today)
         self.assertTrue(confirm, "test_add_item_to_inventory does not add item to inventory")
     
@@ -287,7 +300,7 @@ class Test_Admin(unittest.TestCase ):
         random_item=random.sample(list(Book.select()), 1)[0]
         fakeargs=dict(title=random_item.title.booktitle, authors=random_item.title.authors_as_string(), publisher=random_item.title.publisher, distributor=random_item.distributor, owner='woodenshoe', listprice=random_item.listprice, ourprice=random_item.ourprice, isbn=random_item.title.isbn, categories=random_item.title.categories_as_string(), location=random_item.location, quantity=1, known_title=True, types=random_item.title.type, kind=random_item.title.kind.id, kind_name=random_item.title.kind.kindName)
         response=self._my_app.post('/admin/add_item_to_inventory', fakeargs)
-        nowish=mx.DateTime.now().strftime('%Y-%m-%d %H:%M:%S')
+        nowish=Now.now.strftime('%Y-%m-%d %H:%M:%S')
         confirm=Transaction.select('date > %s' % nowish).filter('info RLIKE %s' % random_item.title.booktitle)
         self.assertTrue(confirm, "test_add_item_to_inventory does not add item to inventory")
     
@@ -311,6 +324,32 @@ class Test_Admin(unittest.TestCase ):
         random_item=random.sample(list(Title.select()), 1)[0]
         response=self._my_app.get('/admin/search_isbn', {'isbn':random_item.isbn}).json[0]
         self.assertEqual(response['isbn'], random_item.isbn, "/admin/search_isbn doesn't return proper item for isbn10")
+
+    def test_print_label_unit(self):
+        random_item=random.sample(list(Title.select('WHERE title.isbn RLIKE "^978"')), 1)[0]
+        result=self._my_class.print_label(isbn=random_item.isbn, booktitle=random_item.booktitle, authorstring=random_item.authors_as_string())
+        self.assertIsNone(result, "print_label doesn't return")
+
+    def test_print_label_functional(self):
+        random_item=random.sample(list(Title.select('WHERE title.isbn RLIKE "^978"')), 1)[0]
+        response=self._my_app.post('/admin/print_label', {'isbn':random_item.isbn, 'booktitle':random_item.booktitle, 'authorstring':random_item.authors_as_string()})
+        print(response)
+        self.assertIsNone(response, "print_label doesn't return")
+
+    @unittest.skip("old method")
+    def test_search_id(self):
+        pass
+
+    def test_select_item_for_isbn_search_functional(self):
+        random_item=random.sample(list(Title.select()), 1)[0]
+        response=self._my_app.get('/admin/select_item_for_isbn_search', {'isbn':random_item.isbn})
+        code, error=tidylib.tidy_document(response.body, options={'show-errors':1, 'show-warnings':0})
+        self.assertFalse(error, "/admin/select_item_for_isbn_search did not return proper response")
+
+    def test_select_item_for_isbn_search_unit(self):
+        random_item=random.sample(list(Title.select()), 1)[0]
+        code, error=tidylib.tidy_document(self._my_class.select_item_for_isbn_search(isbn=random_item.isbn, title=random_item.booktitle, author=random_item.authors_as_string()),options={'show-errors':1,'show-warnings':0})
+        self.assertEqual(error, '', "InventoryServer.select_item_for_isbn_search did not return proper response")
 
 #class InventoryServer:
     #def __init__(self):
@@ -408,7 +447,7 @@ class Test_InventoryServer(unittest.TestCase ):
 
     @unittest.expectedFailure
     def test_search_unit(self):
-        code, error=tidylib.tidy_document(self._my_class.search(), options={'show-errors':1,'show-warnings':0})
+        code, error = tidylib.tidy_document(self._my_class.search(), options={'show-errors':1,'show-warnings':0})
         self.assertFalse(error, "method InventoryServer.search does not return valid html page")
         
     def test_search_functional(self):
@@ -418,7 +457,7 @@ class Test_InventoryServer(unittest.TestCase ):
 
     def test_search_returns_result(self):
         response=self._my_app.get('/search', {'title':'zinn'})
-        self.assertTrue(response.body.count('Zinn'), '/search did not return results')
+        self.assertTrue(response.body.count(b'Zinn'), '/search did not return results')
         
     @unittest.expectedFailure
     def test_titlelist_unit(self):
@@ -429,7 +468,48 @@ class Test_InventoryServer(unittest.TestCase ):
         response=self._my_app.get('/titlelist')
         code, error=tidylib.tidy_document(response.body, options={'show-errors':1, 'show-warnings':0})
         self.assertFalse(error, '/titlelist did not return valid html page')
-    
+ 
+class Test_CSLogging(unittest.TestCase):
+    def setUp(self):
+        try:
+            self._my_class=CSLogging()
+        except Exception as excp:
+                pass
+        try:
+            self._my_app=webtest.TestApp(application)
+        except:
+                pass
+
+    def test_logger_unit(self):
+        code, error=tidylib.tidy_document(self._my_class.logger(url='url_test', message='message_test', linenumber=0, browser='browser_test',), options={'show-errors':1,'show-warnings':0})
+        self.assertFalse(error, 'logger did not return valid html page')
+        now = datetime.datetime.now()
+        regex = r"^(?P<datetime>(?=\d)(?:(?!(?:1582(?:\.|-|\/)10(?:\.|-|\/)(?:0?[5-9]|1[0-4]))|(?:1752(?:\.|-|\/)0?9(?:\.|-|\/)(?:0?[3-9]|1[0-3])))(?=(?:(?!000[04]|(?:(?:1[^0-6]|[2468][^048]|[3579][^26])00))(?:(?:\d\d)(?:[02468][048]|[13579][26]))\D0?2\D29)|(?:\d{4}\D(?!(?:0?[2469]|11)\D31)(?!0?2(?:\.|-|\/)(?:29|30))))(\d{4})([-\/.])(0?\d|1[012])\3((?!00)[012]?\d|3[01])(?:$|(?=\x20\d)\x20))?((?:(?:0?[1-9]|1[012])(?::[0-5]\d){0,2}(?:\x20[aApP][mM]))|(?:[01]\d|2[0-3])(?::[0-5]\d){1,2}(?:[,.]\d+)?)?)(?P<remainder>.*(?P<success>(?:message_test)+).*$)"
+        regex = re.compile(regex, re.MULTILINE | re.UNICODE)
+        success = False
+        try:
+            csl = open(config.configuration.get('client_side_error_log'), 'r')
+            lines = csl.readlines()
+        except Exception as e:
+            raise e
+        else:
+            with open(config.configuration.get('client_side_error_log'), 'r'):
+                for lin1 in lines:
+                    print(lin1)
+                    match = next(regex.finditer(lin1))
+                    groups = match.groups()
+                    if not groups[7]:
+                        csl.write(lin1)
+                    else:
+                        success = True
+        self.assertTrue(success, 'client side logger did not write to log')
+
+    def test_logger_functional(self):
+        response=self._my_app.get('/logging/logger')
+        code, error=tidylib.tidy_document(response.body, options={'show-errors':1, 'show-warnings':0})
+        self.assertFalse(error, '/logging/logger did not return valid html page')
+
+
 def create_dynamic_method(reportItem):
     """just don't include `test` in the function name here, nose will try to
     run it"""
@@ -451,5 +531,40 @@ for reportItem in InventoryServer().reportlist:
 
 
 
+
         
         
+'''
+class Test_MenuData
+    def test_getMenuData
+    def test_setMenuData
+def test_jsonify_tool_callback
+class Test_Staffing
+    def test_calendar
+class Test_Admin
+    def test_print_label
+    def test_search_id
+    def test_select_item_for_isbn_search
+class Test_SpecialOrders
+    def test_special_order_list
+    def test_common
+    def test_special_order_edit
+    def test_special_order_item_edit
+    def test_select_special_order_search
+    def test_add_to_special_order
+    def test_set_special_order_item_status
+class Test_CSLogging
+    def test_logger
+class Test_InventoryServer
+    def test_loadUserByUsername
+    def test_checkLoginAndPassword
+    def test_common
+    def test_author_autocomplete
+    def test_title_autocomplete
+    def test_checkout
+    def test_addtocart
+    def test_transactions
+    def test_reports
+    def test_report
+    def test_test
+'''

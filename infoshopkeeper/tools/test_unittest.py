@@ -7,12 +7,7 @@ import isbnlib
 from objects.book import Book
 from objects.title import Title
 
-<<<<<<< HEAD
-from tools import inventory
-from tools import isbn
-=======
 from tools import inventory, now
->>>>>>> 3c6574259f98ad6784113632037b3c331ebecd19
 
 UNIT_TEST = True
 

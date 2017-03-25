@@ -94,9 +94,10 @@ class Images(SQLObjectWithFormGlue):
          #actual filename is <isbn>_<size>.<filetype>
          remote_url = getattr(self.title.images, '%sUrl'%size)
          dummy, filetype= os.path.splitext(remote_url)
+         print("filetype is ", filetype, file=sys.stderr)
          
          #if we have the image already, we get its url from our cache
-         image_filename = os.path.join(image_dir, isbn + '_' + size + '.' + filetype)
+         image_filename = os.path.join(image_dir, isbn + '_' + size + filetype)
          if os.path.exists(image_filename):
             relative_image_url = os.path.relpath(image_filename, image_directory_root)
             print("image file {url}".format(url=relative_image_url), file=sys.stderr)

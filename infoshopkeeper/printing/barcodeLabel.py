@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-from . import barcode_monkeypatch
+from printing import barcode_monkeypatch
 
 from reportlab import rl_config
 from reportlab.graphics import barcode, renderPDF
@@ -26,6 +26,7 @@ num_copies=1
 def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=0, num_copies=1):
     import sys
     print(type(isbn), type(isbn1), type(booktitle), file=sys.stderr)
+    print(isbn, booktitle, author, ourprice, listprice, numcopies, file=sys.stderr)
     rl_config.warnOnMissingFontGlyphs = 1
     try:
         registerFont(TTFont('Courier New', 'Courier New.ttf'))
@@ -56,10 +57,10 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
         title_array = []
         for i in booktitle.split(split_char):
            title_array.append(i)
-           if stringWidth(string.join(title_array, split_char), font, font_size) > max_width:
+           if stringWidth(split_char.join(title_array), font, font_size) > max_width:
                 title_array.pop()
                 break
-        return string.join(title_array, split_char)
+        return split_char.join(title_array)
     
     saleBanner=False
     if float(str(ourprice).strip('$')) < float(str(listprice).strip('$')):
@@ -85,7 +86,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     text_object.textLine(truncate_by_word(author, max_width=column_width, split_char=','))
     canvas1.drawText(text_object)
     
-    price_string='5999'
+    price_string='59999'
     if 0 <= float(str(ourprice).strip('$')) < 100:
         price_string='5' + ('%3.2f' % float(str(ourprice).strip('$'))).replace('.', '').zfill(4)[-4:]
         
@@ -103,7 +104,7 @@ def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=
     #print_command_string = string.Template(u"open $filename")
     pcs_sub = print_command_string.substitute({'filename':tmpfile.name, 'printer': configuration.get('label_printer_name'), 'num_copies':num_copies})
     result=subprocess.call( ' '.join(pcs_sub.split()), shell=True)
-    print>>sys.stderr, pcs_sub
+    print(pcs_sub, file=sys.stderr)
 #    tmpfile.unlink(tmpfile.name)
 
 def test_label():
