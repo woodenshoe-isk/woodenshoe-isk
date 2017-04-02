@@ -289,7 +289,7 @@ def search_by_keyword(authorOrTitle=''):
         #add filter clauses if they are called for
         where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (authorOrTitle.strip(), authorOrTitle.strip()))
         #AND all where clauses together
-        where_clause=' AND '.join(where_clause_list)
+        where_clause = AND(where_clause_list)
         titles=[]
          
         #do search. 
@@ -437,7 +437,7 @@ def search_by_keyword(authorOrTitle=''):
                     print(err)
                     yield
                  
-def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', num_copies=0, printlabel=False, special_orders=0):
+def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', labels_per_copy=1, printlabel=False, special_orders=0):
     print("GOT to addToInventory", file=sys.stderr)
     if not authors:
         authors = []
@@ -460,7 +460,7 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
 
         #print>>sys.stderr, title
          
-        title=title.encode('utf8', "backslashreplace")
+        title=title
         publisher=publisher
         #print>>sys.stderr, title, publisher
         known_title=Title(isbn=isbn, origIsbn=orig_isbn, booktitle=title, publisher=publisher, tag=" ", type=types, kindID=kind_id)
@@ -470,7 +470,7 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
         print(im, file=sys.stderr)
         
         for rawAuthor in authors:
-            author = rawAuthor.encode("utf8", "backslashreplace")
+            author = rawAuthor
             theAuthors = Author.selectBy(authorName=author)
             theAuthorsList = list(theAuthors)
             if len(theAuthorsList) == 1:
@@ -482,7 +482,7 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
                 # We should SQLDataCoherenceLost here
                 print("mmm... looks like you have multiple author of the sama name in your database...", file=sys.stderr)
         for category in categories:
-            Category(categoryName=category.encode("utf8", "backslashreplace"), title=known_title)
+            Category(categoryName=category, title=known_title)
     #the_locations=list(Location.select(Location.q.locationName==location))
     #location_id=1
     #if the_locations:
@@ -494,7 +494,7 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
     print("location_id is", location_id, file=sys.stderr)
     for i in range(int(quantity)): 
         print("book loop", file=sys.stderr)
-        b=Book(title=known_title, status=status, distributor=distributor.encode('ascii', "backslashreplace"), listprice=listprice, ourprice=ourprice, location=int(location_id), owner=owner.encode("utf8", "backslashreplace"), notes=notes.encode("utf8", "backslashreplace"), consignmentStatus="")
+        b=Book(title=known_title, status=status, distributor=distributor, listprice=listprice, ourprice=ourprice, location=int(location_id), owner=owner, notes=notes, consignmentStatus="")
 #               book_for_info.extracolumns()
 #~ #               for mp in extra_prices.keys():
 #                   setattr(book_for_info,string.replace(mp," ",""),extra_prices[mp])

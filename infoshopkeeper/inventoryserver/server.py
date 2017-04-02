@@ -22,6 +22,7 @@ from MySQLdb import escape_string
 import os.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
+import sqlobject
 from sqlobject.sqlbuilder import *
 from sqlobject.dberrors import DuplicateEntryError
 
@@ -277,7 +278,10 @@ class Register:
                             print("preparing to sell book", file=sys.stderr)
                             print("bookID is", item.get('bookID'), file=sys.stderr)
                             b=Book.selectBy(id=item['bookID'])[0]
-                            b.set(status='SOLD', sold_when=Now.now.strftime("%Y-%m-%d"))
+                            print(b, file=sys.stderr)
+                            b.set(status='SOLD')
+                            print("now is ", Now.now, file=sys.stderr)
+                            print(b, file=sys.stderr)
                             if item.get('special_order_selected'):
                                 tso=TitleSpecialOrder.get(item['special_order_selected']) 
                                 tso.orderStatus='SOLD'
@@ -289,7 +293,8 @@ class Register:
                             if 'booktitle' in item:
                                 infostring=infostring + ": " +item['booktitle']
                             print('About to do transaction', file=sys.stderr)
-                            Transaction(action='SALE', info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
+                            t = Transaction(action='SALE', info=infostring, owner=None, cashier=None, schedule=None, amount=item['ourprice'], cartID=cart.get('uuid', ''))
+                            print(t, file=sys.stderr)
                             cart['items'].remove(item)
                             print("Item removed from cart", file=sys.stderr)
                         except Exception as err:
@@ -316,7 +321,7 @@ class Register:
             except KeyError:
                 print('cart is now', cart, file=sys.stderr)
             if cart['items'].__len__()==0:
-                cherrypy.session['cart']={}
+                cherrypy.session.pop('cart', '')
             else:
                 cherrypy.session['cart']=cart
             #save cart 
