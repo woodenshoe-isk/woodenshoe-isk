@@ -20,7 +20,7 @@ import isbnlib
 import sys
 import re
 
-from sqlobject.sqlbuilder import Field, RLIKE, AND, LEFTJOINOn
+from sqlobject.sqlbuilder import Field, RLIKE, AND, OR, LEFTJOINOn
 from MySQLdb import escape_string
 
 amazon_license_key=configuration.get('amazon_license_key')
@@ -514,45 +514,45 @@ def searchInventory(sortby='booktitle', out_of_stock=False, **kwargs):
     clause_tables=['book', 'author', 'author_title', 'category', 'location']
     join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
     if 'the_kind' in kwargs:
-        where_clause_list .append("title.kind_id = '%s'" % kwargs['the_kind'])
+        where_clause_list .append(Title.q.kindID == kwargs['the_kind'])
     if 'the_location' in kwargs and len(the_location)>1:
-        where_clause_list .append("book.location_id = '%s'" % kwargs['the_location'])
+        where_clause_list .append(Book.q.locationID == kwargs['the_location'])
     if 'title' in kwargs:
-        where_clause_list.append("title.booktitle RLIKE '%s'" % kwargs['title'].strip())
+        where_clause_list.append(RLIKE(Title.q.booktitle, kwargs['title'].strip()))
     if 'publisher' in kwargs:
-        where_clause_list.append("title.publisher RLIKE '%s'" % kwargs['publisher'].strip())
+        where_clause_list.append(RLIKE(Title.q.publisher, kwargs['publisher'].strip()))
     if 'tag' in kwargs:
-        where_clause_list.append("title.tag RLIKE '%s'" % kwargs['tag'].strip())
+        where_clause_list.append(RLIKE(Title.q.tag, kwargs['tag'].strip()))
     if 'isbn' in kwargs:
         isbn, price=process_isbn(kwargs['isbn'])
-        where_clause_list.append("title.isbn RLIKE '%s'" % kwargs['isbn'])
+        where_clause_list.append(Title.q.isbn == kwargs['isbn'])
     if 'formatType' in kwargs:
-        where_clause_list.append("title.type RLIKE '%s'" % kwargs['formatType'].strip())
+        where_clause_list.append(Title.q.type == kwargs['formatType'].strip())
     if 'owner' in kwargs:
-        where_clause_list.append("book.owner RLIKE '%s'" % kwargs['owner'].strip())
+        where_clause_list.append(RLIKE(Book.q.owner, kwargs['owner'].strip()))
     if 'distributor' in kwargs:
-        where_clause_list.append("book.distributor RLIKE '%s'" % kwargs['distributor'].strip())
+        where_clause_list.append(RLIKE(Book.q.distributor, kwargs['distributor'].strip()))
     if 'inv_begin_date' in kwargs:
-        where_clause_list.append("book.inventoried_when >= '%s'" % kwargs['inv_begin_date'])
+        where_clause_list.append(Book.q.inventoried_when >= kwargs['inv_begin_date'])
     if 'inv_end_date' in kwargs:
-        where_clause_list.append("book.inventoried_when < '%s'" % kwargs['inv_end_date'])
+        where_clause_list.append(Book.q.inventoried_when < kwargs['inv_end_date'])
     if 'sold_begin_date' in kwargs:
-        where_clause_list.append("book.sold_when >= '%s'" % kwargs['sold_begin_date'])
+        where_clause_list.append(Book.q.sold_when >= kwargs['sold_begin_date'])
     if 'sold_end_date' in kwargs:
-        where_clause_list.append("book.sold_when < '%s'" % kwargs['sold_end_date'])
+        where_clause_list.append(Book.q.sold_when < kwargs['sold_end_date'])
     if 'author' in kwargs:
-        where_clause_list.append("author.author_name RLIKE '%s'" % kwargs['author'].strip())
+        where_clause_list.append(RLIKE(Author.q.authorName, kwargs['author'].strip()))
     if 'category' in kwargs:
-        where_clause_list.append("category.category_name RLIKE '%s'" % kwargs['category'].strip())
+        where_clause_list.append(RLIKE(Category.q.categoryName, kwargs['category'].strip()))
     if 'status' in kwargs:
-        where_clause_list.append("book.status = '%s'" % kwargs['status'].strip())
+        where_clause_list.append(Book.q.status == kwargs['status'].strip())
     if 'id' in kwargs:
-        where_clause_list.append("title.id=%s" % kwargs['id'])
+        where_clause_list.append(Title.q.id == kwargs['id'])
     if 'authorOrTitle' in kwargs:
-        where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (kwargs['authorOrTitle'].strip(), kwargs['authorOrTitle'].strip()))
+        where_clause_list.append(OR(RLIKE(Author.q.authorName, kwargs['authorOrTitle'].strip()), RLIKE(Title.q.booktitle, kwargs['authorOrTitle'].strip())))
 
-    where_clause=' AND '.join(where_clause_list)
-     
+    where_clause = AND(*where_clause_list)
+        
     #do search first. Note it currently doesnt let you search for every book in database, unless you use some sort of
     #trick like '1=1' for the where clause string, as the where clause string may not be blank
     titles=[]

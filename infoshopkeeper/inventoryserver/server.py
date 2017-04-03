@@ -247,7 +247,7 @@ class Register:
     @cherrypy.expose
     def void_cart(self):
         if 'cart' in cherrypy.session:
-            cherrypy.session['cart']={}
+            cherrypy.session.pop('cart')
         cherrypy.session.save()        
         hooks = cherrypy.serving.request.hooks['before_finalize']
         forbidden = cherrypy.lib.sessions.save
