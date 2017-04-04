@@ -12,3 +12,4 @@ class Author(SQLObjectWithFormGlue):
 
     authorName=UnicodeCol(default=None)
     title = RelatedJoin('Title', intermediateTable='author_title', createRelatedTable=True)
+    title_pivots = MultipleJoin('AuthorTitle')
