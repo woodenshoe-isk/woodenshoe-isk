@@ -1,37 +1,14 @@
 *.pyc
 *.pyo
 *~
-*.html
 *.bak
-*.config
-*.conf
 *.log
 *.log.*
-*.js
-*.html
-__init__.py
-etc.py
-test.py
-config.py
 infoshopkeeper/inventoryserver/sessions/*
-infoshopkeeper/inventoryserver/*Template.py
-infoshopkeeper/inventoryserver/*Template2.py
-infoshopkeeper/inventoryserver/Skeleton.py
-infoshopkeeper/inventoryserver/javascript/*
 .DS_Store
-infoshopkeeper/reports/untitled text
 infoshopkeeper/inventoryserver/images/*
-tmp.py
-
-infoshopkeeper-trac/
 
 *~
 *.bak
 *.log
 *.log.*
-
-infoshopkeeper/cherrypy_local.conf
-
-/infoshopkeeper/install_superpack.sh
-SpecialOrderItemEdit.py
-/infoshopkeeper/infoshopkeeper.xcworkspace/
