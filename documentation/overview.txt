@@ -1,0 +1,40 @@
+Infoshopkeeper2 is a rewrite of the original infoshopkeeper, written by John Duda
+for Red Emma's, an infoshop in Baltimore.
+
+The original infoshopkeeper can be found at the following URL: https://github.com/johm/infoshopkeeper
+
+Infoshopkeeper2 (ISK2) is a rewrite by Markos Kapes. The original Infoshopkeeper database was retained, but 
+the user interface was rewritten in Python 3. 
+
+ISK2 uses the following technology stack:
+    - CherryPy - a minimalist Python framework (http://cherrypy.org/)
+    - Cheetah3, a python-powered templating engine (http://cheetahtemplate.org/)
+    - the mysql database engine
+    - the apache2 http server
+
+For reliable access to the ISK2 from a remote location, the Wooden Shoe has been using a DNS from 
+noip.com: woodenshoebooks.ddns.net. This DNS will expire after a period of time unless the host 
+name is confirmed periodically. Currently, Tom Magee confirms it when he receives an email from
+no-ip.com.
+
+Tom Magee setup a service on the shoe's main computer called noip2. The service can be downloaded
+from no-ips website if we ever need to set it up again.
+
+THE APACHE WEB SERVER
+---------------------
+
+ISK2 is designed to run on a local computer, however since it is run as a web 
+app the admin obviously can setup remote access as well.
+
+At the Wooden Shoe,  
+Ideally, three sites configuration files are setup in apache2's sites-enabled directory:
+   - localhost.conf - for local access to ISK2
+      - The localhost.conf apache config file on the main server only allows access to the 127.0.0.1 
+        URL. For the vagrant setup, you have to update localhost.conf to be accessible from the 
+        vagrant host (usually 10.0.2.2)
+   - woodenshoebooks.ddns.net-ssl.conf - for remote access
+
+
+THINGS TO KNOW
+--------------
+
