@@ -56,7 +56,7 @@ Search the inventory
                     event.preventDefault();
                     var position = resultsTable.fnGetPosition(this); // getting the clicked row position
                     var titleID = resultsTable.fnGetData(position)[0];
-                    document.location.href= "http://" + document.location.host + '/titleedit?id=' + titleID;
+                    document.location.href= '/titleedit?id=' + titleID;
                     return false;
             });
         } else {
@@ -64,7 +64,7 @@ Search the inventory
                     event.preventDefault();
                     var position = resultsTable.fnGetPosition(this); // getting the clicked row position
                     var titleID = resultsTable.fnGetData(position)[0];
-                    document.location.href= "http://" + document.location.host + '/titleedit?id=' + titleID;
+                    document.location.href= '/titleedit?id=' + titleID;
                     return false;
             });
         }

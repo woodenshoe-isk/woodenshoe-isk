@@ -385,7 +385,8 @@ class Register:
         #only search for in stock books
         where_clause_list.append("book.status='STOCK'")
         clause_tables=['book', 'author', 'author_title', 'category', 'location']
-        join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+        join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+        #join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
 
         #add filter clauses if they are called for
         if the_kind:
@@ -406,8 +407,8 @@ class Register:
             where_clause_list.append("book.distributor RLIKE '%s'" % escape_string(distributor.strip()))
         if author:
             where_clause_list.append("author.author_name RLIKE '%s'" % escape_string(author.strip()))
-        if category:
-            where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
+        #if category:
+        #    where_clause_list.append("category.category_name RLIKE '%s'" % escape_string(category.strip()))
         if authorOrTitle:
             print("in authorOrTitle ", authorOrTitle, file=sys.stderr)
             where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (escape_string(authorOrTitle.strip()), escape_string(authorOrTitle.strip())))
@@ -1319,7 +1320,8 @@ class InventoryServer:
         #start building the filter list
         where_clause_list = []
         clause_tables=['book', 'author', 'author_title', 'category', 'location']
-        join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+        # join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+        join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
         if the_kind:
             where_clause_list .append("title.kind_id = '%s'" % escape_string(the_kind))
         if the_location and len(the_location)>1:

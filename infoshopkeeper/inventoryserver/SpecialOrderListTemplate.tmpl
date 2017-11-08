@@ -31,7 +31,7 @@ Special Orders
         //add button to make new special order
         jQuery('#new_special_order').button().click( function( event ) {
             event.preventDefault();
-            document.location.href= "http://" + document.location.host + '/specialorder/special_order_edit';
+            document.location.href= '/specialorder/special_order_edit';
         });
             
         //doubleclick adds item to cart, except for iOS/Android
@@ -40,14 +40,14 @@ Special Orders
             jQuery('#results_table tr').dblclick(function(event) {
                 event.preventDefault();
                 specialorderID=jQuery(this).children().last()[0].innerHTML;
-                document.location.href= "http://" + document.location.host + '/specialorder/special_order_edit?id=' + specialorderID;
+                document.location.href= '/specialorder/special_order_edit?id=' + specialorderID;
                 return false;
             });
         } else {
             jQuery('#results_table tr').click(function(event) {
                 event.preventDefault();
                 specialorderID=jQuery(this).children().last()[0].innerHTML;
-                document.location.href= "http://" + document.location.host + '/specialorder/special_order_edit?id=' + specialorderID;
+                document.location.href= '/specialorder/special_order_edit?id=' + specialorderID;
                 return false;
             });
         }

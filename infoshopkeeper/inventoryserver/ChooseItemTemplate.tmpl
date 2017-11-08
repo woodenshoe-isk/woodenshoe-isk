@@ -44,7 +44,7 @@ Search the inventory
                         if ( !isNaN(jQuery('#price_select option:selected').text()) ) {
                             price = jQuery('#price_select option:selected').text();
                             jQuery.get('/register/add_item_to_cart', {titleid:titleID, ourprice:price}, function() {
-                                    document.location.href= "http://" + document.location.host + '/register/build_cart';
+                                    document.location.href= '/register/build_cart';
                             });                                
                             jQuery(this).dialog("close");
                         }
@@ -80,7 +80,7 @@ Search the inventory
                 if (price_array.length==1) {
                     price = price_array[0];
                     jQuery.get('/register/add_item_to_cart', {titleid:titleID, ourprice:price}, function() {
-                        document.location.href= "http://" + document.location.host + '/register/build_cart';
+                        document.location.href= '/register/build_cart';
                     });
                 } else {
                     jQuery('#price_select').find('option:gt(0)').remove();
@@ -100,7 +100,7 @@ Search the inventory
                 if (price_array.length==1) {
                     price = price_array[0];
                     jQuery.get('/register/add_item_to_cart', {titleid:titleID, ourprice:price}, function() {
-                        document.location.href= "http://" + document.location.host + '/register/build_cart';
+                        document.location.href= '/register/build_cart';
                     });
                 } else {
                     jQuery('#price_select').find('option:gt(0)').remove();

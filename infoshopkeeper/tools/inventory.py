@@ -86,12 +86,13 @@ def lookup_by_isbn(number, forceUpdate=False):
             Format=the_titles[0].type.format()
             Kind=the_titles[0].kind.kindName
             orig_isbn=the_titles[0].origIsbn.format()
-            if the_titles[0].images:
-                 large_url = the_titles[0].images.largeUrl
-                 med_url = the_titles[0].images.medUrl
-                 small_url = the_titles[0].images.smallUrl
-            else:
-                 large_url = med_url = small_url = ''
+#            if the_titles[0].images:
+#                 large_url = the_titles[0].images.largeUrl
+#                 med_url = the_titles[0].images.medUrl
+#                 small_url = the_titles[0].images.smallUrl
+#            else:
+#                 large_url = med_url = small_url = ''
+            large_url = med_url = small_url = ''
 
             SpecialOrders=[tso.id for tso in Title.selectBy(isbn=isbn).throughTo.specialorder_pivots.filter(TitleSpecialOrder.q.orderStatus=='ON ORDER')]
             return {"title":ProductName,
@@ -511,8 +512,10 @@ def searchInventory(sortby='booktitle', out_of_stock=False, **kwargs):
     for td in to_delete:
         del kwargs[td]
     print(len(kwargs), file=sys.stderr)
-    clause_tables=['book', 'author', 'author_title', 'category', 'location']
-    join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+    #clause_tables=['book', 'author', 'author_title', 'category', 'location']
+    clause_tables=['book', 'author', 'author_title', 'location']
+    join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
+    #join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id'), LEFTJOINOn(None, Category, Category.q.titleID==Title.q.id), LEFTJOINOn(None, Location, Location.q.id==Book.q.locationID)]
     if 'the_kind' in kwargs:
         where_clause_list .append(Title.q.kindID == kwargs['the_kind'])
     if 'the_location' in kwargs and len(the_location)>1:

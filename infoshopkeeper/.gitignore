@@ -9,3 +9,5 @@
 infoshopkeeper/inventoryserver/index.py
 htmlcov/*
 .coverage
+._.DS_Store
+__pycache__

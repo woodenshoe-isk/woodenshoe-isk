@@ -61,7 +61,7 @@ Search the inventory
                 autofill_dict['printlabel']=true;
                 params=jQuery.param(autofill_dict);
                 console.log(params);
-                doc_url="http://" + document.location.host + '/admin/add_to_inventory?' + params;
+                doc_url= '/admin/add_to_inventory?' + params;
                 console.log(doc_url);
                 document.location.href= doc_url;         
             });

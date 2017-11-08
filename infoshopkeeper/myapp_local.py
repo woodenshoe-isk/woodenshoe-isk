@@ -16,7 +16,7 @@ from inventoryserver.server import Staffing
 from inventoryserver.server import Noteboard
 from inventoryserver.server import SpecialOrders
 
-cherrypy.config.update({'environment': 'embedded'})
+# cherrypy.config.update({'environment': 'embedded'})
 
 if cherrypy.__version__.startswith('3.0') and cherrypy.engine.state == 0:
     cherrypy.engine.start(blocking=False)
@@ -38,5 +38,5 @@ cherrypy_local_config_file=configuration.get('cherrypy_local_config_file')
 application = cherrypy.Application(root, script_name=None, config=cherrypy_local_config_file)
 
 if __name__ == '__main__':
-     cherrypy.quickstart(root)
+     cherrypy.quickstart(root, "/", cherrypy_local_config_file)
 
