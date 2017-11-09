@@ -1,0 +1,47 @@
+category
+images
+kind
+location
+music
+notes
+ranked_database
+ranked_inventory
+schema_migrations
+special_order
+status - one of three: DELETED, SOLD, STOCK
+
+transactionLog - records transaction of every sale
+
+
+title - Book titles
+author - the author name
+author_title - table that links authors to books
+
+book - Provides extra information about a title
+       contains foreign keys to location, title,
+       status, type
+
+book_inventory - appears a record is created in this table
+every time a book is inventoried.
+
+UNUSED TABLES
+-------------
+ISBN_to_be_entered
+type                     
+title_special_order
+cashbox
+cd
+cover
+
+
+If you want to know how many titles have been sold for a given title, run the following query:
+
+  select count(*) from book where title_id=15643 and status="SOLD";
+
+If you want to know how many titles are in stock, run the following query:
+
+  select count(*) from book where title_id=15643 and status="STOCK";
+
+When a book is sold, ONE of the STOCK records in the DB needs to be updated to SOLD;
+
+
