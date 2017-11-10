@@ -1,9 +1,7 @@
 from time import time, asctime, localtime, sleep
 import types, string
 
-from . import ecs
 from config.config import configuration 
-
 
 from objects.title import Title
 from objects.book import Book
@@ -16,6 +14,7 @@ from objects.title import Title
 from objects.title_special_order import TitleSpecialOrder
 
 import isbnlib
+import isbntools
 
 import sys
 import re
@@ -23,9 +22,6 @@ import re
 from sqlobject.sqlbuilder import Field, RLIKE, AND, OR, LEFTJOINOn
 from MySQLdb import escape_string
 
-amazon_license_key=configuration.get('amazon_license_key')
-amazon_secret_key=configuration.get('amazon_secret_key')
-amazon_associate_tag=configuration.get('amazon_associate_tag')
 default_kind=configuration.get('default_kind')
 
 def process_isbn(isbn):
@@ -49,10 +45,6 @@ def process_isbn(isbn):
         if len(isbn)==10:
             if isbnlib.is_isbn10(isbn):
                 isbn=isbnlib.to_isbn13(isbn)
-            else:
-                #Fix this -- shouldn't be here.
-                #investigate why amazon gives InvalidParameterCombination ins
-                raise ecs.InvalidParameterValue
     return isbn, price
 
 def lookup_by_isbn(number, forceUpdate=False):
@@ -111,168 +103,28 @@ def lookup_by_isbn(number, forceUpdate=False):
                 "known_title": known_title,
                 "special_order_pivots":SpecialOrders}
         else: #we don't have it yet
-            ##print "in isbn"
-            sleep(1) # so amazon doesn't get huffy 
-            ecs.setLicenseKey(amazon_license_key)
-            ecs.setSecretAccessKey(amazon_secret_key)
-            ecs.setAssociateTag(amazon_associate_tag)
-             
-            ##print "about to search", isbn, isbn[0]
-            amazonBooks=[]
-             
-            idType=''
-            if len(isbn)==12:
-                idType='UPC'
-            elif len(isbn)==13:
-                #if we are using an internal isbn
-                if isbn.startswith('199'):
-                    return []
-                #otherwise search on amazon.
-                elif isbn.startswith('978') or isbn.startswith('979'):
-                    idType='ISBN'
-                else:
-                    idType='EAN'
+
+            isbnlibbooks=[]
+            isbnlibbooks = isbnlib.meta(str(isbn))
             
-            print("idtype ",  idType, file=sys.stderr)
-            try:
-                    print( isbn, idType, file=sys.stderr)
-                    amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
-            except ecs.InvalidParameterValue:
-                pass
-            ##print pythonBooks
-            if amazonBooks:
-                result={}
-                authors=[]
-                categories=[]
-                
-                len_largest = 0
-                for book in amazonBooks:
-                    if len_largest < len(dir(book)):
-                        len_largest = len(dir(book))
-                        book_for_info = book 
-
-                for x in ['Author', 'Creator', 'Artist', 'Director']:
-                    if hasattr(book_for_info, x):
-                        if isinstance(getattr(book_for_info, x), type([])):
-                            authors.extend(getattr(book_for_info, x))
-                        else:
-                            authors.append(getattr(book_for_info, x))
-             
-
-                authors_as_string = ', '.join(authors)
-
-                categories_as_string =""
-             
-                # a bit more complicated of a tree walk than it needs be.
-                # set up to still have the option of category strings like "history -- us"
-                # switched to sets to quickly remove redundancies.
-                def parseBrowseNodes(bNodes):
-                    def parseBrowseNodesInner(item):
-                        bn=set()
-                        if hasattr(item, 'Name'):
-                            bn.add(item.Name)
-                        if hasattr(item, 'Ancestors'):
-                            ##print "hasansc"   
-                            for i in item.Ancestors:
-                                bn.update(parseBrowseNodesInner(i))
-                        if hasattr(item, 'Children'):
-                            for i in item.Children:
-                                bn.update(parseBrowseNodesInner(i))
-                                ##print "bn ", bn
-                        if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
-                            if hasattr(item, 'Name'):
-                                return set([item.Name])
-                            else:
-                                return set()
-                        return bn
-                    nodeslist=[parseBrowseNodesInner(i) for i in bNodes ]
-                    nodes=set()
-                    for n in nodeslist:
-                        nodes = nodes.union(n)
-                    return nodes
-
-
-                categories=parseBrowseNodes(book_for_info.BrowseNodes)
-                categories_as_string = ', '.join(categories)
-
-
-                ProductName=""
-                if hasattr(book_for_info, 'Title'):
-                    ProductName=book_for_info.Title
-
-                 
-                Manufacturer=""
-                if hasattr(book_for_info, 'Manufacturer'):
-                    Manufacturer=book_for_info.Manufacturer
-
-                ListPrice=""
-                if hasattr(book_for_info, 'ListPrice'):
-                    ListPrice=book_for_info.ListPrice.FormattedPrice.replace("$", '')
-
-                Format=''
-                if hasattr(book_for_info, "Binding"):
-                    Format=book_for_info.Binding
-             
-                Kind=''
-                if book_for_info.ProductGroup=='Book':
-                    Kind='books'
-                elif book_for_info.ProductGroup=='Music':
-                    Kind='music'
-                elif book_for_info.ProductGroup in ('DVD', 'Video'):
-                    Kind='film'
-                
-                if hasattr(book_for_info, "LargeImage"):
-                    large_url=book_for_info.LargeImage.URL
-                else:
-                    large_url=''
-
-                if hasattr(book_for_info, "MediumImage"):
-                    med_url=book_for_info.MediumImage.URL
-                else:
-                    med_url=''
-
-                if hasattr(book_for_info, "SmallImage"):
-                    small_url=book_for_info.SmallImage.URL
-                else:
-                    small_url=''
-             
-                return {"title":ProductName,
-                    "authors":authors,
-                    "authors_as_string":authors_as_string,
-                    "categories_as_string":categories_as_string,
-                    "list_price":ListPrice,
-                    "publisher":Manufacturer,
+            if isbnlibbooks:
+                return {"title":isbnlibbooks["Title"],
+                    "authors":isbnlibbooks["Authors"],
+                    "authors_as_string":','.join(isbnlibbooks["Authors"]),
+                    "categories_as_string":None,
+                    "list_price":0.00,
+                    "publisher":isbnlibbooks["Publisher"],
                     "isbn":isbn,
                     "orig_isbn":isbn,
-                    "large_url":large_url,
-                    "med_url":med_url,
-                    "small_url":small_url,
-                    "format":Format,
-                    "kind":Kind,
+                    "large_url":None,
+                    "med_url":None,
+                    "small_url":None,
+                    "format":None,
+                    "kind":'book',
                     "known_title": known_title,
-                    "special_orders": []}
+                    "special_orders": []}  
             else:
-                isbnlibbooks=[]
-                isbnlibbooks = isbnlib.meta('isbn')
-                
-                if isbnlibbooks:
-                    return {"title":isbnlibBooks.Title,
-                        "authors":isbnlibBooks.Authors,
-                        "authors_as_string":','.join(isbnlibBooks.Authors),
-                        "categories_as_string":None,
-                        "list_price":0.00,
-                        "publisher":isbnlibBooks.Publisher,
-                        "isbn":isbn,
-                        "orig_isbn":isbn,
-                        "large_url":None,
-                        "med_url":None,
-                        "small_url":None,
-                        "format":None,
-                        "kind":'book',
-                        "known_title": known_title,
-                        "special_orders": []}  
-                else:
-                    return []
+                return []
          
     
     else:
