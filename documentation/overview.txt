@@ -9,8 +9,24 @@ the user interface was rewritten in Python 3.
 ISK2 uses the following technology stack:
     - CherryPy - a minimalist Python framework (http://cherrypy.org/)
     - Cheetah3, a python-powered templating engine (http://cheetahtemplate.org/)
+    - sqlobject python 3 library for object relational mapping
+    - simplejson python 3 library
+    - isbnlib python 3 library
+    - tools python 3 library
+    - requests python 3 library
+    - pyAesCrypt python 3 library
+    - reportlab python 3 library
     - the mysql database engine
     - the apache2 http server
+
+ISK2 was designed to run on Ubuntu 16.04 and requires the following packages to be installed:
+    - python3
+    - python3-pip 
+    - mysql-server 
+    - python3-mysqldb 
+    - python3-dev 
+    - libxml2-dev 
+    - libxslt1-dev 
 
 For reliable access to the ISK2 from a remote location, the Wooden Shoe has been using a DNS from 
 noip.com: woodenshoebooks.ddns.net. This DNS will expire after a period of time unless the host 
@@ -35,6 +51,5 @@ Ideally, three sites configuration files are setup in apache2's sites-enabled di
    - woodenshoebooks.ddns.net-ssl.conf - for remote access
 
 
-THINGS TO KNOW
---------------
-
+The app uses the python sqlobject library to connect to each table as an object. Look in the "objects" 
+folder for all of the database classes that the app uses to access the database
