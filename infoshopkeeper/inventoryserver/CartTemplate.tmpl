@@ -22,10 +22,17 @@
         
         //jQuery('#void-toggle').button();
         
-        //make sure keypress goes to default dialog
+        /* If the user starts pressing numbers we pop up a dialog to allow them to 
+         * enter an ISBN which will in turn add a book to the cart
+         *
+         * Of course the user won't be manually typing in an ISBN, but a scan gun
+         * enters numbers in exactly like a keyboard, so this event is effectively
+         * written to react to the user entering in an ISBN via a scan gun
+         */
         jQuery(document).keydown(function(event) {
             if (  jQuery('input:focus').length == 0 ) {
                 //at some point switch to values -- keycodes are not good across all layouts 
+                // keycode 48 to 57 are the numerals 0 to 9 on the keyboard
                 if ((event.keyCode > 47) && (event.keyCode < 58 )) {
                     //event.preventDefault();
                     jQuery('#book').click();
@@ -45,7 +52,7 @@
                 var strLength = 0;
             }
 
-            if(event.which==39){
+            if(event.which==39){ // Right arrow key
                         //only go right if we really reached the end, that means the prev pos is the same then the current pos
                 if(charPos==strLength && (prevPos ==null || prevPos == charPos)){
                     jQuery(this).next().focus();
@@ -53,7 +60,7 @@
                 }else{
                     jQuery(this).data('prevPos',charPos);
                 }
-            } else if (event.which==37){
+            } else if (event.which==37){ // Left arrow key
             //only go left if we really reached the beginning, that means the prev pos is the same then the current pos
                 if(charPos == 0 && (prevPos ==null || prevPos == charPos)){
                     jQuery(this).prev().focus();
@@ -61,11 +68,11 @@
                 }else{
                     jQuery(this).data('prevPos',charPos);
                 }
-            } else if (event.which==40){
+            } else if (event.which==40){ // Down arrow key
                 jQuery(this).next().focus();
                 jQuery(this).data('prevPos',null);
 
-            }else if(event.which==38){
+            }else if(event.which==38){ // Up arrow key
                 jQuery(this).prev().focus();
                 jQuery(this).data('prevPos',null);
             }
