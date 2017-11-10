@@ -1,8 +1,8 @@
 dbname="infoshopkeeper2"
 dbhost="localhost"
 dbuser="woodenshoe"
-dbpass=""
-db_col_password='woodenshoebooks'
+dbpass="password"
+db_col_password='password'
 dbtype="mysql"
 
 cherrypy_config_file="/var/www/isk-production/infoshopkeeper/config/cherrypy.conf"
