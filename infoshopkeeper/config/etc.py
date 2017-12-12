@@ -15,9 +15,9 @@ should_log_SQLObject=True
 
 taxrate=0.08
 
-amazon_license_key="AKIAJZ33OWZPPGD5MCGA"
-amazon_secret_key="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"
-amazon_associate_tag="wwwwoodenshoe-20"
+amazon_license_key="AKIAI3Z6UMRYLYSDMEKQ"
+amazon_secret_key="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"
+amazon_associate_tag="woodenshoeboo-20"
 
 open_cash_drawer="echo 'DO SOMETHING TO MAKE A DRAWER OPEN HERE'"
 
