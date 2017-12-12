@@ -196,11 +196,11 @@
                             copies_multiplier =  jQuery('#labels_per_copy').val();
                             num_copies = jQuery('#quantity').val();
                             
-                            if (jQuery('#printlabel').is(':checked')) {
-                                total_copies = parseInt(copies_multiplier) * parseInt(num_copies);
-                                console.log('total_copies is ' + total_copies)
-                                jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(),'listprice':jQuery('#listprice').val(),'num_copies': total_copies});
-                            }                        
+                            //if (jQuery('#printlabel').is(':checked')) {
+                            //    total_copies = parseInt(copies_multiplier) * parseInt(num_copies);
+                            //    console.log('total_copies is ' + total_copies)
+                            //    jQuery.get('/admin/print_label', {'isbn': jQuery('#isbn').val(), 'booktitle':jQuery('#title').val(), 'authorstring': jQuery('#authors').val(),'ourprice':jQuery('#ourprice').val(),'listprice':jQuery('#listprice').val(),'num_copies': total_copies});
+                            //}                        
                             
                             //check on special orders
                             console.log(jQuery('#special_orders').val())
