@@ -29,8 +29,6 @@ amazon_associate_tag=configuration.get('amazon_associate_tag')
 default_kind=configuration.get('default_kind')
 
 def process_isbn(isbn):
-    traceback.print_stack()
-    print("in process_isbn. isbn is ", isbn, file=sys.stderr)
     #only strip quotes if wsr, reg, or consignment number, or none
     if re.match('^wsr|^reg|^\d{2,4}-\d{1,4}$|n/a|none', isbn, re.I):
         isbn = re.sub('[\'\"]', '', isbn)
