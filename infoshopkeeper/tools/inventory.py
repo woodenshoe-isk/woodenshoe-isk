@@ -29,16 +29,17 @@ amazon_associate_tag=configuration.get('amazon_associate_tag')
 default_kind=configuration.get('default_kind')
 
 def process_isbn(isbn):
+    traceback.print_stack()
     print("in process_isbn. isbn is ", isbn, file=sys.stderr)
     #only strip quotes if wsr, reg, or consignment number, or none
     if re.match('^wsr|^reg|^\d{2,4}-\d{1,4}$|n/a|none', isbn, re.I):
         isbn = re.sub('[\'\"]', '', isbn)
-        price = None
+        price = 0.00
     #strip quotes, dashes and whitespace. convert isbn10 to isbn13.
     #split isbn and price if it's an extended isbn
     else:
         isbn=re.sub('[\s\'\"\-]', '', isbn)
-        price = None
+        price = 0.00
         #note the checking for the first character of ean5 extension
         #if it's 5, it means price is in us dollars 0-99.99
         #otherwise, we need to do price ourself.
@@ -53,7 +54,6 @@ def process_isbn(isbn):
 
 def lookup_by_isbn(number, forceUpdate=False):
     isbn, price = process_isbn(number)
-    print(isbn, price, file=sys.stderr)
     if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
         #first we check our database
         titles =  Title.select(Title.q.isbn==isbn)
@@ -74,10 +74,13 @@ def lookup_by_isbn(number, forceUpdate=False):
                 ##print the_titles[0].categorys
                 categories = [x.categoryName.format() for x in the_titles[0].categorys] 
             categories_as_string = ', '.join(categories)
-            if len(the_titles[0].books) > 0:
-                ListPrice = max([x.listprice for x in the_titles[0].books])
+            if price == 0:
+                if len(the_titles[0].books) > 0:
+                    ListPrice = max([x.listprice for x in the_titles[0].books])
+                else:
+                    ListPrice = 0
             else:
-                ListPrice = 0
+                ListPrice = price 
             Manufacturer = the_titles[0].publisher.format()
             Format=the_titles[0].type.format()
             Kind=the_titles[0].kind.kindName
@@ -198,9 +201,12 @@ def lookup_by_isbn(number, forceUpdate=False):
                 if hasattr(book_for_info, 'Manufacturer'):
                     Manufacturer=book_for_info.Manufacturer
 
-                ListPrice=""
-                if hasattr(book_for_info, 'ListPrice'):
-                    ListPrice=book_for_info.ListPrice.FormattedPrice.replace("$", '')
+                if price == 0:
+                    ListPrice=""
+                    if hasattr(book_for_info, 'ListPrice'):
+                        ListPrice=book_for_info.ListPrice.FormattedPrice.replace("$", '')
+                else:
+                    ListPrice = price
 
                 Format=''
                 if hasattr(book_for_info, "Binding"):
@@ -255,7 +261,7 @@ def lookup_by_isbn(number, forceUpdate=False):
                         "authors":isbnlibbooks["Authors"],
                         "authors_as_string":','.join(isbnlibbooks["Authors"]),
                         "categories_as_string":None,
-                        "list_price":0.00,
+                        "list_price":price,
                         "publisher":isbnlibbooks["Publisher"],
                         "isbn":isbn,
                         "orig_isbn":isbn,
@@ -523,7 +529,7 @@ def searchInventory(sortby='booktitle', out_of_stock=False, **kwargs):
         where_clause_list.append(RLIKE(Title.q.tag, kwargs['tag'].strip()))
     if 'isbn' in kwargs:
         isbn, price=process_isbn(kwargs['isbn'])
-        where_clause_list.append(Title.q.isbn == kwargs['isbn'])
+        where_clause_list.append(Title.q.isbn == isbn)
     if 'formatType' in kwargs:
         where_clause_list.append(Title.q.type == kwargs['formatType'].strip())
     if 'owner' in kwargs:
