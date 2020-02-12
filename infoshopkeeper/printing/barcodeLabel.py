@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: future_fstrings -*-
+## -*- coding: UTF-8 -*-
 from printing import barcode_monkeypatch
 
 from reportlab import rl_config
@@ -10,6 +11,10 @@ from reportlab.pdfbase.pdfmetrics import registerFont
 from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.pdfgen import canvas
+
+import treepoem
+import plotly.express as px
+import plotly.graph_objects as go
 
 import tempfile
 import subprocess
@@ -24,6 +29,138 @@ ourprice=28
 num_copies=1
 
 def print_barcode_label(isbn='', booktitle='', author='', ourprice=0, listprice=0, num_copies=1):
+    #make sure it's a float
+    if type(ourprice) != float:
+        if type(ourprice) == str:
+            ourprice.strip('$')
+        ourprice = float(ourprice)
+    if type(listprice) != float:
+        if type(listprice) == str:
+            listprice.strip('$')
+        listprice = float(listprice)
+    
+    #we need a string of format '9780804732185 52295'
+    #in other words, isbn plus currency code (5 for USD) plus price
+    #ean5 only allows for prices up to 99.99.
+    #the convention in the protocol is to make the barcode price 99.99
+    if ourprice > 100:
+        ourprice1 = 99.99
+    else:
+        ourprice1 = ourprice
+    barcode_price_string = f'{ourprice1:05.2f}'.replace('.', '')
+    barcode_string = isbn + ' 5' + barcode_price_string
+    print(barcode_string)
+    ean13 = treepoem.generate_barcode('ean13', barcode_string, 
+                                      {'includetext':True, 'guardwhitespace':True,'height':1.75})
+    #convert to bitmap.
+    ean13 = ean13.convert('1')
+    font = "Monaco, monospaced"
+    
+    #add ean13+5 to canvas
+    fig = px.imshow(ean13,color_continuous_scale='gray')
+    fig.update_layout(coloraxis_showscale=False)
+
+    #we are using annotations for the title, author, etc info
+    annotations=[
+        go.layout.Annotation(
+            x= 0,
+            y= 1.18,
+            showarrow=False,
+            text=author,
+            name= 'author',
+            xref="paper",
+            yref="paper"
+        ),
+        go.layout.Annotation(
+            x=1,
+            y=1.18,
+            showarrow=False,
+            text= f'${ourprice:.2f}',
+            name='price',
+            xref="paper",
+            yref="paper"
+        ),
+        go.layout.Annotation(
+            x=0,
+            y=1.28,
+            showarrow=False,
+            text= booktitle,
+            name= 'title',
+            xref="paper",
+            yref="paper"
+        )
+    ]
+    
+    #only show sale banner if it's a sale book
+    if ourprice < listprice:
+        annotations.append(
+            go.layout.Annotation(
+                x=0,
+                y=1.40,
+                showarrow=False,
+                text= '<b> Sale!! Sale!! Sale!! Sale!!  <b>',
+                name = 'sale',
+                font=dict(
+                    color="white"
+                ),
+                bgcolor = 'black',
+                xref="paper",
+                yref="paper"
+            )
+        )
+        
+    fig.update_layout(
+        annotations = annotations
+    )
+    
+    fig.update_layout(
+        autosize = True,
+        font=dict(
+            family=font,
+            size=16,
+            color="black"
+        ),
+        #don't show grid (image is effectively a graph)
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False), 
+        #small margin l, r. top margin is space for title, etc.
+        margin=dict(l=2, r=2, t=75, b=0),
+        paper_bgcolor="white"
+    )
+
+    #assume 0.18 width to height.
+    #72 points per inch btw
+    #this is completely empirical-- replace with font metrics
+    char_width = 0.35 * 16
+    for ann in fig.layout.annotations:
+        #correct for potential overflow
+        if ann.name == 'title':
+            
+            num_char_allowed = (2.4 * 72) // char_width
+            booktitle1 = booktitle[:int(num_char_allowed)]
+            booktitle1 = booktitle1[:booktitle1.rfind(' ')]            
+            ann.text = booktitle1
+        if ann.name == 'author':
+            num_char_allowed = (2.4 * 72) // char_width
+            #leave room for for price
+            num_char_allowed = num_char_allowed - 8
+            author1 = author[:int(num_char_allowed)]
+            author1 = author1[:author1.rfind(',')]
+            ann.text = author1                    
+    fig.show(renderer='png', width=300, height=250)
+    label_img = fig.to_image(format='png', width=300, height=250)
+
+    print_string = f"lpr -P {configuration.get('label_printer_name')} -#  {num_copies} -o fit-to-page=ON  -o orientation-requested=3 -o media=Custom.62x62mm"
+    print(print_string)
+    with subprocess.Popen(print_string.split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=-1, shell=True) as process:
+        pass
+        #out, err = process.communicate(input=label_img)
+    os.unlink('/User/mkapes/fig1.png')
+    fig.write_image('/User/mkapes/fig1.png')
+    return fig, ean13
+    
+
+def print_barcode_label_old(isbn='', booktitle='', author='', ourprice=0, listprice=0, num_copies=1):
     import sys
     print(type(isbn), type(isbn1), type(booktitle), file=sys.stderr)
     print(isbn, booktitle, author, ourprice, listprice, num_copies, file=sys.stderr)

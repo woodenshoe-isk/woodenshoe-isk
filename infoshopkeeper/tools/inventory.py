@@ -2,7 +2,7 @@ from time import time, asctime, localtime, sleep
 import types, string
 
 from . import ecs
-from config.config import configuration 
+from config.config import configuration
 
 from objects.title import Title
 from objects.book import Book
@@ -17,12 +17,19 @@ from objects.title_special_order import TitleSpecialOrder
 import isbnlib
 import isbntools
 
+from amzsear import AmzSear
+
 import sys
 import re
+
+from urllib.error import HTTPError
+import requests
+from bs4 import BeautifulSoup
 
 from sqlobject.sqlbuilder import Field, RLIKE, AND, OR, LEFTJOINOn
 from MySQLdb import escape_string
 
+use_amazon_ecs = configuration.get('use_amazon_ecs')
 amazon_license_key=configuration.get('amazon_license_key')
 amazon_secret_key=configuration.get('amazon_secret_key')
 amazon_associate_tag=configuration.get('amazon_associate_tag')
@@ -70,7 +77,7 @@ def lookup_by_isbn(number, forceUpdate=False):
             if len(the_titles[0].categorys) > 0:
                 ##print len(the_titles[0].categorys)
                 ##print the_titles[0].categorys
-                categories = [x.categoryName.format() for x in the_titles[0].categorys] 
+                categories = [x.categoryName.format() for x in the_titles[0].categorys]
             categories_as_string = ', '.join(categories)
             if price == 0:
                 if len(the_titles[0].books) > 0:
@@ -78,7 +85,7 @@ def lookup_by_isbn(number, forceUpdate=False):
                 else:
                     ListPrice = 0
             else:
-                ListPrice = price 
+                ListPrice = price
             Manufacturer = the_titles[0].publisher.format()
             Format=the_titles[0].type.format()
             Kind=the_titles[0].kind.kindName
@@ -108,191 +115,219 @@ def lookup_by_isbn(number, forceUpdate=False):
                 "known_title": known_title,
                 "special_order_pivots":SpecialOrders}
         else: #we don't have it yet
-            sleep(1) # so amazon doesn't get huffy 
-            ecs.setLicenseKey(amazon_license_key)
-            ecs.setSecretAccessKey(amazon_secret_key)
-            ecs.setAssociateTag(amazon_associate_tag)
-             
-            ##print "about to search", isbn, isbn[0]
-            amazonBooks=[]
-             
-            idType=''
-            if len(isbn)==12:
-                idType='UPC'
-            elif len(isbn)==13:
-                #if we are using an internal isbn
-                if isbn.startswith('199'):
-                    return []
-                #otherwise search on amazon.
-                elif isbn.startswith('978') or isbn.startswith('979'):
-                    idType='ISBN'
+            #if we're using amazon ecs
+            if use_amazon_ecs:
+                sleep(1) # so amazon doesn't get huffy
+                ecs.setLicenseKey(amazon_license_key)
+                ecs.setSecretAccessKey(amazon_secret_key)
+                ecs.setAssociateTag(amazon_associate_tag)
+
+                ##print "about to search", isbn, isbn[0]
+                amazonBooks=[]
+
+                idType=''
+                if len(isbn)==12:
+                    idType='UPC'
+                elif len(isbn)==13:
+                    #if we are using an internal isbn
+                    if isbn.startswith('199'):
+                        return []
+                    #otherwise search on amazon.
+                    elif isbn.startswith('978') or isbn.startswith('979'):
+                        idType='ISBN'
+                    else:
+                        idType='EAN'
+                try:
+                    print("searching amazon for ", isbn, idType, file=sys.stderr)
+                    amazonProds = AmzSear(isbn)
+                    print(amazonProds, file=sys.stderr)
+                except (ecs.InvalidParameterValue, HTTPError):
+                    pass
+                if amazonProds:
+                    print(amazonProds, file=sys.stderr)
+                    # inner comprehension tests each prodict for price whose type is in formats
+                    # if we find a price which its key is in formats, then we return the coorresponding product
+                    format_list = ['Paperback', 'Mass Market Paperback', 'Hardcover', 'Perfect Paperback', 'Pamphlet', 'Plastic Comb', 'Spiral-bound', 'Print on Demand (Paperback)', 'DVD', 'Calendar', 'Board book', 'Audio Cassette', 'Cards', 'Audio CD', 'Diary', 'DVD-ROM', 'Library Binding', 'music', 'Vinyl', 'Health and Beauty', 'Hardback']
+                    prods = [x for x in amazonProds.values() if [dum for dum in x['prices'].keys() if dum in format_list]]
+
+                    for prod1 in prods:
+                        print(prod1, file=sys.stderr)
+                        price_dict = prod1['prices']
+                        listprice = max(price_dict.values())
+
+                        format = [k for k in format_list if k in price_dict]
+                        format = format[0]
+                        if not format:
+                            continue
+
+                        title = prod1['title']
+
+                        image_url = prod1['image_url']
+
+                        authors = [x.replace('by ', '')  for x in prod1['subtext'] if x.startswith('by ')]
+                        auth_list = [y.strip()  for a in [x.split(', ') for x in authors[0].split(' and ')] for y in a]
+                        # we assume any full name less than five characters is an abbreviation like 'Jr.'
+                        # so we add it back to the previous authorname
+                        abbrev_list = [i for i, x in enumerate(auth_list) if len(x)<5]
+                        for i in abbrev_list:
+                            auth_list[i-1:i+1] = [', '.join(auth_list[i-1:i+1])]
+
+                        return {"title": title,
+                            "authors": auth_list,
+                            "authors_as_string": ','.join(auth_list),
+                            "categories_as_string": '',
+                            "list_price": listprice,
+                            "publisher": '',
+                             "isbn": isbn,
+                             "orig_isbn": isbn,
+                            "large_url": image_url,
+                            "med_url": image_url,
+                            "small_url": image_url,
+                            "format": format,
+                            "kind": 'books',
+                            "known_title": known_title,
+                            "special_orders": []}
+
                 else:
-                    idType='EAN'
-            
-            print("idtype ",  idType, file=sys.stderr)
-            try:
-                print( isbn, idType, file=sys.stderr)
-                amazonBooks = ecs.ItemLookup(isbn,IdType= idType, SearchIndex="Books",ResponseGroup="ItemAttributes,BrowseNodes,Images")
-            except ecs.InvalidParameterValue:
-                pass
-            ##print pythonBooks
-            if amazonBooks:
-                result={}
-                authors=[]
-                categories=[]
-                
-                len_largest = 0
-                for book in amazonBooks:
-                    if len_largest < len(dir(book)):
-                        len_largest = len(dir(book))
-                        book_for_info = book 
+                    print("using isbnlib from ecs", file=sys.stderr)
+                    isbnlibbooks=[]
+                    try:
+                        isbnlibbooks = isbnlib.meta(str(isbn))
+                    except:
+                        pass
 
-                for x in ['Author', 'Creator', 'Artist', 'Director']:
-                    if hasattr(book_for_info, x):
-                        if isinstance(getattr(book_for_info, x), type([])):
-                            authors.extend(getattr(book_for_info, x))
-                        else:
-                            authors.append(getattr(book_for_info, x))
-             
+                    if isbnlibbooks:
+                        return {"title":isbnlibbooks["Title"],
+                            "authors":isbnlibbooks["Authors"],
+                            "authors_as_string":','.join(isbnlibbooks["Authors"]),
+                            "categories_as_string":None,
+                            "list_price":price,
+                            "publisher":isbnlibbooks["Publisher"],
+                            "isbn":isbn,
+                            "orig_isbn":isbn,
+                            "large_url":None,
+                            "med_url":None,
+                            "small_url":None,
+                            "format":None,
+                            "kind":'books',
+                            "known_title": known_title,
+                            "special_orders": []}
+                    else:
+                        return []
+            else:  #if we're scraping amazon
+                print("scraping amazon", file=sys.stderr)
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
+                }
+                amazon_url_template = 'https://www.amazon.com/dp/%s/ref=s9_acsd_hps_bw_c2_x_3_i?pf_rd_m=ATVPDKIKX0DER&pf_rd_s=merchandised-search-6&pf_rd_r=X5X8C98Q6ZHQRYVDWWEH&pf_rd_t=101&pf_rd_p=e86ff05d-db67-4abf-a3a1-67b87c968d22&pf_rd_i=4'
 
-                authors_as_string = ', '.join(authors)
+                if len(isbn)==13:
+                    if isbnlib.is_isbn13(isbn):
+                        isbn10=isbnlib.to_isbn10(isbn)
+                if 'isbn10' in locals():
+                    with requests.Session() as session:
+                        try:
+                            page_response = session.get(amazon_url_template % isbn10, headers=headers)
+                            page_content = BeautifulSoup(page_response.content, "lxml")
+                            title = page_content.select('#productTitle').pop().text
+                            popover_preload = [a.text for a in \
+                                            page_content.select('.author.notFaded .a-popover-preload a.a-link-normal')]
+                            author_name = [a.text for a in \
+                                            page_content.select('.author.notFaded a.a-link-normal') \
+                                            if a.text not in popover_preload]
+                            contributor_role = page_content.select('.contribution span')
+                            contributor_role = [re.findall('\w+', cr.text).pop() for cr in contributor_role]
+                            author_role = zip(author_name, contributor_role)
+                            listprice = page_content.select(".a-text-strike").pop().text
+                            book_edition = page_content.select("#bookEdition").pop().text
+                            image_url = page_content.select("#mainImageContainer > img").pop()
+                            image_url = image_url.get_attribute_list('data-a-dynamic-image')
+                            image_url = re.findall('http[^\"\"]*jpg', image_url.pop())
+                            product_details = page_content.select("#productDetailsTable ul:first-of-type")
+                            product_details1 = product_details[0].text.splitlines()
+                            category_items = page_content.select(".zg_hrsr_ladder a")
+                            category_items = [a.text for a in category_items]
+                            for pd in product_details1:
+                                if pd.endswith("pages"):
+                                    format , numpages = pd.split(':')
+                                    numpages = numpages.replace(" pages", "").strip()
+                                    continue
+                                if pd.startswith("Publisher: "):
+                                    matches = re.match("Publisher: ([^;^(]*)\s?([^(]*)?\W(.*)\W", pd).groups()
+                                    publisher = matches[0]
+                                    publication_date = matches[2]
+                                    continue
+                        except Exception as e:
+                            print(e, file=sys.stderr)
+                            print("using isbnlib from scraper", file=sys.stderr)
+                            isbnlibbooks=[]
+                            try:
+                                isbnlibbooks = isbnlib.meta(str(isbn))
+                            except:
+                                pass
 
-                categories_as_string =""
-             
-                # a bit more complicated of a tree walk than it needs be.
-                # set up to still have the option of category strings like "history -- us"
-                # switched to sets to quickly remove redundancies.
-                def parseBrowseNodes(bNodes):
-                    def parseBrowseNodesInner(item):
-                        bn=set()
-                        if hasattr(item, 'Name'):
-                            bn.add(item.Name)
-                        if hasattr(item, 'Ancestors'):
-                            ##print "hasansc"   
-                            for i in item.Ancestors:
-                                bn.update(parseBrowseNodesInner(i))
-                        if hasattr(item, 'Children'):
-                            for i in item.Children:
-                                bn.update(parseBrowseNodesInner(i))
-                                ##print "bn ", bn
-                        if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):   
-                            if hasattr(item, 'Name'):
-                                return set([item.Name])
+                            if isbnlibbooks:
+                                return {"title":isbnlibbooks["Title"],
+                                    "authors":isbnlibbooks["Authors"],
+                                    "authors_as_string":','.join(isbnlibbooks["Authors"]),
+                                    "categories_as_string":None,
+                                    "list_price":price,
+                                    "publisher":isbnlibbooks["Publisher"],
+                                    "isbn":isbn,
+                                    "orig_isbn":isbn,
+                                    "large_url":None,
+                                    "med_url":None,
+                                    "small_url":None,
+                                    "format":None,
+                                    "kind":'books',
+                                    "known_title": known_title,
+                                    "special_orders": []}
                             else:
-                                return set()
-                        return bn
-                    nodeslist=[parseBrowseNodesInner(i) for i in bNodes ]
-                    nodes=set()
-                    for n in nodeslist:
-                        nodes = nodes.union(n)
-                    return nodes
+                                return []
+                        else:
+                            return []
+                    if title:
+                        return {"title":title,
+                            "authors": author_name,
+                            "authors_as_string": ','.join(author_name),
+                            "categories_as_string": ','.join(category_items),
+                            "list_price":listprice,
+                            "publisher":publisher,
+                            "isbn":isbn,
+                            "orig_isbn":isbn,
+                            "large_url":image_url[0],
+                            "med_url":image_url[0],
+                            "small_url":image_url[0],
+                            "format":format,
+                            "kind":'books',
+                            "known_title": known_title,
+                            "special_orders": []}
+                    else:
+                        return []
 
 
-                categories=parseBrowseNodes(book_for_info.BrowseNodes)
-                categories_as_string = ', '.join(categories)
 
-                ProductName=""
-                if hasattr(book_for_info, 'Title'):
-                    ProductName=book_for_info.Title
-                 
-                Manufacturer=""
-                if hasattr(book_for_info, 'Manufacturer'):
-                    Manufacturer=book_for_info.Manufacturer
 
-                if price == 0:
-                    ListPrice=""
-                    if hasattr(book_for_info, 'ListPrice'):
-                        ListPrice=book_for_info.ListPrice.FormattedPrice.replace("$", '')
-                else:
-                    ListPrice = price
 
-                Format=''
-                if hasattr(book_for_info, "Binding"):
-                    Format=book_for_info.Binding
-             
-                Kind=''
-                if book_for_info.ProductGroup=='Book':
-                    Kind='books'
-                elif book_for_info.ProductGroup=='Music':
-                    Kind='music'
-                elif book_for_info.ProductGroup in ('DVD', 'Video'):
-                    Kind='film'
-                
-                if hasattr(book_for_info, "LargeImage"):
-                    large_url=book_for_info.LargeImage.URL
-                else:
-                    large_url=''
-
-                if hasattr(book_for_info, "MediumImage"):
-                    med_url=book_for_info.MediumImage.URL
-                else:
-                    med_url=''
-
-                if hasattr(book_for_info, "SmallImage"):
-                    small_url=book_for_info.SmallImage.URL
-                else:
-                    small_url=''
-             
-                return {"title":ProductName,
-                    "authors":authors,
-                    "authors_as_string":authors_as_string,
-                    "categories_as_string":categories_as_string,
-                    "list_price":ListPrice,
-                    "publisher":Manufacturer,
-                     "isbn":isbn,
-                     "orig_isbn":isbn,
-                    "large_url":large_url,
-                    "med_url":med_url,
-                    "small_url":small_url,
-                    "format":Format,
-                    "kind":Kind,
-                    "known_title": known_title,
-                    "special_orders": []}
-
-            else:
-
-                isbnlibbooks=[]
-                isbnlibbooks = isbnlib.meta(str(isbn))
-                
-                if isbnlibbooks:
-                    return {"title":isbnlibbooks["Title"],
-                        "authors":isbnlibbooks["Authors"],
-                        "authors_as_string":','.join(isbnlibbooks["Authors"]),
-                        "categories_as_string":None,
-                        "list_price":price,
-                        "publisher":isbnlibbooks["Publisher"],
-                        "isbn":isbn,
-                        "orig_isbn":isbn,
-                        "large_url":None,
-                        "med_url":None,
-                        "small_url":None,
-                        "format":None,
-                        "kind":'book',
-                        "known_title": known_title,
-                        "special_orders": []}  
-                else:
-                    return []
-         
-    
     else:
         return []
-     
+
 def search_by_keyword(authorOrTitle=''):
     def database_gen(authorOrTitle=''):
         titles=[]
-         
+
         #start out with the join clauses in the where clause list
         where_clause_list = []
         clause_tables=['book', 'author', 'author_title',]
         join_list=[LEFTJOINOn('title', 'book', 'book.title_id=title.id'), LEFTJOINOn(None, 'author_title', 'title.id=author_title.title_id'), LEFTJOINOn(None, 'author', 'author.id=author_title.author_id')]
-         
+
         #add filter clauses if they are called for
         where_clause_list.append("(author.author_name RLIKE '%s' OR title.booktitle RLIKE '%s')" % (authorOrTitle.strip(), authorOrTitle.strip()))
         #AND all where clauses together
         where_clause = AND(where_clause_list)
         titles=[]
-         
-        #do search. 
+
+        #do search.
         titles=Title.select( where_clause, join=join_list, clauseTables=clause_tables, distinct=True)
         for t1 in titles:
             yield { "title":t1.booktitle,
@@ -302,35 +337,35 @@ def search_by_keyword(authorOrTitle=''):
                     'list_price':t1.highest_price_book().ourprice,
                     'publisher':t1.publisher,
                     'isbn':t1.isbn,
-                    'format': t1.type, 
+                    'format': t1.type,
                     'kind':t1.kind.kindName,
                     'known_title':t1}
-                     
+
     def amazon_gen(authorOrTitle=''):
-        sleep(1) # so amazon doesn't get huffy 
+        sleep(1) # so amazon doesn't get huffy
         ecs.setLicenseKey(amazon_license_key)
         ecs.setSecretAccessKey(amazon_secret_key)
         ecs.setAssociateTag(amazon_associate_tag)
-         
+
         iter1 = ecs.ItemSearch(Keywords='python', SearchIndex='Books', ResponseGroup="ItemAttributes,BrowseNodes")
         #iter1=xrange(0,20)
         def process_data(data):
             result={}
             authors=[]
             categories=[]
-     
+
             for x in ['Author', 'Creator', 'Artist', 'Director']:
                 if hasattr(data, x):
                     if isinstance(getattr(data, x), type([])):
                         authors.extend(getattr(data, x))
                     else:
                         authors.append(getattr(data, x))
-             
-     
+
+
             authors_as_string = ', '.join(authors)
-     
+
             categories_as_string =""
-             
+
             # a bit more complicated of a tree walk than it needs be.
             # set up to still have the option of category strings like "history -- us"
             # switched to sets to quickly remove redundancies.
@@ -340,14 +375,14 @@ def search_by_keyword(authorOrTitle=''):
                     if hasattr(item, 'Name'):
                         bn.add(item.Name)
                     if hasattr(item, 'Ancestors'):
-                        ##print "hasansc"   
+                        ##print "hasansc"
                         for i in item.Ancestors:
                             bn.update(parseBrowseNodesInner(i))
                     if hasattr(item, 'Children'):
                         for i in item.Children:
                             bn.update(parseBrowseNodesInner(i))
                             ##print "bn ", bn
-                    if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):            
+                    if not (hasattr(item, 'Ancestors') or hasattr(item, 'Children')):
                         if hasattr(item, 'Name'):
                             return set([item.Name])
                         else:
@@ -358,35 +393,35 @@ def search_by_keyword(authorOrTitle=''):
                 for n in nodeslist:
                     nodes = nodes.union(n)
                 return nodes
-     
-     
+
+
             categories=parseBrowseNodes(data.BrowseNodes)
             categories_as_string = ', '.join(categories)
-     
-     
+
+
             ProductName=""
             if hasattr(data, 'Title'):
                 ProductName=data.Title
-     
-                 
+
+
             Manufacturer=""
             if hasattr(data, 'Manufacturer'):
                 Manufacturer=data.Manufacturer
-     
+
             ListPrice=""
             if hasattr(data, 'ListPrice'):
                 ListPrice=data.ListPrice.FormattedPrice.replace("$", '')
-     
+
             Format=''
             if hasattr(data, "Binding"):
                 Format=data.Binding
-             
+
             ISBN=''
             if hasattr(data, "ISBN"):
                 ISBN=data.ISBN
             elif hasattr(data, "EAN"):
                 ISBN=data.EAN
-                 
+
             Kind=''
             if data.ProductGroup=='Books':
                 Kind='books'
@@ -394,7 +429,7 @@ def search_by_keyword(authorOrTitle=''):
                 Kind='music'
             elif data.ProductGroup in ('DVD', 'Video'):
                 Kind='film'
-             
+
             return {"title": ProductName,
                 "authors": authors,
                 "authors_as_string": authors_as_string,
@@ -405,9 +440,9 @@ def search_by_keyword(authorOrTitle=''):
                 "format": Format,
                 "kind": Kind,
                 "known_title": None,}
-     
+
         return (process_data(a) for a in ecs.ItemSearch(Keywords=authorOrTitle, SearchIndex='Books', ResponseGroup="ItemAttributes,BrowseNodes"))
-     
+
     print('at ', authorOrTitle, file=sys.stderr)
     iter_array = [database_gen]
     #test if internet is up
@@ -417,7 +452,7 @@ def search_by_keyword(authorOrTitle=''):
         pass
     else:
         iter_array.append(amazon_gen)
-     
+
     print("iterarray ", iter_array, file=sys.stderr)
     for iter1 in iter_array:
         try:
@@ -436,7 +471,7 @@ def search_by_keyword(authorOrTitle=''):
                 except IOError as err:
                     print(err)
                     yield
-                 
+
 def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="",ourprice='',isbn="", orig_isbn='',categories=[],distributor="",location='', location_id='',large_url='',med_url='',small_url='',owner="",notes="",quantity=1,known_title=False,types='',kind_name="",kind=default_kind, extra_prices={}, tag='', labels_per_copy=1, printlabel=False, special_orders=0):
     print("GOT to addToInventory", file=sys.stderr)
     if not authors:
@@ -459,16 +494,16 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
         print('kind id is', kind_id, file=sys.stderr)
 
         #print>>sys.stderr, title
-         
+
         title=title
         publisher=publisher
         #print>>sys.stderr, title, publisher
         known_title=Title(isbn=isbn, origIsbn=orig_isbn, booktitle=title, publisher=publisher, tag=" ", type=types, kindID=kind_id)
         print(known_title, file=sys.stderr)
-        
+
         im=Images(titleID=known_title.id, largeUrl=large_url, medUrl=med_url, smallUrl=small_url)
         print(im, file=sys.stderr)
-        
+
         for rawAuthor in authors:
             author = rawAuthor
             theAuthors = Author.selectBy(authorName=author)
@@ -492,7 +527,7 @@ def addToInventory(title="",status="STOCK",authors=None,publisher="",listprice="
     print("about to enter book loop", file=sys.stderr)
     print("location is", location, file=sys.stderr)
     print("location_id is", location_id, file=sys.stderr)
-    for i in range(int(quantity)): 
+    for i in range(int(quantity)):
         print("book loop", file=sys.stderr)
         b=Book(title=known_title, status=status, distributor=distributor, listprice=listprice, ourprice=ourprice, location=int(location_id), owner=owner, notes=notes, consignmentStatus="")
 #               book_for_info.extracolumns()
@@ -554,7 +589,7 @@ def searchInventory(sortby='booktitle', out_of_stock=False, **kwargs):
         where_clause_list.append(OR(RLIKE(Author.q.authorName, kwargs['authorOrTitle'].strip()), RLIKE(Title.q.booktitle, kwargs['authorOrTitle'].strip())))
 
     where_clause = AND(*where_clause_list)
-        
+
     #do search first. Note it currently doesnt let you search for every book in database, unless you use some sort of
     #trick like '1=1' for the where clause string, as the where clause string may not be blank
     titles=[]
@@ -583,7 +618,7 @@ def getInventory(queryTerms):
     for k in keys:
         if type(queryTerms[k])==bytes:
             queryTerms[k] = queryTerms[k].decode('utf-8')
-     
+
     isbnSelect=""
     kindSelect=""
     statusSelect=""
@@ -599,16 +634,16 @@ def getInventory(queryTerms):
         try:
             kind_id=kind_map[queryTerms['kind']]
             kindSelect=Book.sqlrepr(AND(Field("book", "title_id")==Field("title", "id"), Field("title", "kind_id")==kind_id))
-        except: 
+        except:
             pass
-         
+
     if 'status' in keys:
         statusSelect=Book.sqlrepr(Field("book", "status")==queryTerms["status"])
-         
+
 
     if ('title' in keys) or ('authorName' in keys) or ('kind' in keys) or ('categoryName' in keys) or ('isbn' in keys):
-        clauseTables.append('title') 
-        #we are going to need to do a join 
+        clauseTables.append('title')
+        #we are going to need to do a join
 
         if 'title' in keys:
             titleSelect=Book.sqlrepr(AND(Field("book", "title_id")==Field("title", "id"), RLIKE(Field("title", "booktitle"), queryTerms["title"])))
@@ -621,11 +656,11 @@ def getInventory(queryTerms):
 
 
         if 'authorName' in keys:
-            #authorSelect="""book.title_id = title.id AND author.title_id=title.id AND author.author_name RLIKE %s""" % (Book.sqlrepr(queryTerms["authorName"]))    
+            #authorSelect="""book.title_id = title.id AND author.title_id=title.id AND author.author_name RLIKE %s""" % (Book.sqlrepr(queryTerms["authorName"]))
            authorSelect=Book.sqlrepr(AND(Field("book", "title_id")==Field("title", "id"), Field("author", "id")==Field("author_title", "author_id"), Field("title", "id")==Field("author_title", "title_id"), RLIKE(Field("author", "author_name"), queryTerms["authorName"])))
            clauseTables.append('author')
            clauseTables.append('author_title')
-         
+
         if 'categoryName' in keys:
             categorySelect="""book.title_id = title.id AND category.title_id=title.id AND category.category_name RLIKE %s""" % (Book.sqlrepr(queryTerms["categoryName"]))
             clauseTables.append('category')
@@ -646,7 +681,7 @@ def getInventory(queryTerms):
         authorString = ", ".join([a.authorName for a in book_for_info.title.author])
         categoryString = ", ".join([c.categoryName for c in book_for_info.title.categorys])
         results[i]=(theTitle.capitalize(),
-                    authorString, 
+                    authorString,
                     book_for_info.listprice  if book_for_info.listprice is not None else '',
                     book_for_info.title.publisher if book_for_info.title.publisher is not None else '',
                     book_for_info.status if book_for_info.status is not None else'',
@@ -659,10 +694,11 @@ def getInventory(queryTerms):
         categoryString,
         book_for_info.title.type if book_for_info.title.type is not None else '')
     return results
-    
+
 def updateItem(id):
     title = Title.get(id)
     title_info = lookup_by_isbn( title.orig_isbn, forceUpdate=True)
-        
-        
+
+
+
 

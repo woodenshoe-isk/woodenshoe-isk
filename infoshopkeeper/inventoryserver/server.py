@@ -615,7 +615,7 @@ class Admin:
             result = Title.select("title.isbn RLIKE \'^199[0-9]{10}$'").max(Title.q.isbn)
         except:
             result= '199' + '0'*10
-        result= str(int(result[:-1])+1) + isbnlib._core._check_digit13(str(int(result[:-1])+1))
+        result= str(int(result[:-1])+1) + isbnlib._core.check_digit13(str(int(result[:-1])+1))
         return result
 
     #wrapper to inventory.addToInventory to be added
