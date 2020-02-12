@@ -9,13 +9,14 @@ cherrypy_config_file="/my/install/of/infoshopkeeper/config/cherrypy.conf"
 title="INFOSHOPKEEPER: robot workers of the world unite!"
 taxrate=0.05
 
+use_amazon_ecs = False
 amazon_license_key="go get one at http://www.amazon.com/gp/aws/registration/registration-form.html/"
 
 # In case you generate sale report as pdf
 pdf_opening_program = "/usr/bin/evince"
 
 # Still in case you generate sale report as PDF
-# This will be part of the header. 
+# This will be part of the header.
 infoshopname="Red emmas ?"
 infoshopaddress="800 St-Paul St"
 
@@ -54,7 +55,7 @@ complex_items= (
     ("DVD", "dvd", "easyselect_button", {"color":"#3333ff","taxable":False}),
 )
 
-#The miscellaneous function buttons 
+#The miscellaneous function buttons
 #Name,ClassFactory,{Color,Page,Type}
 
 misc_functions = (
@@ -68,13 +69,13 @@ misc_functions = (
     ("Credit button", "cash", "credit", {"color":"#3333ff","page":"Cash","type":"book"} ),
     ("Manage consignment", "consignment", "pay", {"color":"#3333ff","page":"consignment","type":"book"} ),
     ("Pay out cash", "cash", "giveout", {"color":"#3333ff","page":"Cash","type":"book"} ),
-)    
+)
 
 # these are the possible status of a book
-bookStatus = ("STOCK", "BORROWABLE", "ARCHIVE", "STOLEN", "LOST", "RETURNED") 
+bookStatus = ("STOCK", "BORROWABLE", "ARCHIVE", "STOLEN", "LOST", "RETURNED")
 default_kind = "book"
 #these are expressed as a fraction of "list price", until you tell the
-#machine otherwise 
+#machine otherwise
 
 #you need to make the corresponding float column in the database on
 #the "book" table(remove the spaces in whatever name you use
@@ -91,11 +92,11 @@ default_owner="redemmas"
 # It is simply a two dimensionnal array of tuple,
 # the tuple being the name of the procedure to call
 # to draw the sizer (see the lasts procedures in
-# wxFrame1.py, the make_ ,,, _sizer being put 
+# wxFrame1.py, the make_ ,,, _sizer being put
 # afterward), the proportion argument, and if
 # wxGROW is set to true. After each columns of the
 # GUI, there's once again the proportion and wxGROW
-# flags defined for the row. 
+# flags defined for the row.
 #
 #
 # Check out wxFrame1.py => build_GUI for more info

@@ -1,4 +1,4 @@
-dbname="infoshopkeeper2"
+dbname="infoshopkeeper1"
 dbhost="localhost"
 dbuser="woodenshoe"
 dbpass="password"
@@ -15,9 +15,10 @@ should_log_SQLObject=True
 
 taxrate=0.08
 
-amazon_license_key="AKIAI3Z6UMRYLYSDMEKQ"
-amazon_secret_key="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"
-amazon_associate_tag="woodenshoeboo-20"
+use_amazon_ecs = False
+amazon_license_key="AKIAJPRDI7WTUC2HQS6A"
+amazon_secret_key="2tX+qzz+BYOhGZ1BVRV7hFfr06ExcjNE6vCcBTNsj"
+amazon_associate_tag="wwwwoodenshoe03-20"
 
 open_cash_drawer="echo 'DO SOMETHING TO MAKE A DRAWER OPEN HERE'"
 
