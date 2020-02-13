@@ -9,7 +9,7 @@ from config.config import configuration
 
 class SpecialOrder( SQLObjectWithFormGlue ):
     _passwd = configuration.get('db_col_password')
-    _aes = AES.new( _passwd + (16- (len(_passwd[0:16])))*'{', AES.MODE_CBC, '0'*16) 
+    _aes = AES.new( _passwd + (16- (len(_passwd[0:16])))*b'{', AES.MODE_CBC, b'0'*16) 
     
     class sqlmeta:
         fromDatabase=True
