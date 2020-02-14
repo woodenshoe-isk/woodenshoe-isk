@@ -1,8 +1,8 @@
-dbname="infoshopkeeper1"
+dbname="infoshopkeeper2"
 dbhost="localhost"
 dbuser="woodenshoe"
 dbpass="password"
-db_col_password='password'
+db_col_password=b'password'
 dbtype="mysql"
 
 cherrypy_config_file="/var/www/isk-production/infoshopkeeper/config/cherrypy.conf"
