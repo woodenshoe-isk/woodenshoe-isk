@@ -59,6 +59,7 @@ def process_isbn(isbn):
 
 def lookup_by_isbn(number, forceUpdate=False):
     isbn, price = process_isbn(number)
+    print("ISBN IS ", number, isbn, price)
     if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
         #first we check our database
         titles =  Title.select(Title.q.isbn==isbn)
@@ -283,9 +284,9 @@ def lookup_by_isbn(number, forceUpdate=False):
                                     "known_title": known_title,
                                     "special_orders": []}
                             else:
-                                return []
+                                return {}
                         else:
-                            return []
+                            return {}
                     if title:
                         return {"title":title,
                             "authors": author_name,
@@ -303,14 +304,9 @@ def lookup_by_isbn(number, forceUpdate=False):
                             "known_title": known_title,
                             "special_orders": []}
                     else:
-                        return []
-
-
-
-
-
+                        return {}
     else:
-        return []
+        return {}
 
 def search_by_keyword(authorOrTitle=''):
     def database_gen(authorOrTitle=''):
