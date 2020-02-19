@@ -42,8 +42,10 @@ def process_isbn(isbn):
     #strip quotes, dashes and whitespace. convert isbn10 to isbn13.
     #split isbn and price if it's an extended isbn
     else:
+        print(isbn)
         isbn=re.sub('[\s\'\"\-]', '', isbn)
         price = 0.00
+        print(isbn, price)
         #note the checking for the first character of ean5 extension
         #if it's 5, it means price is in us dollars 0-99.99
         #otherwise, we need to do price ourself.
@@ -51,9 +53,11 @@ def process_isbn(isbn):
             if isbn[-5] == '5':
                 price = float(isbn[-4:])/100
             isbn=isbn[:-5]
+        print(isbn, price)
         if len(isbn)==10:
             if isbnlib.is_isbn10(isbn):
                 isbn=isbnlib.to_isbn13(isbn)
+        print(isbn, price)
     return isbn, price
 
 def lookup_by_isbn(number, forceUpdate=False):
@@ -227,11 +231,15 @@ def lookup_by_isbn(number, forceUpdate=False):
                     isbn10 = None
                     if isbnlib.is_isbn13(isbn):
                         isbn10=isbnlib.to_isbn10(isbn)
+                    else:
+                        return {}
                 if 'isbn10':
                     with requests.Session() as session:
                         try:
+                            print("getting amazon")
                             page_response = session.get(amazon_url_template % isbn10, headers=headers)
                             page_content = BeautifulSoup(page_response.content, "lxml")
+                            print("got it")
                             title = page_content.select('#productTitle').pop().text
                             popover_preload = [a.text for a in \
                                             page_content.select('.author.notFaded .a-popover-preload a.a-link-normal')]
