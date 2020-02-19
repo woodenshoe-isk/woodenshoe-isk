@@ -58,7 +58,9 @@ def process_isbn(isbn):
 
 def lookup_by_isbn(number, forceUpdate=False):
     isbn, price = process_isbn(number)
-    print("ISBN IS ", number, isbn, price)
+    print("Looking up isbn", isbn, "with price", price)
+
+    #if length of isbn>0 and isn't "n/a" or "none"
     if (len(isbn)>0 and not re.match('^n(\s|/){0,1}a|none', isbn, re.I)):
         #first we check our database
         titles =  Title.select(Title.q.isbn==isbn)
@@ -213,18 +215,19 @@ def lookup_by_isbn(number, forceUpdate=False):
                             "known_title": known_title,
                             "special_orders": []}
                     else:
-                        return []
+                        return {}
             else:  #if we're scraping amazon
                 print("scraping amazon", file=sys.stderr)
                 headers = {
                     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
                 }
                 amazon_url_template = 'https://www.amazon.com/dp/%s/ref=s9_acsd_hps_bw_c2_x_3_i?pf_rd_m=ATVPDKIKX0DER&pf_rd_s=merchandised-search-6&pf_rd_r=X5X8C98Q6ZHQRYVDWWEH&pf_rd_t=101&pf_rd_p=e86ff05d-db67-4abf-a3a1-67b87c968d22&pf_rd_i=4'
-
+                amazon_url_template2 = 'http://www.amazon.com/dp/%s/'
                 if len(isbn)==13:
+                    isbn10 = None
                     if isbnlib.is_isbn13(isbn):
                         isbn10=isbnlib.to_isbn10(isbn)
-                if 'isbn10' in locals():
+                if 'isbn10':
                     with requests.Session() as session:
                         try:
                             page_response = session.get(amazon_url_template % isbn10, headers=headers)
@@ -238,25 +241,59 @@ def lookup_by_isbn(number, forceUpdate=False):
                             contributor_role = page_content.select('.contribution span')
                             contributor_role = [re.findall('\w+', cr.text).pop() for cr in contributor_role]
                             author_role = zip(author_name, contributor_role)
-                            listprice = page_content.select(".a-text-strike").pop().text
-                            book_edition = page_content.select("#bookEdition").pop().text
-                            image_url = page_content.select("#mainImageContainer > img").pop()
-                            image_url = image_url.get_attribute_list('data-a-dynamic-image')
-                            image_url = re.findall('http[^\"\"]*jpg', image_url.pop())
-                            product_details = page_content.select("#productDetailsTable ul:first-of-type")
-                            product_details1 = product_details[0].text.splitlines()
+                            try:
+                                listprice = page_content.select(".a-text-strike").pop().text
+                            except IndexError as e:
+                                print("using bookfinder4u")
+                                if 'listprice' not in locals():
+                                    with requests.Session() as session:
+                                        bookfinderurl = "http://www.bookfinder4u.com/IsbnSearch.aspx?isbn='%s'&mode=direct"
+                                        url = bookfinderurl % isbn
+                                        try:
+                                            page_response2 = session.get(url, headers=headers)
+                                            page_content2 = BeautifulSoup(page_response2.content, "lxml")
+                                        except Exception as e:
+                                            print(e)
+                                            listprice = 0.0
+                                        else:
+                                            try:
+                                                matches = re.search('List\sprice:\s(\w{2,4})\s(\d+(.\d+)?)', page_content2.text, re.I)
+                                                if matches:
+                                                    listprice = matches.groups()[1]
+                                                else:
+                                                    listprice = 0.00
+                                            except Exception as e:
+                                                print(e)
+                                                listprice = 0.00
+                            try:
+                                book_edition = page_content.select("#bookEdition").pop().text
+                            except:
+                                book_edition = ''
+                            try:
+                                matches = re.findall("(?<=imageGalleryData'\s:\s\[)\{.*?\}", page_content.contents[1].text)
+                                image_url_dict = eval(matches[0])
+                            except Exception as e:
+                                print(e)
+                                image_url_dict = {'mainUrl':'', 'thumbUrl':''}
                             category_items = page_content.select(".zg_hrsr_ladder a")
                             category_items = [a.text for a in category_items]
+                            product_details = page_content.select("#productDetailsTable")    #ul:first-of-type")
+                            product_details1 = product_details.pop().text.splitlines()
+                            quit_flag = 0
                             for pd in product_details1:
                                 if pd.endswith("pages"):
                                     format , numpages = pd.split(':')
                                     numpages = numpages.replace(" pages", "").strip()
+                                    quit_flag += 1
                                     continue
                                 if pd.startswith("Publisher: "):
                                     matches = re.match("Publisher: ([^;^(]*)\s?([^(]*)?\W(.*)\W", pd).groups()
                                     publisher = matches[0]
                                     publication_date = matches[2]
+                                    quit_flag += 1
                                     continue
+                                if quit_flag == 2:
+                                    break
                         except Exception as e:
                             print(e, file=sys.stderr)
                             print("using isbnlib from scraper", file=sys.stderr)
@@ -285,25 +322,24 @@ def lookup_by_isbn(number, forceUpdate=False):
                             else:
                                 return {}
                         else:
-                            return {}
-                    if title:
-                        return {"title":title,
-                            "authors": author_name,
-                            "authors_as_string": ','.join(author_name),
-                            "categories_as_string": ','.join(category_items),
-                            "list_price":listprice,
-                            "publisher":publisher,
-                            "isbn":isbn,
-                            "orig_isbn":isbn,
-                            "large_url":image_url[0],
-                            "med_url":image_url[0],
-                            "small_url":image_url[0],
-                            "format":format,
-                            "kind":'books',
-                            "known_title": known_title,
-                            "special_orders": []}
-                    else:
-                        return {}
+                            if title:
+                                return {"title":title,
+                                    "authors": author_name,
+                                    "authors_as_string": ','.join(author_name),
+                                    "categories_as_string": ','.join(category_items),
+                                    "list_price":listprice,
+                                    "publisher":publisher,
+                                    "isbn":isbn,
+                                    "orig_isbn":isbn,
+                                    "large_url":image_url_dict['mainUrl'],
+                                    "med_url":image_url_dict['mainUrl'],
+                                    "small_url":image_url_dict['thumbUrl'],
+                                    "format":format,
+                                    "kind":'books',
+                                    "known_title": known_title,
+                                    "special_orders": []}
+                            else:
+                                return {}
     else:
         return {}
 
