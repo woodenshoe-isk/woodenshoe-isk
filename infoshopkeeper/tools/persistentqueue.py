@@ -1,21 +1,23 @@
 ## {{{ http://code.activestate.com/recipes/501154/ (r2)
-#made to operate as a regular queue 12/1/2011 Markos Kapes
+# made to operate as a regular queue 12/1/2011 Markos Kapes
 
 import os, sys, marshal, glob, _thread
 from time import time as _time
+
 try:
     import threading as _threading
 except ImportError:
     import dummy_threading as _threading
-    
+
 # Filename used for index files, must not contain numbers
-INDEX_FILENAME = 'index'
+INDEX_FILENAME = "index"
 
 # Exception thrown when calling get() on an empty queue
-class Empty(Exception):  pass
+class Empty(Exception):
+    pass
+
 
 class PersistentQueue:
-
     def __init__(self, name, cache_size=512, marshal=marshal, maxsize=0):
         """
         Create a persistent FIFO queue named by the 'name' argument.
@@ -26,7 +28,7 @@ class PersistentQueue:
         may specify an alternative serialize module/instance with the
         optional 'marshal' argument (e.g. pickle).
         """
-        assert cache_size > 0, 'Cache size must be larger than 0'
+        assert cache_size > 0, "Cache size must be larger than 0"
         self.name = name
         try:
             os.makedirs(name)
@@ -34,42 +36,44 @@ class PersistentQueue:
             pass
         self.cache_size = cache_size
         self.marshal = marshal
-        self.maxsize=maxsize
+        self.maxsize = maxsize
         self.index_file = os.path.join(name, INDEX_FILENAME)
-        self.temp_file = os.path.join(name, 'tempfile')        
+        self.temp_file = os.path.join(name, "tempfile")
         self.mutex = _threading.RLock()
         self.not_full = _threading.Condition(self.mutex)
         self.not_empty = _threading.Condition(self.mutex)
         self.all_tasks_done = _threading.Condition(self.mutex)
         self._init_index()
-        self.unfinished_tasks = self.qsize()   
+        self.unfinished_tasks = self.qsize()
 
     def _init_index(self):
         if not os.path.exists(self.name):
             os.mkdir(self.name)
         if os.path.exists(self.index_file):
             index_file = open(self.index_file)
-            self.head, self.tail = [int(x) for x in index_file.read().split(' ')]
+            self.head, self.tail = [int(x) for x in index_file.read().split(" ")]
             index_file.close()
         else:
             self.head, self.tail = 0, 1
+
         def _load_cache(cache, num):
             name = os.path.join(self.name, str(num))
-            mode = 'rb+' if os.path.exists(name) else 'wb+'
+            mode = "rb+" if os.path.exists(name) else "wb+"
             cachefile = open(name, mode)
             try:
                 setattr(self, cache, self.marshal.load(cachefile))
             except EOFError:
                 setattr(self, cache, [])
             cachefile.close()
-        _load_cache('put_cache', self.tail)
-        _load_cache('get_cache', self.head)
-        assert self.head < self.tail, 'Head not less than tail'
+
+        _load_cache("put_cache", self.tail)
+        _load_cache("get_cache", self.head)
+        assert self.head < self.tail, "Head not less than tail"
 
     def _sync_index(self):
-        assert self.head < self.tail, 'Head not less than tail'
-        index_file = open(self.temp_file, 'w')
-        index_file.write('%d %d' % (self.head, self.tail))
+        assert self.head < self.tail, "Head not less than tail"
+        index_file = open(self.temp_file, "w")
+        index_file.write("%d %d" % (self.head, self.tail))
         index_file.close()
         if os.path.exists(self.index_file):
             os.remove(self.index_file)
@@ -77,7 +81,7 @@ class PersistentQueue:
 
     def _split(self):
         put_file = os.path.join(self.name, str(self.tail))
-        temp_file = open(self.temp_file, 'wb')
+        temp_file = open(self.temp_file, "wb")
         self.marshal.dump(self.put_cache, temp_file)
         temp_file.close()
         if os.path.exists(put_file):
@@ -87,7 +91,7 @@ class PersistentQueue:
         if len(self.put_cache) <= self.cache_size:
             self.put_cache = []
         else:
-            self.put_cache = self.put_cache[:self.cache_size]
+            self.put_cache = self.put_cache[: self.cache_size]
         self._sync_index()
 
     def _join(self):
@@ -96,7 +100,7 @@ class PersistentQueue:
             self.get_cache = self.put_cache
             self.put_cache = []
         else:
-            get_file = open(os.path.join(self.name, str(current)), 'rb')
+            get_file = open(os.path.join(self.name, str(current)), "rb")
             self.get_cache = self.marshal.load(get_file)
             get_file.close()
             try:
@@ -109,17 +113,17 @@ class PersistentQueue:
         self._sync_index()
 
     def _sync(self):
-        self.unfinished_tasks=self.qsize()
+        self.unfinished_tasks = self.qsize()
         self._sync_index()
         get_file = os.path.join(self.name, str(self.head))
-        temp_file = open(self.temp_file, 'wb')
+        temp_file = open(self.temp_file, "wb")
         self.marshal.dump(self.get_cache, temp_file)
         temp_file.close()
         if os.path.exists(get_file):
             os.remove(get_file)
         os.rename(self.temp_file, get_file)
         put_file = os.path.join(self.name, str(self.tail))
-        temp_file = open(self.temp_file, 'wb')
+        temp_file = open(self.temp_file, "wb")
         self.marshal.dump(self.put_cache, temp_file)
         temp_file.close()
         if os.path.exists(put_file):
@@ -132,8 +136,11 @@ class PersistentQueue:
         """
         self.mutex.acquire()
         try:
-            return (((self.tail-self.head)-1)*self.cache_size) + \
-                    len(self.put_cache) + len(self.get_cache)
+            return (
+                (((self.tail - self.head) - 1) * self.cache_size)
+                + len(self.put_cache)
+                + len(self.get_cache)
+            )
         finally:
             self.mutex.release()
 
@@ -197,12 +204,12 @@ class PersistentQueue:
             unfinished = self.unfinished_tasks - 1
             if unfinished <= 0:
                 if unfinished < 0:
-                    raise ValueError('task_done() called too many times')
+                    raise ValueError("task_done() called too many times")
                 self.all_tasks_done.notify_all()
             self.unfinished_tasks = unfinished
         finally:
             self._sync()
-            print((self.unfinished_tasks, self.qsize())) 
+            print((self.unfinished_tasks, self.qsize()))
             self.all_tasks_done.release()
 
     def join(self):
@@ -216,7 +223,9 @@ class PersistentQueue:
         """
         self.all_tasks_done.acquire()
         try:
-            print(("qsize: ", self.qsize(), " unfinished_tasks: ", self.unfinished_tasks))
+            print(
+                ("qsize: ", self.qsize(), " unfinished_tasks: ", self.unfinished_tasks)
+            )
             while self.unfinished_tasks:
                 self.all_tasks_done.wait()
         finally:
@@ -347,52 +356,72 @@ class PersistentQueue:
         finally:
             self.mutex.release()
 
+
 ## Tests
 if __name__ == "__main__":
     ELEMENTS = 1000
-    p = PersistentQueue('test', 10)
-    print(('Enqueueing %d items, cache size = %d to queue of size: %s' % (ELEMENTS, p.cache_size, p.qsize())))
+    p = PersistentQueue("test", 10)
+    print(
+        (
+            "Enqueueing %d items, cache size = %d to queue of size: %s"
+            % (ELEMENTS, p.cache_size, p.qsize())
+        )
+    )
     for a in range(ELEMENTS):
         p.put(str(a))
-    print(('%d elements enqueued' % ELEMENTS))
+    print(("%d elements enqueued" % ELEMENTS))
     p.sync()
-    print(('Queue length (using __len__):', len(p)))
-    print(('Dequeueing %d items' % (ELEMENTS/2)))
-    for a in range(ELEMENTS/2):
+    print(("Queue length (using __len__):", len(p)))
+    print(("Dequeueing %d items" % (ELEMENTS / 2)))
+    for a in range(ELEMENTS / 2):
         p.get()
-    print(('Queue length (using __len__):', len(p)))
-    print(('Dequeueing %d items' % (ELEMENTS/2)))
-    for a in range(ELEMENTS/2):
+    print(("Queue length (using __len__):", len(p)))
+    print(("Dequeueing %d items" % (ELEMENTS / 2)))
+    for a in range(ELEMENTS / 2):
         p.get()
-    print(('Queue length (using __len__):', len(p)))
+    print(("Queue length (using __len__):", len(p)))
     p.sync()
-    print(('Enqueueing %d items, cache size = %d to queue of size: %s' % (ELEMENTS, p.cache_size, p.qsize())))
+    print(
+        (
+            "Enqueueing %d items, cache size = %d to queue of size: %s"
+            % (ELEMENTS, p.cache_size, p.qsize())
+        )
+    )
     for a in range(ELEMENTS):
         p.put(str(a))
-    print(('%d elements enqueued' % ELEMENTS))
+    print(("%d elements enqueued" % ELEMENTS))
     p.sync()
-    
-    class MyThread( _threading.Thread ):
+
+    class MyThread(_threading.Thread):
         def __init__(self, queue):
             _threading.Thread.__init__(self)
-            self.queue=queue
-    
+            self.queue = queue
+
         def run(self):
-            print(('Queue length (using __len__):', len(self.queue)))
-            isDone=False
+            print(("Queue length (using __len__):", len(self.queue)))
+            isDone = False
             while not isDone:
                 self.queue.get()
                 self.queue.task_done()
                 print((self.queue.qsize(), len(self.queue)))
                 if self.queue.qsize() == 0:
-                    isDone=True
-                
-            print(('Queue length (using __len__):', len(self.queue), self.queue.__len__()))
-    
-    t=MyThread(p)
+                    isDone = True
+
+            print(
+                ("Queue length (using __len__):", len(self.queue), self.queue.__len__())
+            )
+
+    t = MyThread(p)
     t.setDaemon(True)
     t.start()
-    print(("joining queue of size: ", p.qsize(), " and unfinished tasks size: ", p.unfinished_tasks))
+    print(
+        (
+            "joining queue of size: ",
+            p.qsize(),
+            " and unfinished tasks size: ",
+            p.unfinished_tasks,
+        )
+    )
     p.join()
     print("p.finished")
     p.close()

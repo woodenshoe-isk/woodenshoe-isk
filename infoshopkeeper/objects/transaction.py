@@ -10,22 +10,22 @@ import datetime
 from tools import db
 from tools.now import Now
 
-#_connection = db.SQLObjconnect()
+# _connection = db.SQLObjconnect()
+
 
 class Transaction(SQLObjectWithFormGlue):
-
     class sqlmeta:
-        from_database=True
+        from_database = True
         table = "transactionLog"
-    
-    action=StringCol()
-    amount=FloatCol()
-    date=DateTimeCol(default=Now.now)
-    schedule = StringCol()            
-    info =StringCol()
-    owner =StringCol()
-    cashier =StringCol()
-    cartID=StringCol()
+
+    action = StringCol()
+    amount = FloatCol()
+    date = DateTimeCol(default=Now.now)
+    schedule = StringCol()
+    info = StringCol()
+    owner = StringCol()
+    cashier = StringCol()
+    cartID = StringCol()
 
     def object_to_form(self):
         self.extracolumns()
@@ -38,7 +38,7 @@ class Transaction(SQLObjectWithFormGlue):
         pass
 
     def get_info(self):
-        if 'tostring' in dir(self.info):
+        if "tostring" in dir(self.info):
             return self.info.tostring()
         else:
             return self.info

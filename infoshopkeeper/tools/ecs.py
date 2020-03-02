@@ -128,7 +128,7 @@ How To Use This Module
 __author__ = "Kun Xi < kunxi@kunxi.org >"
 __version__ = "0.2.0"
 __license__ = "Python Software Foundation"
-__docformat__ = 'restructuredtext'
+__docformat__ = "restructuredtext"
 
 
 import os, urllib.request, urllib.parse, urllib.error, string, hmac, hashlib
@@ -147,32 +147,33 @@ OPTIONS = {}
 
 
 __supportedLocales = {
-        None: "ecs.amazonaws.com",  
-        "us": "ecs.amazonaws.com",  
-        "uk": "ecs.amazonaws.co.uk", 
-        "de": "ecs.amazonaws.de", 
-        "jp": "ecs.amazonaws.jp", 
-        "fr": "ecs.amazonaws.fr", 
-        "ca": "ecs.amazonaws.ca", 
-    }
+    None: "ecs.amazonaws.com",
+    "us": "ecs.amazonaws.com",
+    "uk": "ecs.amazonaws.co.uk",
+    "de": "ecs.amazonaws.de",
+    "jp": "ecs.amazonaws.jp",
+    "fr": "ecs.amazonaws.fr",
+    "ca": "ecs.amazonaws.ca",
+}
 
 __licenseKeys = (
     (lambda key: key),
-    (lambda key: LICENSE_KEY), 
-    (lambda key: os.environ.get('AWS_LICENSE_KEY', None))
-   )
+    (lambda key: LICENSE_KEY),
+    (lambda key: os.environ.get("AWS_LICENSE_KEY", None)),
+)
 
 __secretAccessKeys = (
     (lambda key: key),
-    (lambda key: SECRET_ACCESS_KEY), 
-    (lambda key: os.environ.get('AWS_SECRET_ACCESS_KEY', None))
-   )
+    (lambda key: SECRET_ACCESS_KEY),
+    (lambda key: os.environ.get("AWS_SECRET_ACCESS_KEY", None)),
+)
 
 __associateTags = (
     (lambda key: key),
-    (lambda key: ASSOCIATE_TAG), 
-    (lambda key: os.environ.get('AWS_ASSOCIATE_TAG', None))
-   )
+    (lambda key: ASSOCIATE_TAG),
+    (lambda key: os.environ.get("AWS_ASSOCIATE_TAG", None)),
+)
+
 
 def __buildPlugins():
     """
@@ -192,15 +193,32 @@ def __buildPlugins():
     automatically
     """
     rgh = {
-        'CustomerFull': ('CustomerInfo', 'CustomerLists', 'CustomerReviews'), 
-        'Large': ('Accessories', 'BrowseNodes', 'ListmaniaLists', 'Medium', 'Offers', 'Reviews', 'Similarities', 'Tracks'),
-        'ListFull': ('ListInfo', 'ListItems'),
-        'ListInfo': ('ListMinimum', ),
-        'ListItems': ('ListMinimum', ),
-        'Medium': ('EditorialReview', 'Images', 'ItemAttributes', 'OfferSummary', 'Request', 'SalesRank', 'Small'),
-        'OfferFull': ('Offers',),
-        'Offers': ('OfferSummary',),
-        'Variations': ('VariationMinimum', 'VariationSummary')
+        "CustomerFull": ("CustomerInfo", "CustomerLists", "CustomerReviews"),
+        "Large": (
+            "Accessories",
+            "BrowseNodes",
+            "ListmaniaLists",
+            "Medium",
+            "Offers",
+            "Reviews",
+            "Similarities",
+            "Tracks",
+        ),
+        "ListFull": ("ListInfo", "ListItems"),
+        "ListInfo": ("ListMinimum",),
+        "ListItems": ("ListMinimum",),
+        "Medium": (
+            "EditorialReview",
+            "Images",
+            "ItemAttributes",
+            "OfferSummary",
+            "Request",
+            "SalesRank",
+            "Small",
+        ),
+        "OfferFull": ("Offers",),
+        "Offers": ("OfferSummary",),
+        "Variations": ("VariationMinimum", "VariationSummary"),
     }
 
     """
@@ -222,99 +240,268 @@ def __buildPlugins():
 
     """
     rgps = {
-        'Accessories': ((), (), ('Accessories',), ('Accessory',), {}), 
-        'AlternateVersions': ((), (), (), (), {}), 
-        'BrowseNodeInfo': ((), (), ('Children', 'Ancestors'), ('BrowseNode',), {}),
-        'BrowseNodes': ((), (), ('Children', 'Ancestors', 'BrowseNodes'), ('BrowseNode',), {}),
-        'Cart': ((), (), (), (), {}),
-        'CartNewReleases': ((), (), (), (), {}),
-        'CartTopSellers': ((), (), (), (), {}),
-        'CartSimilarities': ((), (), (), (), {}),
-        'Collections': ((), (), (), (), {}),
-        'CustomerFull': ((), (), (), (), {}),
-        'CustomerInfo': ((), (), ('Customers',), ('Customer',), {}),
-        'CustomerLists': ((), (), ('Customers',), ('Customer',), {}),
-        'CustomerReviews': ((), (), ('Customers',), ('Customer', 'Review'), 
-            {'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
-        'EditorialReview': ((), (), ('EditorialReviews',), ('EditorialReview',), {}),
-        'Help': ((), (), ('RequiredParameters', 'AvailableParameters',
-            'DefaultResponseGroups', 'AvailableResponseGroups'),
-             ('Parameter', 'ResponseGroup'), {}),
-        'Images': ((), (), ('ImageSets',), ('ImageSet',), {}),
-        'ItemAttributes': ((), ('ItemAttributes',), (), (), {}),
-        'ItemIds': ((), (), (), (), {}),
-        'ItemLookup.Small': ((), ('ItemAttributes',), (), ('Item',), 
-            {'Items': ('OfferPage', 'TotalResults', 10) }),
-        'ItemSearch.Small': ((), ('ItemAttributes',), (), ('Item',), 
-            {'Items': ('ItemPage', 'TotalResults', 10) }),
-        'Large': ((), (), (), (), {}),
-        'ListFull': ((), (), (), (), {}),
-        'ListInfo': ((), (), (), (), {}),
-        'ListItems': ((), (), (), (), {}),
-        'ListmaniaLists': ((), (), ('ListmaniaLists', ), ('ListmaniaList',), {}),
-        'ListMinimum': ((), (), (), (), {}),
-        'Medium': ((), (), (), (), {}),
-        'MerchantItemAttributes': ((), (), (), (), {}),
-        'NewReleases': ((), (), ('NewReleases',), ('NewRelease',), {}),
-        'OfferFull': ((), (), (), (), {}),
-        'OfferListings': ((), (), (), (), {}),
-        'Offers': ((), (), (), ('Offer',), {'Offers': ('OfferPage', 'TotalOffers', 10)}),
-        'OfferSummary': ((), (), (), (), {}),
-        'Request': (('Request',), (), (), (), {}),
-        'Reviews': ((), (), (), ('Review',), 
-            {'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
-        'SalesRank': ((), (), (), (), {}),
-        'SearchBins': ((), (), ('SearchBinSets',), ('SearchBinSet',), {}),
-        'Seller': ((), (), (), (), {}),
-        'SellerListing': ((), (), (), (), {}),
-        'Similarities': ((), (), ('SimilarProducts',), ('SimilarProduct',), {}),
-        'Small': ((), (), (), (), {}),
-        'Subjects': ((), (), ('Subjects',), ('Subject',), {}),
-        'TopSellers': ((), (), ('TopSellers',), ('TopSeller',), {}),
-        'Tracks': ((), (), (), (), {}),
-        'TransactionDetails': ((), (), ('Transactions', 'TransactionItems', 'Shipments'),
-            ('Transaction', 'TransactionItem', 'Shipment'), {}),
-        'Variations': ((), (), (), (), {}),
-        'VariationMinimum': ((), (), ('Variations',), ('Variation',), {}),
-        'VariationImages': ((), (), (), (), {}),
-        'VariationSummary':((), (), (), (), {}) 
+        "Accessories": ((), (), ("Accessories",), ("Accessory",), {}),
+        "AlternateVersions": ((), (), (), (), {}),
+        "BrowseNodeInfo": ((), (), ("Children", "Ancestors"), ("BrowseNode",), {}),
+        "BrowseNodes": (
+            (),
+            (),
+            ("Children", "Ancestors", "BrowseNodes"),
+            ("BrowseNode",),
+            {},
+        ),
+        "Cart": ((), (), (), (), {}),
+        "CartNewReleases": ((), (), (), (), {}),
+        "CartTopSellers": ((), (), (), (), {}),
+        "CartSimilarities": ((), (), (), (), {}),
+        "Collections": ((), (), (), (), {}),
+        "CustomerFull": ((), (), (), (), {}),
+        "CustomerInfo": ((), (), ("Customers",), ("Customer",), {}),
+        "CustomerLists": ((), (), ("Customers",), ("Customer",), {}),
+        "CustomerReviews": (
+            (),
+            (),
+            ("Customers",),
+            ("Customer", "Review"),
+            {"CustomerReviews": ("ReviewPage", "TotalReviews", 10)},
+        ),
+        "EditorialReview": ((), (), ("EditorialReviews",), ("EditorialReview",), {}),
+        "Help": (
+            (),
+            (),
+            (
+                "RequiredParameters",
+                "AvailableParameters",
+                "DefaultResponseGroups",
+                "AvailableResponseGroups",
+            ),
+            ("Parameter", "ResponseGroup"),
+            {},
+        ),
+        "Images": ((), (), ("ImageSets",), ("ImageSet",), {}),
+        "ItemAttributes": ((), ("ItemAttributes",), (), (), {}),
+        "ItemIds": ((), (), (), (), {}),
+        "ItemLookup.Small": (
+            (),
+            ("ItemAttributes",),
+            (),
+            ("Item",),
+            {"Items": ("OfferPage", "TotalResults", 10)},
+        ),
+        "ItemSearch.Small": (
+            (),
+            ("ItemAttributes",),
+            (),
+            ("Item",),
+            {"Items": ("ItemPage", "TotalResults", 10)},
+        ),
+        "Large": ((), (), (), (), {}),
+        "ListFull": ((), (), (), (), {}),
+        "ListInfo": ((), (), (), (), {}),
+        "ListItems": ((), (), (), (), {}),
+        "ListmaniaLists": ((), (), ("ListmaniaLists",), ("ListmaniaList",), {}),
+        "ListMinimum": ((), (), (), (), {}),
+        "Medium": ((), (), (), (), {}),
+        "MerchantItemAttributes": ((), (), (), (), {}),
+        "NewReleases": ((), (), ("NewReleases",), ("NewRelease",), {}),
+        "OfferFull": ((), (), (), (), {}),
+        "OfferListings": ((), (), (), (), {}),
+        "Offers": (
+            (),
+            (),
+            (),
+            ("Offer",),
+            {"Offers": ("OfferPage", "TotalOffers", 10)},
+        ),
+        "OfferSummary": ((), (), (), (), {}),
+        "Request": (("Request",), (), (), (), {}),
+        "Reviews": (
+            (),
+            (),
+            (),
+            ("Review",),
+            {"CustomerReviews": ("ReviewPage", "TotalReviews", 10)},
+        ),
+        "SalesRank": ((), (), (), (), {}),
+        "SearchBins": ((), (), ("SearchBinSets",), ("SearchBinSet",), {}),
+        "Seller": ((), (), (), (), {}),
+        "SellerListing": ((), (), (), (), {}),
+        "Similarities": ((), (), ("SimilarProducts",), ("SimilarProduct",), {}),
+        "Small": ((), (), (), (), {}),
+        "Subjects": ((), (), ("Subjects",), ("Subject",), {}),
+        "TopSellers": ((), (), ("TopSellers",), ("TopSeller",), {}),
+        "Tracks": ((), (), (), (), {}),
+        "TransactionDetails": (
+            (),
+            (),
+            ("Transactions", "TransactionItems", "Shipments"),
+            ("Transaction", "TransactionItem", "Shipment"),
+            {},
+        ),
+        "Variations": ((), (), (), (), {}),
+        "VariationMinimum": ((), (), ("Variations",), ("Variation",), {}),
+        "VariationImages": ((), (), (), (), {}),
+        "VariationSummary": ((), (), (), (), {}),
     }
-    
+
     """
     Operation=>ResponseGroups 
     """
     orgs = {
-        'BrowseNodeLookup': ('Request', 'BrowseNodeInfo', 'NewReleases', 'TopSellers'),
-        'CartAdd': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'NewReleases'),
-        'CartClear': ('Cart', 'Request'),
-        'CartCreate': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'CartNewReleases'),
-        'CartGet': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'CartNewReleases'),
-        'CartModify': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'CartNewReleases'),
-        'CustomerContentLookup': ('Request', 'CustomerInfo', 'CustomerReviews', 'CustomerLists', 'CustomerFull'),
-        'CustomerContentSearch': ('Request', 'CustomerInfo'),
-        'Help': ('Request', 'Help'),
-        'ItemLookup': ('Request', 'ItemLookup.Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationImages', 'VariationMinimum', 'Variations', 'VariationSummary'),
-        'ItemSearch': ('Request', 'ItemSearch.Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'SearchBins', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
-        'ListLookup': ('Request', 'ListInfo', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListFull', 'ListItems', 'ListmaniaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
-        'ListSearch': ('Request', 'ListInfo', 'ListMinimum'),
-        'SellerListingLookup': ('Request', 'SellerListing'),
-        'SellerListingSearch': ('Request', 'SellerListing'),
-        'SellerLookup': ('Request', 'Seller'),
-        'SimilarityLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
-        'TransactionLookup':('Request', 'TransactionDetails') 
+        "BrowseNodeLookup": ("Request", "BrowseNodeInfo", "NewReleases", "TopSellers"),
+        "CartAdd": (
+            "Cart",
+            "Request",
+            "CartSimilarities",
+            "CartTopSellers",
+            "NewReleases",
+        ),
+        "CartClear": ("Cart", "Request"),
+        "CartCreate": (
+            "Cart",
+            "Request",
+            "CartSimilarities",
+            "CartTopSellers",
+            "CartNewReleases",
+        ),
+        "CartGet": (
+            "Cart",
+            "Request",
+            "CartSimilarities",
+            "CartTopSellers",
+            "CartNewReleases",
+        ),
+        "CartModify": (
+            "Cart",
+            "Request",
+            "CartSimilarities",
+            "CartTopSellers",
+            "CartNewReleases",
+        ),
+        "CustomerContentLookup": (
+            "Request",
+            "CustomerInfo",
+            "CustomerReviews",
+            "CustomerLists",
+            "CustomerFull",
+        ),
+        "CustomerContentSearch": ("Request", "CustomerInfo"),
+        "Help": ("Request", "Help"),
+        "ItemLookup": (
+            "Request",
+            "ItemLookup.Small",
+            "Accessories",
+            "BrowseNodes",
+            "EditorialReview",
+            "Images",
+            "ItemAttributes",
+            "ItemIds",
+            "Large",
+            "ListmaniaLists",
+            "Medium",
+            "MerchantItemAttributes",
+            "OfferFull",
+            "Offers",
+            "OfferSummary",
+            "Reviews",
+            "SalesRank",
+            "Similarities",
+            "Subjects",
+            "Tracks",
+            "VariationImages",
+            "VariationMinimum",
+            "Variations",
+            "VariationSummary",
+        ),
+        "ItemSearch": (
+            "Request",
+            "ItemSearch.Small",
+            "Accessories",
+            "BrowseNodes",
+            "EditorialReview",
+            "ItemAttributes",
+            "ItemIds",
+            "Large",
+            "ListmaniaLists",
+            "Medium",
+            "MerchantItemAttributes",
+            "OfferFull",
+            "Offers",
+            "OfferSummary",
+            "Reviews",
+            "SalesRank",
+            "SearchBins",
+            "Similarities",
+            "Subjects",
+            "Tracks",
+            "VariationMinimum",
+            "Variations",
+            "VariationSummary",
+        ),
+        "ListLookup": (
+            "Request",
+            "ListInfo",
+            "Accessories",
+            "BrowseNodes",
+            "EditorialReview",
+            "Images",
+            "ItemAttributes",
+            "ItemIds",
+            "Large",
+            "ListFull",
+            "ListItems",
+            "ListmaniaLists",
+            "Medium",
+            "Offers",
+            "OfferSummary",
+            "Reviews",
+            "SalesRank",
+            "Similarities",
+            "Subjects",
+            "Tracks",
+            "VariationMinimum",
+            "Variations",
+            "VariationSummary",
+        ),
+        "ListSearch": ("Request", "ListInfo", "ListMinimum"),
+        "SellerListingLookup": ("Request", "SellerListing"),
+        "SellerListingSearch": ("Request", "SellerListing"),
+        "SellerLookup": ("Request", "Seller"),
+        "SimilarityLookup": (
+            "Request",
+            "Small",
+            "Accessories",
+            "BrowseNodes",
+            "EditorialReview",
+            "Images",
+            "ItemAttributes",
+            "ItemIds",
+            "Large",
+            "ListmaniaLists",
+            "Medium",
+            "Offers",
+            "OfferSummary",
+            "Reviews",
+            "SalesRank",
+            "Similarities",
+            "Tracks",
+            "VariationMinimum",
+            "Variations",
+            "VariationSummary",
+        ),
+        "TransactionLookup": ("Request", "TransactionDetails"),
     }
-    
+
     def collapse(responseGroups):
         l = []
         for x in responseGroups:
             l.append(x)
             if x in list(rgh.keys()):
-                l.extend( collapse(rgh[x]) )
+                l.extend(collapse(rgh[x]))
         return l
 
-
     def mergePlugins(responseGroups, index):
-        #return reduce(lambda x, y: x.update(set(rgps[y][index])), responseGroups, set()) 
+        # return reduce(lambda x, y: x.update(set(rgps[y][index])), responseGroups, set())
         # this magic reduce does not work, using the primary implementation first.
         # CODEDEBT: magic number !
         if index == 4:
@@ -324,36 +511,59 @@ def __buildPlugins():
 
         list([s.update(rgps[x][index]) for x in responseGroups])
         return s
-            
-    def unionPlugins(responseGroups):
-        return dict( [ (key, mergePlugins(collapse(responseGroups), index)) for index, key in enumerate(['isBypassed', 'isPivoted', 'isCollective', 'isCollected', 'isPaged']) ])
 
-    return dict( [ (k, unionPlugins(v)) for k, v in list(orgs.items()) ] )
-    
+    def unionPlugins(responseGroups):
+        return dict(
+            [
+                (key, mergePlugins(collapse(responseGroups), index))
+                for index, key in enumerate(
+                    [
+                        "isBypassed",
+                        "isPivoted",
+                        "isCollective",
+                        "isCollected",
+                        "isPaged",
+                    ]
+                )
+            ]
+        )
+
+    return dict([(k, unionPlugins(v)) for k, v in list(orgs.items())])
+
 
 __plugins = __buildPlugins()
 
 # Wrapper class for ECS
-class Bag : 
+class Bag:
     """A generic container for the python objects"""
+
     def __repr__(self):
-        return '<Bag instance: ' + self.__dict__.__repr__() + '>'
-    
+        return "<Bag instance: " + self.__dict__.__repr__() + ">"
 
 
 def rawObject(XMLSearch, arguments, kwItem, plugins=None):
     """Return simple object from `unmarshal`"""
-    dom = XMLSearch(** arguments)
-    return unmarshal(XMLSearch, arguments, dom.getElementsByTagName(kwItem).item(0), plugins) 
+    dom = XMLSearch(**arguments)
+    return unmarshal(
+        XMLSearch, arguments, dom.getElementsByTagName(kwItem).item(0), plugins
+    )
+
 
 def rawIterator(XMLSearch, arguments, kwItems, plugins=None):
     """Return list of objects from `unmarshal`"""
-    dom = XMLSearch(** arguments)
-    return unmarshal(XMLSearch, arguments, dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
+    dom = XMLSearch(**arguments)
+    return unmarshal(
+        XMLSearch,
+        arguments,
+        dom.getElementsByTagName(kwItems).item(0),
+        plugins,
+        listIterator(),
+    )
 
 
 class listIterator(list):
     """List with extended attributes"""
+
     pass
 
 
@@ -371,10 +581,15 @@ def pagedWrapper(XMLSearch, arguments, keywords, plugins):
     pagedWrapper. 
     """
 
-    return pagedIterator(XMLSearch, arguments, keywords,
-        XMLSearch(** arguments).getElementsByTagName(keywords[0]).item(0),
-        plugins)
-    
+    return pagedIterator(
+        XMLSearch,
+        arguments,
+        keywords,
+        XMLSearch(**arguments).getElementsByTagName(keywords[0]).item(0),
+        plugins,
+    )
+
+
 class pagedIterator:
     """
     A page-based iterator using lazy evaluation.
@@ -400,12 +615,12 @@ class pagedIterator:
         """
         kwItems, (kwPage, kwTotalResults, pageSize) = keywords
 
-        self.__search = XMLSearch 
-        self.__arguments = arguments 
+        self.__search = XMLSearch
+        self.__arguments = arguments
         self.__plugins = plugins
-        self.__keywords ={'Items':kwItems, 'Page':kwPage}
+        self.__keywords = {"Items": kwItems, "Page": kwPage}
         self.__page = arguments[kwPage] or 1
-            
+
         """Current page"""
         self.__index = 0
         """Current index"""
@@ -414,7 +629,9 @@ class pagedIterator:
         self.__items = unmarshal(XMLSearch, arguments, element, plugins, listIterator())
         """Cached items"""
         try:
-            self.__len = int(element.getElementsByTagName(kwTotalResults).item(0).firstChild.data)
+            self.__len = int(
+                element.getElementsByTagName(kwTotalResults).item(0).firstChild.data
+            )
         except AttributeError as e:
             self.__len = len(self.__items)
 
@@ -427,7 +644,7 @@ class pagedIterator:
     def __next__(self):
         if self.__index < self.__len:
             self.__index = self.__index + 1
-            return self.__getitem__(self.__index-1)
+            return self.__getitem__(self.__index - 1)
         else:
             raise StopIteration
 
@@ -439,47 +656,144 @@ class pagedIterator:
         page = num // self.__pageSize + 1
         index = num % self.__pageSize
         if page != self.__page:
-            self.__arguments[self.__keywords['Page']] = page
-            dom = self.__search(** self.__arguments)
-            self.__items = unmarshal(self.__search, self.__arguments, dom.getElementsByTagName(self.__keywords['Items']).item(0), self.__plugins, listIterator())
+            self.__arguments[self.__keywords["Page"]] = page
+            dom = self.__search(**self.__arguments)
+            self.__items = unmarshal(
+                self.__search,
+                self.__arguments,
+                dom.getElementsByTagName(self.__keywords["Items"]).item(0),
+                self.__plugins,
+                listIterator(),
+            )
             self.__page = page
 
         return self.__items[index]
 
 
 # Exception classes
-class AWSException(Exception) : pass
-class NoLicenseKey(AWSException) : pass
-class NoSecretAccessKey(AWSException) : pass
-class NoAssociateTag(AWSException) : pass
-class BadLocale(AWSException) : pass
-class BadOption(AWSException): pass
+class AWSException(Exception):
+    pass
+
+
+class NoLicenseKey(AWSException):
+    pass
+
+
+class NoSecretAccessKey(AWSException):
+    pass
+
+
+class NoAssociateTag(AWSException):
+    pass
+
+
+class BadLocale(AWSException):
+    pass
+
+
+class BadOption(AWSException):
+    pass
+
+
 # Runtime exception
-class ExactParameterRequirement(AWSException): pass
-class ExceededMaximumParameterValues(AWSException): pass
-class InsufficientParameterValues(AWSException): pass
-class InternalError(AWSException): pass
-class InvalidEnumeratedParameter(AWSException): pass
-class InvalidISO8601Time(AWSException): pass
-class InvalidOperationForMarketplace(AWSException): pass
-class InvalidOperationParameter(AWSException): pass
-class InvalidParameterCombination(AWSException): pass
-class InvalidParameterValue(AWSException): pass
-class InvalidResponseGroup(AWSException): pass
-class InvalidServiceParameter(AWSException): pass
-class InvalidSubscriptionId(AWSException): pass
-class InvalidXSLTAddress(AWSException): pass
-class MaximumParameterRequirement(AWSException): pass
-class MinimumParameterRequirement(AWSException): pass
-class MissingOperationParameter(AWSException): pass
-class MissingParameterCombination(AWSException): pass
-class MissingParameters(AWSException): pass
-class MissingParameterValueCombination(AWSException): pass
-class MissingServiceParameter(AWSException): pass
-class ParameterOutOfRange(AWSException): pass
-class ParameterRepeatedInRequest(AWSException): pass
-class RestrictedParameterValueCombination(AWSException): pass
-class XSLTTransformationError(AWSException): pass
+class ExactParameterRequirement(AWSException):
+    pass
+
+
+class ExceededMaximumParameterValues(AWSException):
+    pass
+
+
+class InsufficientParameterValues(AWSException):
+    pass
+
+
+class InternalError(AWSException):
+    pass
+
+
+class InvalidEnumeratedParameter(AWSException):
+    pass
+
+
+class InvalidISO8601Time(AWSException):
+    pass
+
+
+class InvalidOperationForMarketplace(AWSException):
+    pass
+
+
+class InvalidOperationParameter(AWSException):
+    pass
+
+
+class InvalidParameterCombination(AWSException):
+    pass
+
+
+class InvalidParameterValue(AWSException):
+    pass
+
+
+class InvalidResponseGroup(AWSException):
+    pass
+
+
+class InvalidServiceParameter(AWSException):
+    pass
+
+
+class InvalidSubscriptionId(AWSException):
+    pass
+
+
+class InvalidXSLTAddress(AWSException):
+    pass
+
+
+class MaximumParameterRequirement(AWSException):
+    pass
+
+
+class MinimumParameterRequirement(AWSException):
+    pass
+
+
+class MissingOperationParameter(AWSException):
+    pass
+
+
+class MissingParameterCombination(AWSException):
+    pass
+
+
+class MissingParameters(AWSException):
+    pass
+
+
+class MissingParameterValueCombination(AWSException):
+    pass
+
+
+class MissingServiceParameter(AWSException):
+    pass
+
+
+class ParameterOutOfRange(AWSException):
+    pass
+
+
+class ParameterRepeatedInRequest(AWSException):
+    pass
+
+
+class RestrictedParameterValueCombination(AWSException):
+    pass
+
+
+class XSLTTransformationError(AWSException):
+    pass
 
 
 # Utilities functions
@@ -488,8 +802,10 @@ def setLocale(locale):
     if unsupported locale is set, BadLocale is raised."""
     global LOCALE
     if locale not in __supportedLocales:
-        raise BadLocale("Unsupported locale. Locale must be one of: %s" %
-            ', '.join([x for x in list(__supportedLocales.keys()) if x]))
+        raise BadLocale(
+            "Unsupported locale. Locale must be one of: %s"
+            % ", ".join([x for x in list(__supportedLocales.keys()) if x])
+        )
     LOCALE = locale
 
 
@@ -503,17 +819,19 @@ def setLicenseKey(license_key=None):
     If license_key is not specified, the license key is set using the
     environment variable: AMAZON_LICENSE_KEY; if no license key is 
     set, NoLicenseKey exception is raised."""
-    
+
     global LICENSE_KEY
     for get in __licenseKeys:
         rc = get(license_key)
         if rc:
             if type(rc == str):
-                LICENSE_KEY = rc.encode('utf-8');
+                LICENSE_KEY = rc.encode("utf-8")
             else:
-                LICENSE_KEY = rc;
-            return;
-    raise NoLicenseKey(("Please get the license key from  http://www.amazon.com/webservices"))
+                LICENSE_KEY = rc
+            return
+    raise NoLicenseKey(
+        ("Please get the license key from  http://www.amazon.com/webservices")
+    )
 
 
 def getLicenseKey():
@@ -524,22 +842,26 @@ def getLicenseKey():
         setLicenseKey()
     return LICENSE_KEY
 
+
 def setSecretAccessKey(secret_access_key=None):
     """Sets your secret AWS key.
     If secret_access_key is not specified, we look for the 
     environment variable: AMAZON_SECRET_ACCESS_KEY.  
     Raises NoSecretAccessKey if we can't get it to work."""
-    
+
     global SECRET_ACCESS_KEY
     for get in __secretAccessKeys:
         rc = get(secret_access_key)
         if rc:
             if type(rc == str):
-                SECRET_ACCESS_KEY = rc.encode('utf-8');
+                SECRET_ACCESS_KEY = rc.encode("utf-8")
             else:
-                SECRET_ACCESS_KEY = rc;
-            return;
-    raise NoSecretAccessKey(("Please get your secret key from  http://www.amazon.com/webservices"))
+                SECRET_ACCESS_KEY = rc
+            return
+    raise NoSecretAccessKey(
+        ("Please get your secret key from  http://www.amazon.com/webservices")
+    )
+
 
 def getSecretAccessKey():
     """Get the secret access key.
@@ -548,23 +870,27 @@ def getSecretAccessKey():
     if not SECRET_ACCESS_KEY:
         setSecretAccessKey()
     return SECRET_ACCESS_KEY
-    
+
+
 def setAssociateTag(associateTag=None):
     """Sets your secret AWS key.
     If ASSOCIATE_TAG is not specified, we look for the 
     environment variable: AWS_ASSOCIATE_TAG.  
     Raises NoAssociateTag if we can't get it to work."""
-    
+
     global ASSOCIATE_TAG
     for get in __associateTags:
         rc = get(associateTag)
         if rc:
             if type(rc == str):
-                ASSOCIATE_TAG = rc.encode('utf-8');
+                ASSOCIATE_TAG = rc.encode("utf-8")
             else:
                 ASSOCIATE_TAG = rc
-            return;
-    raise NoAssociateTag(("Please get your secret key from  http://www.amazon.com/webservices"))
+            return
+    raise NoAssociateTag(
+        ("Please get your secret key from  http://www.amazon.com/webservices")
+    )
+
 
 def getAssociateTag():
     """Get associate tag.
@@ -574,10 +900,11 @@ def getAssociateTag():
         setAssociateTag()
     return ASSOCIATE_TAG
 
+
 def getVersion():
     """Get the version of ECS specification"""
     return VERSION
-    
+
 
 def setOptions(options):
     """
@@ -587,49 +914,63 @@ def setOptions(options):
     - Version
     - Validate
     """
-    
-    if set(options.keys()).issubset( set(['AssociateTag', 'MerchantID', 'Validate']) ):
+
+    if set(options.keys()).issubset(set(["AssociateTag", "MerchantID", "Validate"])):
         global OPTIONS
         OPTIONS.update(options)
     else:
-        raise BadOption(('Unsupported option'))
+        raise BadOption(("Unsupported option"))
 
-        
+
 def getOptions():
     """Get options"""
-    return OPTIONS 
+    return OPTIONS
+
 
 def buildSignature(netloc, query_string):
     secret_key = getSecretAccessKey()
-    string_to_sign = ('GET\n%s\n%s\n%s' % (netloc, '/onca/xml', query_string)).encode('utf-8')
-    
-    #return urllib.parse.quote_plus(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest().encode('base64').strip())
-    return urllib.parse.quote(b64encode(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest()))
+    string_to_sign = ("GET\n%s\n%s\n%s" % (netloc, "/onca/xml", query_string)).encode(
+        "utf-8"
+    )
+
+    # return urllib.parse.quote_plus(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest().encode('base64').strip())
+    return urllib.parse.quote(
+        b64encode(hmac.new(secret_key, string_to_sign, hashlib.sha256).digest())
+    )
+
 
 def buildQuery(argv):
     # 1. Filter any key set to 'None'
     # 2. Sort the dict by key
     # 3. Quote everything and build the query string
-    query_string = urllib.parse.urlencode([(k, argv[k]) for (k) in sorted(argv.keys()) if argv[k]])
+    query_string = urllib.parse.urlencode(
+        [(k, argv[k]) for (k) in sorted(argv.keys()) if argv[k]]
+    )
 
     netloc = __supportedLocales[getLocale()]
     signature = buildSignature(netloc, query_string)
-    return 'http://' + netloc + '/onca/xml?' + query_string + '&Signature=' + signature
+    return "http://" + netloc + "/onca/xml?" + query_string + "&Signature=" + signature
+
 
 def buildRequest(argv):
     """Adds some standard keys (like Timestamp and Version) to the request,
     then builds and returns the request-url."""
 
-    if not argv['AWSAccessKeyId']:
-        argv['AWSAccessKeyId'] = getLicenseKey()
-    if not argv['AssociateTag']:
-        argv['AssociateTag'] = getAssociateTag()
+    if not argv["AWSAccessKeyId"]:
+        argv["AWSAccessKeyId"] = getLicenseKey()
+    if not argv["AssociateTag"]:
+        argv["AssociateTag"] = getAssociateTag()
     argv.update(getOptions())
-    argv.update({'Service':'AWSECommerceService',
-                 'Timestamp':datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-                 'Version':VERSION})
+    argv.update(
+        {
+            "Service": "AWSECommerceService",
+            "Timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "Version": VERSION,
+        }
+    )
 
     return buildQuery(argv)
+
 
 def buildException(els):
     """Build the exception from the returned DOM node
@@ -637,28 +978,28 @@ def buildException(els):
 
     error = els[0]
     class_name = error.childNodes[0].firstChild.data[4:]
-    msg = error.childNodes[1].firstChild.data 
+    msg = error.childNodes[1].firstChild.data
 
-    e = globals()[ class_name ](msg)
+    e = globals()[class_name](msg)
     return e
 
 
 def query(url):
     """Send the query url and return the DOM
     Exception is raised if there are errors"""
-    #u = urllib.request.FancyURLopener()
-    #usock = u.open(url)
-    #dom = minidom.parse(usock)
-    #usock.close()
-    
+    # u = urllib.request.FancyURLopener()
+    # usock = u.open(url)
+    # dom = minidom.parse(usock)
+    # usock.close()
+
     request = urllib.request.Request(url)
-    #base64string =  bytes('%s:%s' % ('login', 'password'), 'ascii')
-    #request.add_header("Authorization", "Basic %s" % base64string)
+    # base64string =  bytes('%s:%s' % ('login', 'password'), 'ascii')
+    # request.add_header("Authorization", "Basic %s" % base64string)
     result = urllib.request.urlopen(request)
-    resulttext = result.read().decode('utf-8')
+    resulttext = result.read().decode("utf-8")
     dom = minidom.parseString(resulttext)
 
-    errors = dom.getElementsByTagName('Error')
+    errors = dom.getElementsByTagName("Error")
     if errors:
         e = buildException(errors)
         raise e
@@ -700,9 +1041,9 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
     - Use optimal search for optimization if necessary
     """
 
-    if(rc == None):
+    if rc == None:
         rc = Bag()
-    
+
     childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
 
     if childElements:
@@ -712,71 +1053,220 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
                 attr = getattr(rc, key)
                 if not isinstance(attr, type([])):
                     setattr(rc, key, [attr])
-                setattr(rc, key, getattr(rc, key) + [unmarshal(XMLSearch, arguments, child, plugins)])
+                setattr(
+                    rc,
+                    key,
+                    getattr(rc, key)
+                    + [unmarshal(XMLSearch, arguments, child, plugins)],
+                )
             elif isinstance(child, minidom.Element):
-                if child.tagName in plugins['isCollected']:
+                if child.tagName in plugins["isCollected"]:
                     rc.append(unmarshal(XMLSearch, arguments, child, plugins))
-                elif child.tagName in plugins['isCollective']:
-                    setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins, listIterator([])))
-                elif child.tagName in list(plugins['isPaged'].keys()):
-                    setattr(rc, key, pagedIterator(XMLSearch, arguments, (child.tagName, plugins['isPaged'][child.tagName]), child, plugins))
-                elif child.tagName in plugins['isPivoted']:
+                elif child.tagName in plugins["isCollective"]:
+                    setattr(
+                        rc,
+                        key,
+                        unmarshal(
+                            XMLSearch, arguments, child, plugins, listIterator([])
+                        ),
+                    )
+                elif child.tagName in list(plugins["isPaged"].keys()):
+                    setattr(
+                        rc,
+                        key,
+                        pagedIterator(
+                            XMLSearch,
+                            arguments,
+                            (child.tagName, plugins["isPaged"][child.tagName]),
+                            child,
+                            plugins,
+                        ),
+                    )
+                elif child.tagName in plugins["isPivoted"]:
                     unmarshal(XMLSearch, arguments, child, plugins, rc)
-                elif child.tagName in plugins['isBypassed']:
+                elif child.tagName in plugins["isBypassed"]:
                     continue
                 else:
                     setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins))
     else:
-        rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
+        rc = "".join(
+            [e.data for e in element.childNodes if isinstance(e, minidom.Text)]
+        )
     return rc
 
 
-    
 # User interfaces
 
-def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None): 
-    '''ItemLookup in ECS'''
-    return pagedWrapper(XMLItemLookup, vars(), 
-        ('Items', __plugins['ItemLookup']['isPaged']['Items']), __plugins['ItemLookup'])
 
-    
-def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of ItemLookup in ECS'''
+def ItemLookup(
+    ItemId,
+    IdType=None,
+    SearchIndex=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ISPUPostalCode=None,
+    OfferPage=None,
+    ReviewPage=None,
+    ReviewSort=None,
+    VariationPage=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """ItemLookup in ECS"""
+    return pagedWrapper(
+        XMLItemLookup,
+        vars(),
+        ("Items", __plugins["ItemLookup"]["isPaged"]["Items"]),
+        __plugins["ItemLookup"],
+    )
+
+
+def XMLItemLookup(
+    ItemId,
+    IdType=None,
+    SearchIndex=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ISPUPostalCode=None,
+    OfferPage=None,
+    ReviewPage=None,
+    ReviewSort=None,
+    VariationPage=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of ItemLookup in ECS"""
 
     Operation = "ItemLookup"
     return query(buildRequest(vars()))
 
 
-def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, OfferPage=None, ReviewPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):  
-    '''ItemSearch in ECS'''
+def ItemSearch(
+    Keywords,
+    SearchIndex="Blended",
+    Availability=None,
+    Title=None,
+    Power=None,
+    BrowseNode=None,
+    Artist=None,
+    Author=None,
+    Actor=None,
+    Director=None,
+    AudienceRating=None,
+    Manufacturer=None,
+    MusicLabel=None,
+    Composer=None,
+    Publisher=None,
+    Brand=None,
+    Conductor=None,
+    Orchestra=None,
+    TextStream=None,
+    ItemPage=None,
+    OfferPage=None,
+    ReviewPage=None,
+    Sort=None,
+    City=None,
+    Cuisine=None,
+    Neighborhood=None,
+    MinimumPrice=None,
+    MaximumPrice=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """ItemSearch in ECS"""
 
-    return pagedWrapper(XMLItemSearch, vars(), 
-        ('Items', __plugins['ItemSearch']['isPaged']['Items']), __plugins['ItemSearch'])
+    return pagedWrapper(
+        XMLItemSearch,
+        vars(),
+        ("Items", __plugins["ItemSearch"]["isPaged"]["Items"]),
+        __plugins["ItemSearch"],
+    )
 
 
-def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, OfferPage=None, ReviewPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):  
-    '''DOM representation of ItemSearch in ECS'''
+def XMLItemSearch(
+    Keywords,
+    SearchIndex="Blended",
+    Availability=None,
+    Title=None,
+    Power=None,
+    BrowseNode=None,
+    Artist=None,
+    Author=None,
+    Actor=None,
+    Director=None,
+    AudienceRating=None,
+    Manufacturer=None,
+    MusicLabel=None,
+    Composer=None,
+    Publisher=None,
+    Brand=None,
+    Conductor=None,
+    Orchestra=None,
+    TextStream=None,
+    ItemPage=None,
+    OfferPage=None,
+    ReviewPage=None,
+    Sort=None,
+    City=None,
+    Cuisine=None,
+    Neighborhood=None,
+    MinimumPrice=None,
+    MaximumPrice=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of ItemSearch in ECS"""
 
     Operation = "ItemSearch"
     return query(buildRequest(vars()))
 
 
-def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):  
-    '''SimilarityLookup in ECS'''
+def SimilarityLookup(
+    ItemId,
+    SimilarityType=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """SimilarityLookup in ECS"""
 
     argv = vars()
     plugins = {
-        'isBypassed': (), 
-        'isPivoted': ('ItemAttributes',),
-        'isCollective': ('Items',),
-        'isCollected': ('Item',),
-        'isPaged': {}
+        "isBypassed": (),
+        "isPivoted": ("ItemAttributes",),
+        "isCollective": ("Items",),
+        "isCollected": ("Item",),
+        "isPaged": {},
     }
-    return rawIterator(XMLSimilarityLookup, argv, 'Items', plugins)
+    return rawIterator(XMLSimilarityLookup, argv, "Items", plugins)
 
 
-def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):  
-    '''DOM representation of SimilarityLookup in ECS'''
+def XMLSimilarityLookup(
+    ItemId,
+    SimilarityType=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of SimilarityLookup in ECS"""
 
     Operation = "SimilarityLookup"
     return query(buildRequest(vars()))
@@ -784,320 +1274,471 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 
 # List Operations
 
-def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):  
-    '''ListLookup in ECS'''
+
+def ListLookup(
+    ListType,
+    ListId,
+    ProductPage=None,
+    ProductGroup=None,
+    Sort=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """ListLookup in ECS"""
 
     argv = vars()
     plugins = {
-        'isBypassed': (), 
-        'isPivoted': ('ItemAttributes',),
-        'isCollective': ('Lists',), 
-        'isCollected': ('List',),
-        'isPaged' : { 'Lists': ('ProductPage', 'TotalResults', 10) }
+        "isBypassed": (),
+        "isPivoted": ("ItemAttributes",),
+        "isCollective": ("Lists",),
+        "isCollected": ("List",),
+        "isPaged": {"Lists": ("ProductPage", "TotalResults", 10)},
     }
-    return pagedWrapper(XMLListLookup, argv, 
-        ('Lists', plugins['isPaged']['Lists']), plugins)
+    return pagedWrapper(
+        XMLListLookup, argv, ("Lists", plugins["isPaged"]["Lists"]), plugins
+    )
 
 
-def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):  
-    '''DOM representation of ListLookup in ECS'''
+def XMLListLookup(
+    ListType,
+    ListId,
+    ProductPage=None,
+    ProductGroup=None,
+    Sort=None,
+    MerchantId=None,
+    Condition=None,
+    DeliveryMethod=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of ListLookup in ECS"""
 
     Operation = "ListLookup"
     return query(buildRequest(vars()))
 
 
-def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''ListSearch in ECS'''
+def ListSearch(
+    ListType,
+    Name=None,
+    FirstName=None,
+    LastName=None,
+    Email=None,
+    City=None,
+    State=None,
+    ListPage=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """ListSearch in ECS"""
 
     argv = vars()
     plugins = {
-        'isBypassed': (), 
-        'isPivoted': ('ItemAttributes',),
-        'isCollective': ('Lists',), 
-        'isCollected': ('List',),
-        'isPaged' : { 'Lists': ('ListPage', 'TotalResults', 10) }
+        "isBypassed": (),
+        "isPivoted": ("ItemAttributes",),
+        "isCollective": ("Lists",),
+        "isCollected": ("List",),
+        "isPaged": {"Lists": ("ListPage", "TotalResults", 10)},
     }
-    return pagedWrapper(XMLListSearch, argv, 
-        ('Lists', plugins['isPaged']['Lists']), plugins)
+    return pagedWrapper(
+        XMLListSearch, argv, ("Lists", plugins["isPaged"]["Lists"]), plugins
+    )
 
 
-def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of ListSearch in ECS'''
+def XMLListSearch(
+    ListType,
+    Name=None,
+    FirstName=None,
+    LastName=None,
+    Email=None,
+    City=None,
+    State=None,
+    ListPage=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of ListSearch in ECS"""
 
     Operation = "ListSearch"
     return query(buildRequest(vars()))
 
 
-#Remote Shopping Cart Operations
-def CartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''CartCreate in ECS'''
+# Remote Shopping Cart Operations
+def CartCreate(
+    Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """CartCreate in ECS"""
 
     return __cartOperation(XMLCartCreate, vars())
 
 
-def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of CartCreate in ECS'''
+def XMLCartCreate(
+    Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """DOM representation of CartCreate in ECS"""
 
     Operation = "CartCreate"
     argv = vars()
-    for x in ('Items', 'Quantities'):
+    for x in ("Items", "Quantities"):
         del argv[x]
 
-    __fromListToItems(argv, Items, 'ASIN', Quantities)
+    __fromListToItems(argv, Items, "ASIN", Quantities)
     return query(buildRequest(argv))
 
 
-def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''CartAdd in ECS'''
+def CartAdd(
+    Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """CartAdd in ECS"""
 
     return __cartOperation(XMLCartAdd, vars())
 
 
-def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of CartAdd in ECS'''
+def XMLCartAdd(
+    Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """DOM representation of CartAdd in ECS"""
 
     Operation = "CartAdd"
     CartId = Cart.CartId
     HMAC = Cart.HMAC
     argv = vars()
-    for x in ('Items', 'Cart', 'Quantities'):
+    for x in ("Items", "Cart", "Quantities"):
         del argv[x]
 
-    __fromListToItems(argv, Items, 'ASIN', Quantities)
+    __fromListToItems(argv, Items, "ASIN", Quantities)
     return query(buildRequest(argv))
 
 
 def CartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''CartGet in ECS'''
+    """CartGet in ECS"""
     return __cartOperation(XMLCartGet, vars())
 
 
 def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of CartGet in ECS'''
+    """DOM representation of CartGet in ECS"""
 
     Operation = "CartGet"
     CartId = Cart.CartId
     HMAC = Cart.HMAC
     argv = vars()
-    del argv['Cart']
+    del argv["Cart"]
     return query(buildRequest(argv))
 
 
-def CartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''CartModify in ECS'''
+def CartModify(
+    Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """CartModify in ECS"""
 
     return __cartOperation(XMLCartModify, vars())
 
 
-def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of CartModify in ECS'''
+def XMLCartModify(
+    Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """DOM representation of CartModify in ECS"""
     Operation = "CartModify"
     CartId = Cart.CartId
     HMAC = Cart.HMAC
     argv = vars()
-    for x in ('Cart', 'Items', 'Actions'):
+    for x in ("Cart", "Items", "Actions"):
         del argv[x]
 
-    __fromListToItems(argv, Items, 'CartItemId', Actions)
+    __fromListToItems(argv, Items, "CartItemId", Actions)
     return query(buildRequest(argv))
 
-    
+
 def CartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''CartClear in ECS'''
+    """CartClear in ECS"""
     return __cartOperation(XMLCartClear, vars())
 
 
 def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of CartClear in ECS'''
+    """DOM representation of CartClear in ECS"""
 
     Operation = "CartClear"
     CartId = Cart.CartId
     HMAC = Cart.HMAC
     argv = vars()
-    del argv['Cart']
+    del argv["Cart"]
 
     return query(buildRequest(argv))
 
 
 def __fromListToItems(argv, items, id, actions):
-    '''Convert list to AWS REST arguments'''
+    """Convert list to AWS REST arguments"""
 
     for i in range(len(items)):
-        argv["Item.%d.%s" % (i+1, id)] = getattr(items[i], id);
+        argv["Item.%d.%s" % (i + 1, id)] = getattr(items[i], id)
         action = actions[i]
         if isinstance(action, int):
-            argv["Item.%d.Quantity" % (i+1)] = action
+            argv["Item.%d.Quantity" % (i + 1)] = action
         else:
-            argv["Item.%d.Action" % (i+1)] = action
+            argv["Item.%d.Action" % (i + 1)] = action
 
 
 def __cartOperation(XMLSearch, arguments):
-    '''Generic cart operation'''
+    """Generic cart operation"""
 
     plugins = {
-        'isBypassed': ('Request',),
-        'isPivoted': (), 
-        'isCollective': ('CartItems', 'SavedForLaterItems'),
-        'isCollected': ('CartItem', 'SavedForLaterItem'),
-        'isPaged': {}
+        "isBypassed": ("Request",),
+        "isPivoted": (),
+        "isCollective": ("CartItems", "SavedForLaterItems"),
+        "isCollected": ("CartItem", "SavedForLaterItem"),
+        "isPaged": {},
     }
-    return rawObject(XMLSearch, arguments, 'Cart', plugins)
+    return rawObject(XMLSearch, arguments, "Cart", plugins)
 
 
 # Seller Operation
-def SellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''SellerLookup in AWS'''
+def SellerLookup(
+    Sellers,
+    FeedbackPage=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """SellerLookup in AWS"""
 
     argv = vars()
     plugins = {
-        'isBypassed': ('Request',),
-        'isPivoted': (), 
-        'isCollective': ('Sellers',),
-        'isCollected': ('Seller',),
-        'isPaged': {}
+        "isBypassed": ("Request",),
+        "isPivoted": (),
+        "isCollective": ("Sellers",),
+        "isCollected": ("Seller",),
+        "isPaged": {},
     }
-    return rawIterator(XMLSellerLookup, argv, 'Sellers', plugins)
+    return rawIterator(XMLSellerLookup, argv, "Sellers", plugins)
 
 
-def XMLSellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of SellerLookup in AWS'''
+def XMLSellerLookup(
+    Sellers,
+    FeedbackPage=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of SellerLookup in AWS"""
 
     Operation = "SellerLookup"
     SellerId = ",".join(Sellers)
     argv = vars()
-    del argv['Sellers']
+    del argv["Sellers"]
     return query(buildRequest(argv))
 
 
-def SellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''SellerListingLookup in AWS
+def SellerListingLookup(
+    SellerId,
+    Id,
+    IdType="Listing",
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """SellerListingLookup in AWS
 
     Notice: although the repsonse includes TotalPage, TotalResults, 
     there is no ListingPage in the request, so we have to use rawIterator
-    instead of pagedIterator. Hope Amazaon would fix this inconsistance'''
-    
+    instead of pagedIterator. Hope Amazaon would fix this inconsistance"""
+
     argv = vars()
     plugins = {
-        'isBypassed': ('Request',),
-        'isPivoted': (), 
-        'isCollective': ('SellerListings',), 
-        'isCollected': ('SellerListing',),
-        'isPaged': {}
+        "isBypassed": ("Request",),
+        "isPivoted": (),
+        "isCollective": ("SellerListings",),
+        "isCollected": ("SellerListing",),
+        "isPaged": {},
     }
     return rawIterator(XMLSellerListingLookup, argv, "SellerListings", plugins)
 
 
-def XMLSellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of SellerListingLookup in AWS'''
+def XMLSellerListingLookup(
+    SellerId,
+    Id,
+    IdType="Listing",
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of SellerListingLookup in AWS"""
 
     Operation = "SellerListingLookup"
     return query(buildRequest(vars()))
 
 
-def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''SellerListingSearch in AWS'''
+def SellerListingSearch(
+    SellerId,
+    Title=None,
+    Sort=None,
+    ListingPage=None,
+    OfferStatus=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """SellerListingSearch in AWS"""
 
     argv = vars()
     plugins = {
-        'isBypassed': ('Request',),
-        'isPivoted': (), 
-        'isCollective': ('SellerListings',), 
-        'isCollected': ('SellerListing',),
-        'isPaged' : { 'SellerListings': ('ListingPage', 'TotalResults', 10) }
+        "isBypassed": ("Request",),
+        "isPivoted": (),
+        "isCollective": ("SellerListings",),
+        "isCollected": ("SellerListing",),
+        "isPaged": {"SellerListings": ("ListingPage", "TotalResults", 10)},
     }
-    return pagedWrapper(XMLSellerListingSearch, argv, 
-        ('SellerListings', plugins['isPaged']['SellerListings']), plugins)
+    return pagedWrapper(
+        XMLSellerListingSearch,
+        argv,
+        ("SellerListings", plugins["isPaged"]["SellerListings"]),
+        plugins,
+    )
 
 
-def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of SellerListingSearch in AWS'''
+def XMLSellerListingSearch(
+    SellerId,
+    Title=None,
+    Sort=None,
+    ListingPage=None,
+    OfferStatus=None,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of SellerListingSearch in AWS"""
 
     Operation = "SellerListingSearch"
     return query(buildRequest(vars()))
 
 
-def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''CustomerContentSearch in AWS'''
+def CustomerContentSearch(
+    Name=None,
+    Email=None,
+    CustomerPage=1,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """CustomerContentSearch in AWS"""
 
-    return rawIterator(XMLCustomerContentSearch, vars(), 'Customers', __plugins['CustomerContentSearch'])
+    return rawIterator(
+        XMLCustomerContentSearch,
+        vars(),
+        "Customers",
+        __plugins["CustomerContentSearch"],
+    )
 
 
-def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of CustomerContentSearch in AWS'''
+def XMLCustomerContentSearch(
+    Name=None,
+    Email=None,
+    CustomerPage=1,
+    ResponseGroup=None,
+    AWSAccessKeyId=None,
+    AssociateTag=None,
+):
+    """DOM representation of CustomerContentSearch in AWS"""
 
     Operation = "CustomerContentSearch"
     argv = vars()
-    for x in ('Name', 'Email'):
+    for x in ("Name", "Email"):
         if not argv[x]:
             del argv[x]
     return query(buildRequest(argv))
 
 
-def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''CustomerContentLookup in AWS'''
+def CustomerContentLookup(
+    CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """CustomerContentLookup in AWS"""
 
     argv = vars()
     plugins = {
-        'isBypassed': ('Request',),
-        'isPivoted': (), 
-        'isCollective': ('Customers',),
-        'isCollected': ('Customer',),
-
+        "isBypassed": ("Request",),
+        "isPivoted": (),
+        "isCollective": ("Customers",),
+        "isCollected": ("Customer",),
     }
-    return rawIterator(XMLCustomerContentLookup, argv, 'Customers', __plugins['CustomerContentLookup'])
+    return rawIterator(
+        XMLCustomerContentLookup, argv, "Customers", __plugins["CustomerContentLookup"]
+    )
 
 
-def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of CustomerContentLookup in AWS'''
+def XMLCustomerContentLookup(
+    CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """DOM representation of CustomerContentLookup in AWS"""
 
     Operation = "CustomerContentLookup"
     return query(buildRequest(vars()))
 
 
 # BrowseNode
-def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
+def BrowseNodeLookup(
+    BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
     """
     BrowseNodeLookup in AWS 
     """
-    return rawIterator(XMLBrowseNodeLookup, vars(), 'BrowseNodes', __plugins['BrowseNodeLookup'])
+    return rawIterator(
+        XMLBrowseNodeLookup, vars(), "BrowseNodes", __plugins["BrowseNodeLookup"]
+    )
 
 
-def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of BrowseNodeLookup in AWS'''
-    
+def XMLBrowseNodeLookup(
+    BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """DOM representation of BrowseNodeLookup in AWS"""
+
     Operation = "BrowseNodeLookup"
     return query(buildRequest(vars()))
 
 
 # Help
 def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''Help in AWS'''
-    return rawObject(XMLHelp, vars(), 'Information', __plugins['Help'])
+    """Help in AWS"""
+    return rawObject(XMLHelp, vars(), "Information", __plugins["Help"])
 
 
-def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of Help in AWS'''
+def XMLHelp(
+    HelpType, About, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """DOM representation of Help in AWS"""
 
     Operation = "Help"
     return query(buildRequest(vars()))
 
 
 # Transaction
-def TransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''TransactionLookup in AWS'''
-    return rawIterator(XMLTransactionLookup, vars(), 'Transactions', __plugins['TransactionLookup'])
-    
+def TransactionLookup(
+    TransactionId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """TransactionLookup in AWS"""
+    return rawIterator(
+        XMLTransactionLookup, vars(), "Transactions", __plugins["TransactionLookup"]
+    )
 
-def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None):
-    '''DOM representation of TransactionLookup in AWS'''
+
+def XMLTransactionLookup(
+    TransactionId, ResponseGroup=None, AWSAccessKeyId=None, AssociateTag=None
+):
+    """DOM representation of TransactionLookup in AWS"""
 
     Operation = "TransactionLookup"
     return query(buildRequest(vars()))
 
 
-
-if __name__ == "__main__" :
+if __name__ == "__main__":
     setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-    ItemSearch('XML Python', SearchIndex='Books', MerchantId='All', ResponseGroup='OfferFull')
+    ItemSearch(
+        "XML Python", SearchIndex="Books", MerchantId="All", ResponseGroup="OfferFull"
+    )
     import pdb
+
     pdb.set_trace()

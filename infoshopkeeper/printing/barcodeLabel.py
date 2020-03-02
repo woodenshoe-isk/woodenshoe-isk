@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: future_fstrings -*-
-## -*- coding: UTF-8 -*-
+-*- coding: future_fstrings -*-
+# -*- coding: UTF-8 -*-
 from printing import barcode_monkeypatch
 
 from reportlab import rl_config

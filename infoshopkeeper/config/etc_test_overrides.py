@@ -1,2 +1,2 @@
-dbname="infoshopkeeper2"
-label_printer_name="nowhere"
+dbname = "infoshopkeeper2"
+label_printer_name = "nowhere"

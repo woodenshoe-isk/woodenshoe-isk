@@ -7,10 +7,7 @@ from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
 
 class Kind(SQLObjectWithFormGlue):
-	titles=MultipleJoin('Title')
-	class sqlmeta:
-		fromDatabase = True
+    titles = MultipleJoin("Title")
 
-
-
-
+    class sqlmeta:
+        fromDatabase = True
