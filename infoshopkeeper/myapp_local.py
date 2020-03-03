@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.stdout = sys.stderr
 sys.path.append(os.path.dirname(__file__))
 
@@ -18,25 +19,29 @@ from inventoryserver.server import SpecialOrders
 
 # cherrypy.config.update({'environment': 'embedded'})
 
-if cherrypy.__version__.startswith('3.0') and cherrypy.engine.state == 0:
+if cherrypy.__version__.startswith("3.0") and cherrypy.engine.state == 0:
     cherrypy.engine.start(blocking=False)
     atexit.register(cherrypy.engine.stop)
 
+
 class Root(object):
     def index(self):
-        return 'Hello World!'
+        return "Hello World!"
+
     index.exposed = True
 
-root=InventoryServer()
-root.admin=Admin()
-root.staffing=Staffing()
-root.notes=Noteboard()
-root.register=Register()
-root.specialorder=SpecialOrders()
 
-cherrypy_local_config_file=configuration.get('cherrypy_local_config_file')
-application = cherrypy.Application(root, script_name=None, config=cherrypy_local_config_file)
+root = InventoryServer()
+root.admin = Admin()
+root.staffing = Staffing()
+root.notes = Noteboard()
+root.register = Register()
+root.specialorder = SpecialOrders()
 
-if __name__ == '__main__':
-     cherrypy.quickstart(root, "/", cherrypy_local_config_file)
+cherrypy_local_config_file = configuration.get("cherrypy_local_config_file")
+application = cherrypy.Application(
+    root, script_name=None, config=cherrypy_local_config_file
+)
 
+if __name__ == "__main__":
+    cherrypy.quickstart(root, "/", cherrypy_local_config_file)

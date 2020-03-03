@@ -6,9 +6,5 @@ from .SQLObjectWithFormGlue import SQLObjectWithFormGlue
 
 
 class Location(SQLObjectWithFormGlue):
-	class sqlmeta:
-		fromDatabase = True
-
-
-
-
+    class sqlmeta:
+        fromDatabase = True

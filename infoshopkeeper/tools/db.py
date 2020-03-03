@@ -14,70 +14,79 @@ dbpass = cfg.get("dbpass")
 
 from sqlobject import *
 
-if dbtype in ('mysql', 'postgres'):
-    if dbtype is 'mysql':
+if dbtype in ("mysql", "postgres"):
+    if dbtype is "mysql":
         import MySQLdb as dbmodule
-    elif dbtype is 'postgres':
+    elif dbtype is "postgres":
         import psycopg as dbmodule
 
-    if cfg.get('should_log_SQLObject'):
-        my_logger = logging.getLogger('SQLObhectLogger')
+    if cfg.get("should_log_SQLObject"):
+        my_logger = logging.getLogger("SQLObhectLogger")
         my_logger.setLevel(logging.DEBUG)
 
         # Add the log message handler to the logger
-        handler = GroupRotatingFileHandler("/var/log/infoshopkeeper/SQLObject.log", maxBytes=100000, backupCount=5)
+        handler = GroupRotatingFileHandler(
+            "/var/log/infoshopkeeper/SQLObject.log", maxBytes=100000, backupCount=5
+        )
         my_logger.addHandler(handler)
-        
-    #deprecate
+
+    # deprecate
     def connect():
         return dbmodule.connect(host=dbhost, db=dbname, user=dbuser, passwd=dbpass)
 
-
     def conn():
-        connection_string  = '%s://%s:%s@%s/%s?debug=1&logger=SQLObhectLogger&loglevel=debug&use_unicode=1&charset=utf8' % (dbtype, dbuser, dbpass, dbhost, dbname)
+        connection_string = (
+            "%s://%s:%s@%s/%s?debug=1&logger=SQLObhectLogger&loglevel=debug&use_unicode=1&charset=utf8"
+            % (dbtype, dbuser, dbpass, dbhost, dbname)
+        )
         return connection_string
         sqlhub.process_connection = connectionForURI(connection_string)
-      
-elif dbtype is 'sqlite':
+
+
+elif dbtype is "sqlite":
     import os, time, re
     from pysqlite2 import dbapi2 as sqlite
-    db_file_ext = '.' + dbtype
+
+    db_file_ext = "." + dbtype
     if not dbname.endswith(db_file_ext):
-        dbname+=db_file_ext
+        dbname += db_file_ext
     dbpath = os.path.join(dbhost, dbname)
-    
+
     def now():
-        return time.strftime('%Y-%m-%d %H:%M:%S')
-    
+        return time.strftime("%Y-%m-%d %H:%M:%S")
+
     def regexp(regex, val):
-        #print regex, val, bool(re.search(regex, val, re.I))
+        # print regex, val, bool(re.search(regex, val, re.I))
         return bool(re.search(regex, val, re.I))
-    
+
     class SQLiteCustomConnection(sqlite.Connection):
         def __init__(self, *args, **kwargs):
-            #print '@@@ SQLiteCustomConnection: registering functions'
+            # print '@@@ SQLiteCustomConnection: registering functions'
             sqlite.Connection.__init__(self, *args, **kwargs)
             SQLiteCustomConnection.registerFunctions(self)
-        
+
         def registerFunctions(self):
             self.create_function("NOW", 0, now)
             self.create_function("REGEXP", 2, regexp)
             self.create_function("regexp", 2, regexp)
-            #~ self.execute("SELECT * FROM title WHERE title.booktitle REGEXP 'mar'")
-        registerFunctions=staticmethod(registerFunctions)
-    
-    #deprecate
-    _conn=None
+            # ~ self.execute("SELECT * FROM title WHERE title.booktitle REGEXP 'mar'")
+
+        registerFunctions = staticmethod(registerFunctions)
+
+    # deprecate
+    _conn = None
+
     def connect():
         import sqlobject
-        
-        #~ return sqlite.connect (database=dbpath)
+
+        # ~ return sqlite.connect (database=dbpath)
         global _conn
         if not _conn:
-            #~ _conn = sqlite.connect (database=dbpath)
+            # ~ _conn = sqlite.connect (database=dbpath)
             from objects.title import Title
+
             # can't use factory in URI because sqliteconnection doesn't share globals with us
-            Title._connection._connOptions['factory'] = SQLiteCustomConnection
+            Title._connection._connOptions["factory"] = SQLiteCustomConnection
             # get the connection instance that sqlobject is going to use, so we only have one
             _conn = Title._connection.getConnection()
             # since a connection is made before we can set the factory, we have to register
@@ -86,5 +95,5 @@ elif dbtype is 'sqlite':
         return _conn
 
     def conn():
-        return '%s://%s?debug=t' % (dbtype, dbpath)
-        #~ return '%s://%s?debug=t&factory=SQLiteCustomConnection' % (dbtype,dbpath)
+        return "%s://%s?debug=t" % (dbtype, dbpath)
+        # ~ return '%s://%s?debug=t&factory=SQLiteCustomConnection' % (dbtype,dbpath)

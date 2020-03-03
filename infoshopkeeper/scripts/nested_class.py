@@ -69,11 +69,15 @@ The name for ``"A1.A2"`` could potentially be set to ``"B1.A2"``. But that will 
 
 import sys
 
-__all__ = ['modify_for_nested_pickle', 'nested_pickle',
-           'NestedClassMetaclass', 'MainClass'
-           # Comment out to silence Sphinx warning about nested classes.
-           #, 'SubClass', 'CopiedClass', 'A1'
-           ]
+__all__ = [
+    "modify_for_nested_pickle",
+    "nested_pickle",
+    "NestedClassMetaclass",
+    "MainClass"
+    # Comment out to silence Sphinx warning about nested classes.
+    # , 'SubClass', 'CopiedClass', 'A1'
+]
+
 
 def modify_for_nested_pickle(cls, name_prefix, module):
     r"""
@@ -109,14 +113,20 @@ def modify_for_nested_pickle(cls, name_prefix, module):
 
     """
     import types
+
     for (name, v) in list(cls.__dict__.items()):
         if isinstance(v, type):
-            if v.__name__ == name and v.__module__ == module.__name__ and getattr(module, name, None) is not v:
+            if (
+                v.__name__ == name
+                and v.__module__ == module.__name__
+                and getattr(module, name, None) is not v
+            ):
                 # OK, probably this is a nested class.
-                dotted_name = name_prefix + '.' + name
+                dotted_name = name_prefix + "." + name
                 v.__name__ = dotted_name
                 setattr(module, dotted_name, v)
                 modify_for_nested_pickle(v, dotted_name, module)
+
 
 def nested_pickle(cls):
     r"""
@@ -183,6 +193,7 @@ class NestedClassMetaclass(type):
         sage: getattr(sys.modules['__main__'], 'A3.B', 'Not found')
         <class '__main__.A3.B'>
     """
+
     def __init__(self, *args):
         r"""
         This invokes the nested_pickle on construction.
@@ -235,6 +246,7 @@ class MainClass(object, metaclass=NestedClassMetaclass):
             """
             pass
 
+
 class SubClass(MainClass):
     r"""
     A simple class to test nested_pickle.
@@ -249,7 +261,9 @@ class SubClass(MainClass):
     """
     pass
 
+
 nested_pickle(SubClass)
+
 
 class CopiedClass(object):
     r"""
@@ -267,12 +281,13 @@ class CopiedClass(object):
     NestedSubClass = MainClass.NestedClass.NestedSubClass
     SubClass = SubClass
 
+
 nested_pickle(CopiedClass)
 
 # Further classes for recursive tests
+
 
 class A1:
     class A2:
         class A3:
             pass
-

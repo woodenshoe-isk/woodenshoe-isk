@@ -56,13 +56,7 @@ class SQLObjectWithFormGlue(SQLObject):
             if self.sortTheseKeys:
                 #pass
                 toObjects.sort(key=operator.attrgetter(self.sortTheseKeys))
-<<<<<<< HEAD
-    
-            
-            form_fragment="<label class='textbox'>%s</label><SELECT name='%s'class='textbox'>" %(colName,colName)
-=======
             form_fragment="<label class='textbox'>%s</label><SELECT name='%sID'class='textbox'>" %(colName,colName)
->>>>>>> 0a6f7f6550c407f7afd15b4b879b40623458c95b
             for o in toObjects:
                 equals_fragment=""
                 try:
