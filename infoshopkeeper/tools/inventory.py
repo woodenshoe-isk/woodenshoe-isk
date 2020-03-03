@@ -226,7 +226,7 @@ def lookup_by_isbn(number, forceUpdate=False):
                     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
                 }
                 amazon_url_template = 'https://www.amazon.com/dp/%s/ref=s9_acsd_hps_bw_c2_x_3_i?pf_rd_m=ATVPDKIKX0DER&pf_rd_s=merchandised-search-6&pf_rd_r=X5X8C98Q6ZHQRYVDWWEH&pf_rd_t=101&pf_rd_p=e86ff05d-db67-4abf-a3a1-67b87c968d22&pf_rd_i=4'
-                amazon_url_template2 = 'http://www.amazon.com/dp/%s/'
+                amazon_url_template2 = 'https://www.amazon.com/dp/%s/'
                 if len(isbn)==13:
                     isbn10 = None
                     if isbnlib.is_isbn13(isbn):
@@ -237,9 +237,10 @@ def lookup_by_isbn(number, forceUpdate=False):
                     with requests.Session() as session:
                         try:
                             print("getting amazon")
-                            page_response = session.get(amazon_url_template % isbn10, headers=headers)
+                            page_response = session.get(amazon_url_template2 % isbn10, headers=headers, timeout=1, verify=True)
+                            print("got response")
                             page_content = BeautifulSoup(page_response.content, "lxml")
-                            print("got it")
+                            print("got content")
                             title = page_content.select('#productTitle').pop().text
                             popover_preload = [a.text for a in \
                                             page_content.select('.author.notFaded .a-popover-preload a.a-link-normal')]
