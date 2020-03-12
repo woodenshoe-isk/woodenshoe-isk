@@ -127,7 +127,7 @@ def find_book_on_isbnlib(isbn, cnx, missing_isbns, bad_isbns):
         bad_isbns.write(str(isbn) + "\n")
 
 
-def process_isbn(isbn, cnx, missing_isbns, bad_isbns, good_isbns):
+def _process_isbn(isbn, cnx, missing_isbns, bad_isbns, good_isbns):
     ecs.setLicenseKey(amazon_license_key)
     ecs.setSecretAccessKey(amazon_secret_key)
     ecs.setAssociateTag(amazon_associate_tag)
@@ -135,7 +135,7 @@ def process_isbn(isbn, cnx, missing_isbns, bad_isbns, good_isbns):
     try:
         cursor = cnx.cursor()
     except Exception as e:
-        print("Error in process_isbn when attempting to create cursor: " + str(e))
+        print("Error in _process_isbn when attempting to create cursor: " + str(e))
         sys.exit()
 
     select_stmt = "SELECT * FROM title WHERE isbn = %(isbn)s"
@@ -192,7 +192,7 @@ with open(sys.argv[1]) as f:
     for line in f:
         line = line.strip()
         if re.search(r"^[0-9][0-9]*$", line):
-            process_isbn(int(line), cnx, missing_isbns, bad_isbns, good_isbns)
+            _process_isbn(int(line), cnx, missing_isbns, bad_isbns, good_isbns)
         else:
             process_title(line, cnx, bad_titles, good_isbns)
 missing_isbns.close()

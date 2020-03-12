@@ -1817,7 +1817,7 @@ class InventoryServer:
                 "title.tag RLIKE '%s'" % escape_string(tag.strip())
             )
         if isbn:
-            isbn, price = inventory.process_isbn(isbn)
+            isbn, price = inventory._process_isbn(isbn)
             where_clause_list.append("title.isbn RLIKE '%s'" % escape_string(isbn))
         if formatType:
             where_clause_list.append(

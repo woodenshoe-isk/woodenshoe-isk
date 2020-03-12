@@ -1,5 +1,5 @@
 from time import time, asctime, localtime, sleep
-import types, string
+import types, string, random, traceback
 
 from . import ecs
 from config.config import configuration
@@ -47,13 +47,13 @@ isbn13_regex = re.compile(isbn13_regex, re.I)
 try:
     user_agent_filename = configuration.get("user_agents_file")
     with open(user_agent_filename, "r") as ua:
-        user_agents = ua.readlines()
+        user_agents = ua.read().split()
 except Exception as e:
     print(e, file=sys.stderr)
     user_agents = []
 
 
-def process_isbn(isbn):
+def _process_isbn(isbn):
     # only strip quotes if wsr, reg, or consignment number, or none
     if re.match("^wsr|^reg|^\d{2,4}-\d{1,4}$|n/a|none", isbn, re.I):
         isbn = re.sub("['\"]", "", isbn)
@@ -86,7 +86,7 @@ def process_isbn(isbn):
 
 
 def lookup_by_isbn(number, forceUpdate=False):
-    isbn, price = process_isbn(number)
+    isbn, price = _process_isbn(number)
     print("Looking up isbn", isbn, "with price", price)
 
     # if length of isbn>0 and isn't "n/a" or "none"
@@ -267,6 +267,7 @@ def lookup_by_isbn(number, forceUpdate=False):
                         }
 
                 else:
+                    traceback.print_exc()
                     print("using isbnlib from ecs", file=sys.stderr)
                     isbnlibbooks = []
                     try:
@@ -297,27 +298,32 @@ def lookup_by_isbn(number, forceUpdate=False):
             else:  # if we're scraping amazon
                 print("scraping amazon", file=sys.stderr)
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"
+                    "User-Agent": random.sample(user_agents, 1).pop()
                 }
-                amazon_url_template = "https://www.amazon.com/dp/%s/ref=s9_acsd_hps_bw_c2_x_3_i?pf_rd_m=ATVPDKIKX0DER&pf_rd_s=merchandised-search-6&pf_rd_r=X5X8C98Q6ZHQRYVDWWEH&pf_rd_t=101&pf_rd_p=e86ff05d-db67-4abf-a3a1-67b87c968d22&pf_rd_i=4"
-                amazon_url_template2 = "http://www.amazon.com/dp/%s/"
+                amazon_url_template = "http://www.amazon.com/dp/%s/"
                 if len(isbn) == 13:
                     isbn10 = None
                     if isbnlib.is_isbn13(isbn):
                         isbn10 = isbnlib.to_isbn10(isbn)
                     else:
                         return {}
-                if "isbn10":
+                if isbn10:
                     with requests.Session() as session:
                         try:
                             print("getting amazon")
                             page_response = session.get(
-                                amazon_url_template % isbn10, headers=headers
+                                amazon_url_template % isbn10,
+                                headers=headers,
+                                timeout=0.1
                             )
                             print("got response")
                             page_content = BeautifulSoup(page_response.content, "lxml")
                             print("got parsed content")
-                            title = page_content.select("#productTitle").pop().text
+                            try:
+                                booktitle = page_content.select("#productTitle").pop().text
+                            except Exception as e:
+                                traceback.print_exc()
+                                booktitle = ''
                             popover_preload = [
                                 a.text
                                 for a in page_content.select(
@@ -332,10 +338,14 @@ def lookup_by_isbn(number, forceUpdate=False):
                                 if a.text not in popover_preload
                             ]
                             contributor_role = page_content.select(".contribution span")
-                            contributor_role = [
-                                re.findall("\w+", cr.text).pop()
-                                for cr in contributor_role
-                            ]
+                            try:
+                                contributor_role = [
+                                    re.findall("\w+", cr.text).pop()
+                                    for cr in contributor_role
+                                ]
+                            except Exception as e:
+                                traceback.print_exc()
+                                contributor_role = []
                             author_role = zip(author_name, contributor_role)
                             try:
                                 listprice = (
@@ -349,13 +359,15 @@ def lookup_by_isbn(number, forceUpdate=False):
                                         url = bookfinderurl % isbn
                                         try:
                                             page_response2 = session.get(
-                                                url, headers=headers
+                                                url,
+                                                headers=headers,
+                                                timeout=0.1
                                             )
                                             page_content2 = BeautifulSoup(
                                                 page_response2.content, "lxml"
                                             )
                                         except Exception as e:
-                                            print(e)
+                                            traceback.print_exc()
                                             listprice = 0.0
                                         else:
                                             try:
@@ -369,13 +381,14 @@ def lookup_by_isbn(number, forceUpdate=False):
                                                 else:
                                                     listprice = 0.00
                                             except Exception as e:
-                                                print(e)
+                                                traceback.print_exc()
                                                 listprice = 0.00
                             try:
                                 book_edition = (
                                     page_content.select("#bookEdition").pop().text
                                 )
-                            except:
+                            except Exception as e:
+                                traceback.print_exc()
                                 book_edition = ""
                             try:
                                 matches = re.findall(
@@ -384,34 +397,60 @@ def lookup_by_isbn(number, forceUpdate=False):
                                 )
                                 image_url_dict = eval(matches[0])
                             except Exception as e:
-                                print(e)
+                                traceback.print_exc()
                                 image_url_dict = {"mainUrl": "", "thumbUrl": ""}
                             category_items = page_content.select(".zg_hrsr_ladder a")
                             category_items = [a.text for a in category_items]
                             product_details = page_content.select(
                                 "#productDetailsTable"
                             )  # ul:first-of-type")
-                            product_details1 = product_details.pop().text.splitlines()
-                            quit_flag = 0
-                            for pd in product_details1:
-                                if pd.endswith("pages"):
-                                    format, numpages = pd.split(":")
-                                    numpages = numpages.replace(" pages", "").strip()
-                                    quit_flag += 1
-                                    continue
-                                if pd.startswith("Publisher: "):
+                            try:
+                                product_details1 = product_details.pop().text.splitlines()
+                                quit_flag = 0
+                                for pd in product_details1:
+                                    if pd.endswith("pages"):
+                                        format, numpages = pd.split(":")
+                                        numpages = numpages.replace(" pages", "").strip()
+                                        quit_flag += 1
+                                        continue
+                                    if pd.startswith("Publisher: "):
 
-                                    matches = re.match(
-                                        "Publisher: ([^;^(]*)\s?([^(]*)?\W(.*)\W", pd
-                                    ).groups()
-                                    publisher = matches[0]
-                                    publication_date = matches[2]
-                                    quit_flag += 1
-                                    continue
-                                if quit_flag == 2:
-                                    break
+                                        matches = re.match(
+                                            "Publisher: ([^;^(]*)\s?([^(]*)?\W(.*)\W", pd
+                                        ).groups()
+                                        publisher = matches[0]
+                                        publication_date = matches[2]
+                                        quit_flag += 1
+                                        continue
+                                    if quit_flag == 2:
+                                        break
+                                else:
+                                    publisher = ''
+                                    format = ''
+                            except Exception as e:
+                                traceback.print_exc()
+                                publisher = ''
+                                format = ''
+                            if booktitle:
+                                return {
+                                    "title": booktitle,
+                                    "authors": author_name,
+                                    "authors_as_string": ",".join(author_name),
+                                    "categories_as_string": ",".join(category_items),
+                                    "list_price": listprice,
+                                    "publisher": publisher,
+                                    "isbn": isbn,
+                                    "orig_isbn": isbn,
+                                    "large_url": image_url_dict["mainUrl"],
+                                    "med_url": image_url_dict["mainUrl"],
+                                    "small_url": image_url_dict["thumbUrl"],
+                                    "format": format,
+                                    "kind": "books",
+                                    "known_title": known_title,
+                                    "special_orders": [],
+                                }
                         except Exception as e:
-                            print(e, file=sys.stderr)
+                            traceback.print_exc()
                             print("using isbnlib from scraper", file=sys.stderr)
                             isbnlibbooks = []
                             try:
@@ -441,27 +480,27 @@ def lookup_by_isbn(number, forceUpdate=False):
                                 }
                             else:
                                 return {}
-                        else:
-                            if title:
-                                return {
-                                    "title": title,
-                                    "authors": author_name,
-                                    "authors_as_string": ",".join(author_name),
-                                    "categories_as_string": ",".join(category_items),
-                                    "list_price": listprice,
-                                    "publisher": publisher,
-                                    "isbn": isbn,
-                                    "orig_isbn": isbn,
-                                    "large_url": image_url_dict["mainUrl"],
-                                    "med_url": image_url_dict["mainUrl"],
-                                    "small_url": image_url_dict["thumbUrl"],
-                                    "format": format,
-                                    "kind": "books",
-                                    "known_title": known_title,
-                                    "special_orders": [],
-                                }
-                            else:
-                                return {}
+                else:
+                    if title:
+                        return {
+                            "title": title,
+                            "authors": author_name,
+                            "authors_as_string": ",".join(author_name),
+                            "categories_as_string": ",".join(category_items),
+                            "list_price": listprice,
+                            "publisher": publisher,
+                            "isbn": isbn,
+                            "orig_isbn": isbn,
+                            "large_url": image_url_dict["mainUrl"],
+                            "med_url": image_url_dict["mainUrl"],
+                            "small_url": image_url_dict["thumbUrl"],
+                            "format": format,
+                            "kind": "books",
+                            "known_title": known_title,
+                            "special_orders": [],
+                        }
+                    else:
+                        return {}
     else:
         return {}
 
@@ -763,10 +802,6 @@ def addToInventory(
         )
 
 
-#               book_for_info.extracolumns()
-# ~ #               for mp in extra_prices.keys():
-#                   setattr(book_for_info,string.replace(mp," ",""),extra_prices[mp])
-
 
 def searchInventory(sortby="booktitle", out_of_stock=False, **kwargs):
     # start building the filter list
@@ -800,7 +835,7 @@ def searchInventory(sortby="booktitle", out_of_stock=False, **kwargs):
     if "tag" in kwargs:
         where_clause_list.append(RLIKE(Title.q.tag, kwargs["tag"].strip()))
     if "isbn" in kwargs:
-        isbn, price = process_isbn(kwargs["isbn"])
+        isbn, price = _process_isbn(kwargs["isbn"])
         where_clause_list.append(Title.q.isbn == isbn)
     if "formatType" in kwargs:
         where_clause_list.append(Title.q.type == kwargs["formatType"].strip())
@@ -850,6 +885,7 @@ def searchInventory(sortby="booktitle", out_of_stock=False, **kwargs):
             distinct=True,
         )
     # filter for stock status
+    # GROUPBY in sqlobject is complicated. We could do it but it's not worth it
     if "out_of_stock" in kwargs:
         titles = [t for t in titles if t.copies_in_status("STOCK") == 0]
     # filter on specific numbers in stock
@@ -935,7 +971,7 @@ def getInventory(queryTerms):
             )
 
         if "isbn" in keys:
-            isbn, price = process_isbn(queryTerms["isbn"])
+            isbn, price = _process_isbn(queryTerms["isbn"])
             print("isbn and price are ", isbn, price)
             titleSelect = Book.sqlrepr(
                 AND(
